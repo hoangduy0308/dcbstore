@@ -1,0 +1,30 @@
+﻿@model List<DCBStore.Models.Product>
+@{
+    ViewData["Title"] = "Trang Chủ";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Chào mừng đến với DCB Store</h1>
+    <p>Nơi mua sắm mọi thứ bạn cần!</p>
+</div>
+
+<hr />
+
+<div class="row">
+    @foreach (var product in Model)
+    {
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div class="card h-100">
+                <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" style="height: 250px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title">@product.Name</h5>
+                    <p class="card-text">@product.Description</p>
+                </div>
+                <div class="card-footer text-center">
+                   <h5 class="text-danger">@product.Price.ToString("N0") VNĐ</h5>
+                   <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="btn btn-primary mt-2">Xem chi tiết</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

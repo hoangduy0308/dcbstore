@@ -1,0 +1,75 @@
+@model DCBStore.Models.Product
+@{
+    ViewData["Title"] = @Model.Name;
+}
+
+<h1>@Model.Name</h1>
+
+<div class="row">
+    <div class="col-md-5">
+        <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid rounded" />
+    </div>
+    <div class="col-md-7">
+        <h4>Mô tả sản phẩm</h4>
+        <p>@Model.Description</p>
+        <hr />
+        <h3 class="text-danger">Giá: @Model.Price.ToString("N0") VNĐ</h3>
+        <div class="mt-4">
+            <button id="addToCartBtn" data-productid="@Model.Id" class="btn btn-lg btn-success">Thêm vào giỏ hàng</button>
+        </div>
+    </div>
+</div>
+
+@* --- BẮT ĐẦU PHẦN CODE JAVASCRIPT THÊM MỚI --- *@
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tìm đến nút "Thêm vào giỏ hàng"
+            const addToCartButton = document.getElementById('addToCartBtn');
+
+            // Gắn sự kiện 'click' cho nút
+            if (addToCartButton) {
+                addToCartButton.addEventListener('click', function () {
+                    const productId = this.dataset.productid;
+
+                    // Gửi request POST đến CartController bằng Fetch API
+                    fetch(`/Cart/AddToCart?productId=${productId}`, {
+                        method: 'POST',
+                        headers: {
+                            // Cần thêm header này để ASP.NET Core xác thực request
+                            'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0]?.value
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                             // Ném lỗi nếu server trả về status không thành công (4xx, 5xx)
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json(); // Chuyển đổi kết quả trả về thành JSON
+                    })
+                    .then(data => {
+                        // Xử lý dữ liệu JSON nhận được từ server
+                        if (data.success) {
+                            // Hiển thị thông báo thành công
+                            alert(data.message); 
+
+                            // Cập nhật số lượng sản phẩm trên icon giỏ hàng ở layout
+                            const cartCountSpan = document.getElementById('cart-item-count');
+                            if(cartCountSpan) {
+                                cartCountSpan.innerText = data.newCartCount;
+                            }
+                        } else {
+                            // Hiển thị thông báo lỗi từ server
+                            alert('Lỗi: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        // Xử lý các lỗi về mạng hoặc lỗi khi parse JSON
+                        console.error('Lỗi khi thêm vào giỏ hàng:', error);
+                        alert('Đã có lỗi xảy ra, vui lòng thử lại.');
+                    });
+                });
+            }
+        });
+    </script>
+}

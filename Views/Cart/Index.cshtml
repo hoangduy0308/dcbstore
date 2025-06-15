@@ -1,0 +1,48 @@
+@model List<DCBStore.Models.CartItem>
+@{
+    ViewData["Title"] = "Giỏ hàng";
+    var total = Model.Sum(item => item.Total).ToString("N0");
+}
+
+<h1>Giỏ hàng của bạn</h1>
+
+@if (Model.Count > 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Sản phẩm</th>
+                <th>Giá</th>
+                <th>Số lượng</th>
+                <th>Thành tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.ProductName</td>
+                    <td>@item.Price.ToString("N0") VNĐ</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.Total.ToString("N0") VNĐ</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-end"><strong>Tổng cộng:</strong></td>
+                <td class="text-danger"><strong>@total VNĐ</strong></td>
+            </tr>
+            
+            <tr>
+                <td colspan="4" class="text-end">
+                    <a asp-controller="Checkout" asp-action="Index" class="btn btn-success">Tiến hành Thanh toán</a>
+                </td>
+            </tr>
+            </tfoot>
+    </table>
+}
+else
+{
+    <p class="alert alert-warning">Giỏ hàng của bạn đang trống.</p>
+}
