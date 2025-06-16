@@ -31,6 +31,38 @@
         font-weight: 600;
         border-radius: 0.5rem;
     }
+    
+    .divider-text {
+        position: relative;
+        text-align: center;
+        margin: 1.5rem 0;
+    }
+    .divider-text span {
+        background-color: rgba(255, 255, 255, 0.95);
+        padding: 0 10px;
+        position: relative;
+        z-index: 1;
+        color: #6c757d;
+    }
+    .divider-text:before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 1px;
+        background-color: #dee2e6;
+        left: 0;
+        top: 50%;
+        z-index: 0;
+    }
+
+    .btn-google {
+        background-color: #fff;
+        color: #495057;
+        border: 1px solid #ced4da;
+    }
+    .btn-google:hover {
+        background-color: #f8f9fa;
+    }
 
     @@keyframes gradientBG {
         0% { background-position: 0% 50%; }
@@ -79,6 +111,41 @@
                         </div>
                     </form>
                 </section>
+
+                <!-- === BẮT ĐẦU VÙNG ĐĂNG NHẬP BÊN NGOÀI === -->
+                <div class="divider-text">
+                    <span>HOẶC</span>
+                </div>
+                
+                <section>
+                    @{
+                        if ((Model.ExternalLogins?.Count ?? 0) == 0)
+                        {
+                            <div>
+                                <p>
+                                    Không có dịch vụ xác thực bên ngoài nào được cấu hình.
+                                </p>
+                            </div>
+                        }
+                        else
+                        {
+                            <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
+                                <div>
+                                    <p>
+                                        @foreach (var provider in Model.ExternalLogins!)
+                                        {
+                                            <button type="submit" class="w-100 btn btn-google" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">
+                                                <i class="fab fa-google me-2"></i> Đăng nhập với @provider.DisplayName
+                                            </button>
+                                        }
+                                    </p>
+                                </div>
+                            </form>
+                        }
+                    }
+                </section>
+                <!-- === KẾT THÚC VÙNG ĐĂNG NHẬP BÊN NGOÀI === -->
+
             </div>
         </div>
     </div>

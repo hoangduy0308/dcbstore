@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using DCBStore.Data;
-using Microsoft.AspNetCore.Identity; // Thêm dòng này để sử dụng Identity
-
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication; 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- Bắt đầu vùng cấu hình dịch vụ ---
@@ -22,26 +22,47 @@ builder.Services.AddSession(options =>
 
 // 3. Cấu hình dịch vụ Identity cho Tài khoản người dùng
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// Cấu hình lại đường dẫn đăng nhập mặc định
+// 4. Cấu hình các dịch vụ xác thực bên ngoài (Google)
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        // Code này sẽ tự động đọc ClientId và ClientSecret từ user-secrets
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    });
+
+// Cấu hình lại đường dẫn đăng nhập mặc định cho Admin
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    // Khi người dùng cố gắng truy cập trang cần đăng nhập, họ sẽ được
-    // chuyển hướng đến trang Login của AccountController trong khu vực Admin.
     options.LoginPath = "/Admin/Account/Login";
-    options.AccessDeniedPath = "/Admin/Account/AccessDenied"; // (Tùy chọn)
+    options.AccessDeniedPath = "/Admin/Account/AccessDenied";
 });
 
-// 4. Đăng ký các dịch vụ MVC
+// 5. Đăng ký các dịch vụ MVC
 builder.Services.AddControllersWithViews();
-// Thêm dịch vụ cho Razor Pages (cần cho các trang của Identity)
 builder.Services.AddRazorPages();
-
 
 // --- Kết thúc vùng cấu hình dịch vụ ---
 
 var app = builder.Build();
+
+// Tự động tạo Vai trò và tài khoản Admin khi ứng dụng chạy
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        await DbSeeder.SeedRolesAndAdminAsync(services);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -56,20 +77,16 @@ app.UseStaticFiles();
 app.UseRouting();
 
 // Quan trọng: Phải đặt các middleware này theo đúng thứ tự
-app.UseSession(); // Kích hoạt Session
-app.UseAuthentication(); // Bật Xác thực (Xác định bạn là ai)
-app.UseAuthorization(); // Bật Phân quyền (Kiểm tra bạn được làm gì)
-
+app.UseSession(); 
+app.UseAuthentication(); 
+app.UseAuthorization(); 
 
 // Cấu hình các endpoint
-app.MapRazorPages(); // Thêm dòng này để các trang của Identity hoạt động
-// Route cho các Area
+app.MapRazorPages();
 app.MapControllerRoute(
   name: "MyArea",
   pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
 );
-
-// Route mặc định
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

@@ -3,12 +3,13 @@ using DCBStore.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DCBStore.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize]
+    [Authorize(Roles = "Admin")] // <-- SỬA ĐỔI QUAN TRỌNG
     public class ProductsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -21,8 +22,7 @@ namespace DCBStore.Areas.Admin.Controllers
         // GET: /Admin/Products
         public async Task<IActionResult> Index()
         {
-            var products = await _context.Products.ToListAsync();
-            return View(products);
+            return View(await _context.Products.ToListAsync());
         }
 
         // GET: /Admin/Products/Create
@@ -44,8 +44,6 @@ namespace DCBStore.Areas.Admin.Controllers
             }
             return View(product);
         }
-
-        // --- BẮT ĐẦU VÙNG CODE MỚI ---
 
         // GET: /Admin/Products/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -82,7 +80,6 @@ namespace DCBStore.Areas.Admin.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    // Xử lý nếu có lỗi xung đột khi cập nhật
                     if (!_context.Products.Any(e => e.Id == product.Id))
                     {
                         return NotFound();
@@ -114,7 +111,6 @@ namespace DCBStore.Areas.Admin.Controllers
 
             return View(product);
         }
-
 
         // GET: /Admin/Products/Delete/5
         public async Task<IActionResult> Delete(int? id)
@@ -148,7 +144,5 @@ namespace DCBStore.Areas.Admin.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
-
-        // --- KẾT THÚC VÙNG CODE MỚI ---
     }
 }

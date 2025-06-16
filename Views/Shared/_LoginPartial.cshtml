@@ -5,6 +5,17 @@
 @if (SignInManager.IsSignedIn(User))
 {
     <h6 class="dropdown-header">Xin chào, @UserManager.GetUserName(User)</h6>
+    
+    @* --- BẮT ĐẦU VÙNG CODE MỚI --- *@
+    @* Chỉ hiển thị link này nếu người dùng có vai trò "Admin" *@
+    @if (User.IsInRole("Admin"))
+    {
+        <a class="dropdown-item fw-bold text-danger" asp-area="Admin" asp-controller="Home" asp-action="Index">
+            <i class="fas fa-user-shield fa-fw me-2"></i>Trang Quản trị
+        </a>
+    }
+    @* --- KẾT THÚC VÙNG CODE MỚI --- *@
+
     <a class="dropdown-item" id="manage" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
         <i class="fas fa-user-cog fa-fw me-2"></i>Quản lý tài khoản
     </a>
