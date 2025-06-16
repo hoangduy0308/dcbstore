@@ -1,13 +1,13 @@
-﻿@model IEnumerable<DCBStore.Models.Product>
+@model IEnumerable<DCBStore.Models.Product>
 @{
-    ViewData["Title"] = "Trang Chủ";
+    ViewData["Title"] = "Tất cả Sản phẩm";
     // Lấy thông tin phân trang từ ViewData mà Controller đã gửi qua
     int currentPage = (int)(ViewData["CurrentPage"] ?? 1);
     int totalPages = (int)(ViewData["TotalPages"] ?? 1);
     string currentFilter = ViewData["CurrentFilter"] as string;
 }
 
-@* Kế thừa các style để đảm bảo tính đồng bộ *@
+@* Kế thừa các style từ trang chủ để đảm bảo tính đồng bộ *@
 <style>
     .product-card {
         transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
@@ -61,7 +61,7 @@
         visibility: visible;
         transform: translateY(0);
     }
-
+    
     .pagination .page-link {
         border-radius: 0.25rem;
         margin: 0 0.25rem;
@@ -74,31 +74,24 @@
     }
 </style>
 
-<div class="container pt-5">
-    
+<div class="container py-5">
     <div class="text-center mb-5">
-        <h2 class="display-5 fw-bold">Sản phẩm Nổi bật</h2>
-        <p class="text-muted">Khám phá những sản phẩm được yêu thích nhất tại DCBStore</p>
-    </div>
-
-    <!-- === SỬA LỖI: Xóa câu lệnh @if, để thanh tìm kiếm luôn hiển thị === -->
-    <div class="row justify-content-center mb-5">
-        <div class="col-md-6">
-            <form asp-controller="Home" asp-action="Index" method="get">
-                <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Nhập tên sản phẩm để tìm kiếm..." name="SearchString" value="@ViewData["CurrentFilter"]">
-                    <button class="btn btn-primary" type="submit">
-                        <i class="fas fa-search"></i> Tìm kiếm
-                    </button>
-                </div>
-            </form>
-        </div>
+        @if (string.IsNullOrEmpty(currentFilter))
+        {
+            <h1 class="display-5 fw-bold">Tất cả Sản phẩm</h1>
+            <p class="text-muted">Khám phá toàn bộ danh mục sản phẩm đa dạng tại DCBStore.</p>
+        }
+        else
+        {
+            <h1 class="display-5 fw-bold">Kết quả tìm kiếm cho "@currentFilter"</h1>
+        }
     </div>
 
     @if (!Model.Any())
     {
         <div class="text-center py-5">
             <p class="lead">Không tìm thấy sản phẩm nào phù hợp.</p>
+            <a asp-controller="Products" asp-action="Index" class="btn btn-link">Xem tất cả sản phẩm</a>
         </div>
     }
     else
@@ -164,6 +157,7 @@
     }
 </div>
 
+<!-- Toast Notification Element -->
 <div id="toast-notification">
     <i class="fas fa-check-circle me-2"></i>
     <span id="toast-message"></span>

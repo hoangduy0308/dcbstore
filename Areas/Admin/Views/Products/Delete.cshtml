@@ -1,0 +1,35 @@
+@model DCBStore.Models.Product
+
+@{
+    ViewData["Title"] = "Xóa Sản phẩm";
+}
+
+<h1 class="h3 mb-3 text-danger">@ViewData["Title"]</h1>
+
+<h3>Bạn có chắc chắn muốn xóa sản phẩm này không?</h3>
+<p>Hành động này không thể được hoàn tác.</p>
+<div>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-3">
+            Tên sản phẩm
+        </dt>
+        <dd class = "col-sm-9">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+        <dt class = "col-sm-3">
+            Giá
+        </dt>
+        <dd class = "col-sm-9">
+            @Model.Price.ToString("N0") VNĐ
+        </dd>
+    </dl>
+    
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-2 mt-4">
+            <input type="submit" value="Xác nhận Xóa" class="btn btn-danger" />
+            <a asp-action="Index" class="btn btn-secondary">Hủy bỏ</a>
+        </div>
+    </form>
+</div>

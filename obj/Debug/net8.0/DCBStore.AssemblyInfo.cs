@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DCBStore")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d399c80d3d4417bf7ccd9b46a79a599c4f980de3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+51d04df5e8db238a6cede85bb83e3320754ce194")]
 [assembly: System.Reflection.AssemblyProductAttribute("DCBStore")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DCBStore")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - DCBStore Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Custom Admin CSS -->
+    <style>
+        :root {
+            --sidebar-bg: #111827; /* Gray 900 */
+            --sidebar-link-text: #9ca3af; /* Gray 400 */
+            --sidebar-link-hover-bg: #374151; /* Gray 700 */
+            --sidebar-link-active-text: #ffffff;
+            --main-bg: #f9fafb; /* Gray 50 */
+            --text-primary: #1f2937; /* Gray 800 */
+            --text-secondary: #6b7280; /* Gray 500 */
+            --accent-color: #3b82f6; /* Blue 500 */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--main-bg);
+            color: var(--text-primary);
+        }
+
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            transition: width 0.3s ease;
+        }
+
+        .sidebar .navbar-brand {
+            color: #fff;
+            font-weight: 700;
+            padding: 1.25rem 1.5rem;
+            font-size: 1.25rem;
+            letter-spacing: .5px;
+        }
+
+        .sidebar .nav-link {
+            color: var(--sidebar-link-text);
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            margin: 0 0.5rem 0.25rem;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar .nav-link .fa-fw {
+            width: 1.75rem;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: var(--sidebar-link-hover-bg);
+            color: #fff;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: var(--accent-color);
+            color: var(--sidebar-link-active-text);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        
+        .sidebar .sidebar-heading {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: #4b5563; /* Gray 600 */
+            padding: 0.5rem 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .main-content-wrapper {
+            width: calc(100% - 260px);
+            transition: width 0.3s ease;
+        }
+        
+        .top-header {
+            background-color: #fff;
+            border-bottom: 1px solid #e5e7eb; /* Gray 200 */
+        }
+        
+        .content-card {
+            background-color: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                overflow: hidden;
+            }
+            .main-content-wrapper {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        @* --- BỐ CỤC KHI ĐÃ ĐĂNG NHẬP (CÓ SIDEBAR) --- *@
+        <div class="d-flex">
+            <aside class="sidebar vh-100 d-flex flex-column">
+                <a class="navbar-brand" asp-area="Admin" asp-controller="Home" asp-action="Index">DCBStore</a>
+                
+                <ul class="nav flex-column flex-grow-1">
+                    <li class="sidebar-heading"><span>Menu</span></li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="Admin" asp-controller="Home" asp-action="Index">
+                            <i class="fas fa-tachometer-alt fa-fw"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" asp-area="Admin" asp-controller="Products" asp-action="Index">
+                            <i class="fas fa-box-open fa-fw"></i>
+                            Sản phẩm
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-file-invoice-dollar fa-fw"></i>
+                            Đơn hàng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-users fa-fw"></i>
+                            Khách hàng
+                        </a>
+                    </li>
+
+                    <li class="sidebar-heading"><span>Khác</span></li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index" target="_blank">
+                            <i class="fas fa-globe fa-fw"></i>
+                            Xem trang chính
+                        </a>
+                    </li>
+                </ul>
+            </aside>
+
+            <div class="main-content-wrapper vh-100 d-flex flex-column">
+                <header class="top-header p-3 d-flex justify-content-end align-items-center">
+                    <partial name="_LoginPartial" />
+                </header>
+
+                <main class="flex-grow-1 p-4 p-md-5" style="overflow-y: auto;">
+                    <div class="border-bottom pb-3 mb-4">
+                        <h1 class="h2 fw-bold">@ViewData["Title"]</h1>
+                    </div>
+                    
+                    <div class="content-card p-4">
+                        @RenderBody()
+                    </div>
+                </main>
+            </div>
+        </div>
+    }
+    else
+    {
+        @* --- BỐ CỤC KHI CHƯA ĐĂNG NHẬP (CHỈ HIỂN THỊ NỘI DUNG CHÍNH) --- *@
+        @RenderBody()
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+

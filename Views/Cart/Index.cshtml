@@ -1,48 +1,184 @@
 @model List<DCBStore.Models.CartItem>
 @{
-    ViewData["Title"] = "Giỏ hàng";
-    var total = Model.Sum(item => item.Total).ToString("N0");
+    ViewData["Title"] = "Giỏ hàng của bạn";
+    var total = Model.Sum(item => item.Total);
 }
 
-<h1>Giỏ hàng của bạn</h1>
+<style>
+    .quantity-input {
+        width: 50px;
+        text-align: center;
+        border: 1px solid #dee2e6;
+        border-left: none;
+        border-right: none;
+    }
+    .quantity-btn {
+        width: 38px;
+        border: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+    }
+    .quantity-btn:hover {
+        background-color: #e9ecef;
+    }
+    .remove-item-btn {
+        transition: color 0.2s ease-in-out;
+    }
+    .remove-item-btn:hover {
+        color: #dc3545 !important;
+    }
+</style>
 
-@if (Model.Count > 0)
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Sản phẩm</th>
-                <th>Giá</th>
-                <th>Số lượng</th>
-                <th>Thành tiền</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.ProductName</td>
-                    <td>@item.Price.ToString("N0") VNĐ</td>
-                    <td>@item.Quantity</td>
-                    <td>@item.Total.ToString("N0") VNĐ</td>
-                </tr>
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold">Giỏ hàng của bạn</h1>
+    </div>
+
+    @if (Model.Count > 0)
+    {
+        <div class="row g-5">
+            <!-- Cột danh sách sản phẩm -->
+            <div class="col-lg-8">
+                <div id="cart-items-container">
+                    @foreach (var item in Model)
+                    {
+                        <div class="card mb-3 border-0 shadow-sm" id="cart-item-@item.ProductId">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <img src="@item.ImageUrl" alt="@item.ProductName" class="me-4 rounded" style="width: 100px; height: 100px; object-fit: contain;">
+                                    
+                                    <div class="flex-grow-1">
+                                        <h5 class="mb-1">@item.ProductName</h5>
+                                        <p class="text-muted mb-2">Giá: @item.Price.ToString("N0") VNĐ</p>
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-center mx-4">
+                                        <button class="btn btn-sm quantity-btn decrease-qty" data-productid="@item.ProductId">-</button>
+                                        <input type="text" value="@item.Quantity" class="form-control form-control-sm quantity-input" readonly>
+                                        <button class="btn btn-sm quantity-btn increase-qty" data-productid="@item.ProductId">+</button>
+                                    </div>
+
+                                    <div class="mx-4">
+                                        <p class="fw-bold mb-0 item-total">@item.Total.ToString("N0") VNĐ</p>
+                                    </div>
+                                    
+                                    <div>
+                                        <button class="btn btn-link text-muted remove-item-btn" data-productid="@item.ProductId" title="Xóa sản phẩm">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Cột tóm tắt đơn hàng -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Tóm tắt đơn hàng</h4>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-2">
+                                <span>Tạm tính</span>
+                                <span id="summary-subtotal">@total.ToString("N0") VNĐ</span>
+                            </li>
+                             <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-2">
+                                <span>Phí vận chuyển</span>
+                                <span>Miễn phí</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center border-top px-0 pt-3">
+                                <strong class="fs-5">Tổng cộng</strong>
+                                <strong class="fs-5 text-primary" id="summary-total">@total.ToString("N0") VNĐ</strong>
+                            </li>
+                        </ul>
+
+                        <a asp-controller="Checkout" asp-action="Index" class="btn btn-primary w-100 mt-4">Tiến hành Thanh toán</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+            <p class="lead">Giỏ hàng của bạn đang trống.</p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">Tiếp tục mua sắm</a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cartContainer = document.getElementById('cart-items-container');
+
+        const updateSummary = (newTotal) => {
+            const formattedTotal = newTotal.toLocaleString('vi-VN') + ' VNĐ';
+            document.getElementById('summary-subtotal').textContent = formattedTotal;
+            document.getElementById('summary-total').textContent = formattedTotal;
+        };
+        
+        const updateCartCount = (newCount) => {
+            const cartCountSpan = document.getElementById('cart-item-count');
+            if (cartCountSpan) {
+                cartCountSpan.innerText = newCount;
             }
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="3" class="text-end"><strong>Tổng cộng:</strong></td>
-                <td class="text-danger"><strong>@total VNĐ</strong></td>
-            </tr>
-            
-            <tr>
-                <td colspan="4" class="text-end">
-                    <a asp-controller="Checkout" asp-action="Index" class="btn btn-success">Tiến hành Thanh toán</a>
-                </td>
-            </tr>
-            </tfoot>
-    </table>
-}
-else
-{
-    <p class="alert alert-warning">Giỏ hàng của bạn đang trống.</p>
+        }
+
+        cartContainer.addEventListener('click', function(e) {
+            const target = e.target.closest('.quantity-btn, .remove-item-btn');
+            if (!target) return;
+
+            const productId = target.dataset.productid;
+            let actionUrl = '';
+
+            if (target.matches('.increase-qty')) {
+                actionUrl = '/Cart/IncreaseQuantity';
+            } else if (target.matches('.decrease-qty')) {
+                actionUrl = '/Cart/DecreaseQuantity';
+            } else if (target.matches('.remove-item-btn')) {
+                actionUrl = '/Cart/RemoveFromCart';
+                // Đã loại bỏ hộp thoại confirm() để có trải nghiệm tốt hơn.
+            }
+
+            if (!actionUrl) return;
+
+            fetch(`${actionUrl}?productId=${productId}`, {
+                method: 'POST',
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if(data.success) {
+                    updateSummary(data.newTotal);
+                    updateCartCount(data.newCartCount);
+
+                    const itemRow = document.getElementById(`cart-item-${productId}`);
+                    if (!itemRow) return;
+
+                    if(actionUrl.includes('RemoveFromCart') || data.itemRemoved) {
+                        itemRow.style.transition = 'opacity 0.5s ease';
+                        itemRow.style.opacity = '0';
+                        setTimeout(() => {
+                            itemRow.remove();
+                            if (document.querySelectorAll('[id^="cart-item-"]').length === 0) {
+                                window.location.reload(); // Tải lại trang nếu giỏ hàng trống
+                            }
+                        }, 500);
+                    } else {
+                        itemRow.querySelector('.quantity-input').value = data.newQuantity;
+                        itemRow.querySelector('.item-total').textContent = data.newItemTotal.toLocaleString('vi-VN') + ' VNĐ';
+                    }
+                }
+            })
+            .catch(error => console.error('Lỗi khi cập nhật giỏ hàng:', error));
+        });
+    });
+    </script>
 }

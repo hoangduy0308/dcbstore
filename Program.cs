@@ -24,6 +24,15 @@ builder.Services.AddSession(options =>
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+// Cấu hình lại đường dẫn đăng nhập mặc định
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    // Khi người dùng cố gắng truy cập trang cần đăng nhập, họ sẽ được
+    // chuyển hướng đến trang Login của AccountController trong khu vực Admin.
+    options.LoginPath = "/Admin/Account/Login";
+    options.AccessDeniedPath = "/Admin/Account/AccessDenied"; // (Tùy chọn)
+});
+
 // 4. Đăng ký các dịch vụ MVC
 builder.Services.AddControllersWithViews();
 // Thêm dịch vụ cho Razor Pages (cần cho các trang của Identity)

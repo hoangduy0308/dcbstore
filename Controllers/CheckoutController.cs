@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization; // Dòng này quan trọng
+using Microsoft.AspNetCore.Authorization;
 using DCBStore.Data;
 using DCBStore.Models;
 using DCBStore.Helpers;
@@ -9,21 +9,19 @@ using System.Linq;
 
 namespace DCBStore.Controllers
 {
-    [Authorize] // Bắt buộc người dùng phải đăng nhập
+    [Authorize]
     public class CheckoutController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private const string CartSessionKey = "Cart";
 
-        // Constructor phải đúng như thế này
         public CheckoutController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
             _userManager = userManager;
         }
 
-        // Action mặc định tên là Index
         public IActionResult Index()
         {
             var cart = HttpContext.Session.GetObjectFromJson<List<CartItem>>(CartSessionKey) ?? new List<CartItem>();
@@ -32,24 +30,34 @@ namespace DCBStore.Controllers
                 TempData["Message"] = "Giỏ hàng của bạn đang trống, không thể thanh toán.";
                 return RedirectToAction("Index", "Cart");
             }
-            return View(new Order());
+            
+            var checkoutViewModel = new CheckoutViewModel
+            {
+                Order = new Order(),
+                CartItems = cart
+            };
+
+            return View(checkoutViewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ProcessOrder(Order order)
+        public async Task<IActionResult> ProcessOrder(CheckoutViewModel checkoutViewModel)
         {
-            if (!ModelState.IsValid)
-            {
-                return View("Index", order);
-            }
-
             var cart = HttpContext.Session.GetObjectFromJson<List<CartItem>>(CartSessionKey) ?? new List<CartItem>();
             if (cart.Count == 0)
             {
                 return RedirectToAction("Index", "Home");
             }
 
+            checkoutViewModel.CartItems = cart;
+
+            if (!ModelState.IsValid)
+            {
+                return View("Index", checkoutViewModel);
+            }
+
+            var order = checkoutViewModel.Order;
             var user = await _userManager.GetUserAsync(User);
 
             order.UserId = user.Id;
@@ -75,11 +83,12 @@ namespace DCBStore.Controllers
 
             HttpContext.Session.Remove(CartSessionKey);
 
-            return RedirectToAction("Confirmation");
+            return RedirectToAction("Confirmation", new { orderId = order.Id });
         }
 
-        public IActionResult Confirmation()
+        public IActionResult Confirmation(int orderId)
         {
+            ViewBag.OrderId = orderId; 
             return View();
         }
     }

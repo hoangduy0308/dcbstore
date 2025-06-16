@@ -1,70 +1,60 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using DCBStore.Models; // Quan trọng: Thêm dòng này
+using DCBStore.Models;
+using DCBStore.Data; // Thêm dòng này để sử dụng DbContext
+using Microsoft.EntityFrameworkCore; // Thêm dòng này để sử dụng ToListAsync
+using System.Linq; // Thêm dòng này để sử dụng Where, Skip, Take
+using System.Threading.Tasks; // Thêm dòng này để sử dụng Task
 
-namespace DCBStore.Controllers;
-
-public class HomeController : Controller
+namespace DCBStore.Controllers
 {
-    private readonly ILogger<HomeController> _logger;
-
-    public HomeController(ILogger<HomeController> logger)
+    public class HomeController : Controller
     {
-        _logger = logger;
-    }
+        private readonly ApplicationDbContext _context; // Thay thế ILogger bằng DbContext
+        private readonly ILogger<HomeController> _logger;
 
-    // Action này sẽ được chạy khi người dùng truy cập vào trang chủ
-    public IActionResult Index()
-    {
-        // Tạo một danh sách sản phẩm đa dạng
-        var products = new List<Product>
+
+        // Cập nhật constructor để nhận ApplicationDbContext
+        public HomeController(ApplicationDbContext context, ILogger<HomeController> logger)
         {
-            new Product 
-            { 
-                Id = 1, 
-                Name = "Laptop ThinkPad T14", 
-                Description = "Laptop doanh nhân mạnh mẽ, bền bỉ.", 
-                Price = 25000000m, 
-                ImageUrl = "/images/laptop-thinkpad.jpg" 
-            },
-            new Product 
-            { 
-                Id = 2, 
-                Name = "Tiểu thuyết 'Nhà Giả Kim'", 
-                Description = "Cuốn sách bán chạy nhất mọi thời đại của Paulo Coelho.", 
-                Price = 69000m, 
-                ImageUrl = "/images/nha-gia-kim.jpg" 
-            },
-            new Product 
-            { 
-                Id = 3, 
-                Name = "Nước hoa Chanel No. 5", 
-                Description = "Hương thơm cổ điển và quyến rũ cho phái nữ.", 
-                Price = 3500000m, 
-                ImageUrl = "/images/chanel-no5.jpg" 
-            },
-            new Product
+            _context = context;
+            _logger = logger;
+        }
+
+        // Cập nhật action Index để hỗ trợ tìm kiếm và phân trang
+        public async Task<IActionResult> Index(string searchString, int? pageNumber)
+        {
+            ViewData["CurrentFilter"] = searchString;
+
+            var productsQuery = from p in _context.Products
+                                select p;
+
+            if (!string.IsNullOrEmpty(searchString))
             {
-                Id = 4,
-                Name = "Tai nghe Sony WH-1000XM5",
-                Description = "Tai nghe chống ồn chủ động hàng đầu thế giới.",
-                Price = 8500000m,
-                ImageUrl = "/images/sony-headphone.jpg"
+                productsQuery = productsQuery.Where(s => s.Name.Contains(searchString));
             }
-        };
 
-        // Truyền danh sách sản phẩm này đến View
-        return View(products);
-    }
+            int pageSize = 8; // Hiển thị 8 sản phẩm mỗi trang
+            int currentPage = pageNumber ?? 1;
 
-    public IActionResult Privacy()
-    {
-        return View();
-    }
+            var count = await productsQuery.CountAsync();
+            var products = await productsQuery.Skip((currentPage - 1) * pageSize).Take(pageSize).ToListAsync();
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            ViewData["TotalPages"] = (int)Math.Ceiling(count / (double)pageSize);
+            ViewData["CurrentPage"] = currentPage;
+
+            return View(products);
+        }
+
+        public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
     }
 }

@@ -1,0 +1,48 @@
+@model DCBStore.Areas.Admin.Controllers.AccountController.LoginInputModel
+@{
+    ViewData["Title"] = "Đăng nhập Trang Quản trị";
+    Layout = "/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid vh-100 d-flex justify-content-center align-items-center" style="background-color: #f9fafb;">
+    <div class="col-lg-5 col-md-7 col-sm-10">
+        <div class="card bg-white border-0 shadow-lg" style="border-radius: 1rem;">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                     <h1 class="h2 fw-bold text-gray-800">DCBStore Admin</h1>
+                     <p class="text-muted">Vui lòng đăng nhập để tiếp tục</p>
+                </div>
+                <section>
+                    <form id="account" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3" role="alert"></div>
+                        <div class="form-floating mb-3">
+                            <input asp-for="Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                            <label asp-for="Email" class="form-label"></label>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input asp-for="Password" type="password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Password" />
+                            <label asp-for="Password" class="form-label"></label>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" asp-for="RememberMe" />
+                                <label class="form-check-label" asp-for="RememberMe">
+                                    @Html.DisplayNameFor(m => m.RememberMe)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button id="login-submit" type="submit" class="w-100 btn btn-primary btn-lg fw-bold">Đăng nhập</button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
