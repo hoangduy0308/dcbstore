@@ -5,28 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - DCBStore Admin</title>
     
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     
-    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
-    <!-- Custom Admin CSS -->
     <style>
         :root {
-            --sidebar-bg: #111827; /* Gray 900 */
-            --sidebar-link-text: #9ca3af; /* Gray 400 */
-            --sidebar-link-hover-bg: #374151; /* Gray 700 */
+            --sidebar-bg: #111827;
+            --sidebar-link-text: #9ca3af;
+            --sidebar-link-hover-bg: #374151;
             --sidebar-link-active-text: #ffffff;
-            --main-bg: #f9fafb; /* Gray 50 */
-            --text-primary: #1f2937; /* Gray 800 */
-            --text-secondary: #6b7280; /* Gray 500 */
-            --accent-color: #3b82f6; /* Blue 500 */
+            --main-bg: #f9fafb;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --accent-color: #3b82f6;
         }
 
         body {
@@ -81,7 +77,7 @@
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: .05em;
-            color: #4b5563; /* Gray 600 */
+            color: #4b5563;
             padding: 0.5rem 1.5rem;
             margin-top: 1rem;
         }
@@ -93,7 +89,7 @@
         
         .top-header {
             background-color: #fff;
-            border-bottom: 1px solid #e5e7eb; /* Gray 200 */
+            border-bottom: 1px solid #e5e7eb;
         }
         
         .content-card {
@@ -102,7 +98,6 @@
             box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
         }
 
-        /* Responsive */
         @@media (max-width: 768px) {
             .sidebar {
                 width: 0;
@@ -118,7 +113,6 @@
 
     @if (User.Identity != null && User.Identity.IsAuthenticated)
     {
-        @* --- BỐ CỤC KHI ĐÃ ĐĂNG NHẬP (CÓ SIDEBAR) --- *@
         <div class="d-flex">
             <aside class="sidebar vh-100 d-flex flex-column">
                 <a class="navbar-brand" asp-area="Admin" asp-controller="Home" asp-action="Index">DCBStore</a>
@@ -126,19 +120,19 @@
                 <ul class="nav flex-column flex-grow-1">
                     <li class="sidebar-heading"><span>Menu</span></li>
                     <li class="nav-item">
-                        <a class="nav-link" asp-area="Admin" asp-controller="Home" asp-action="Index">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Home" ? "active" : "")" asp-area="Admin" asp-controller="Home" asp-action="Index">
                             <i class="fas fa-tachometer-alt fa-fw"></i>
                             Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" asp-area="Admin" asp-controller="Products" asp-action="Index">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Products" ? "active" : "")" asp-area="Admin" asp-controller="Products" asp-action="Index">
                             <i class="fas fa-box-open fa-fw"></i>
                             Sản phẩm
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Orders" ? "active" : "")" asp-area="Admin" asp-controller="Orders" asp-action="Index">
                             <i class="fas fa-file-invoice-dollar fa-fw"></i>
                             Đơn hàng
                         </a>
@@ -166,10 +160,6 @@
                 </header>
 
                 <main class="flex-grow-1 p-4 p-md-5" style="overflow-y: auto;">
-                    <div class="border-bottom pb-3 mb-4">
-                        <h1 class="h2 fw-bold">@ViewData["Title"]</h1>
-                    </div>
-                    
                     <div class="content-card p-4">
                         @RenderBody()
                     </div>
@@ -179,7 +169,6 @@
     }
     else
     {
-        @* --- BỐ CỤC KHI CHƯA ĐĂNG NHẬP (CHỈ HIỂN THỊ NỘI DUNG CHÍNH) --- *@
         @RenderBody()
     }
 
@@ -189,4 +178,3 @@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
-

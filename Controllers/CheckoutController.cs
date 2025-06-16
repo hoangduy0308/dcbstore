@@ -13,10 +13,10 @@ namespace DCBStore.Controllers
     public class CheckoutController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private const string CartSessionKey = "Cart";
 
-        public CheckoutController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
+        public CheckoutController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;
@@ -62,8 +62,8 @@ namespace DCBStore.Controllers
 
             order.UserId = user.Id;
             order.OrderDate = DateTime.Now;
-            order.TotalAmount = cart.Sum(item => item.Total);
-            order.Status = "Processing";
+            order.Total = cart.Sum(item => item.Total);
+            order.Status = OrderStatus.Pending;
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();

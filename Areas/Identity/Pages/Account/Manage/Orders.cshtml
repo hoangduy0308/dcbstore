@@ -1,0 +1,89 @@
+@page
+@model OrdersModel
+@using DCBStore.Models
+@{
+    ViewData["Title"] = "Đơn Hàng Của Tôi";
+    ViewData["ActivePage"] = "Orders";
+}
+
+<div class="account-content-wrapper">
+    <div class="account-content-header">
+        <h4>@ViewData["Title"]</h4>
+        <p>Theo dõi và quản lý các đơn hàng đã đặt</p>
+    </div>
+
+    <hr class="account-content-divider">
+
+    @if (Model.Orders != null && Model.Orders.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Mã Đơn Hàng</th>
+                        <th scope="col">Ngày Đặt</th>
+                        <th scope="col">Trạng Thái</th>
+                        <th scope="col" class="text-end">Tổng Tiền</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.Orders)
+                    {
+                        <tr>
+                            <th scope="row">#@order.Id</th>
+                            <td>@order.OrderDate.ToShortDateString()</td>
+                            @{
+                                var statusText = "";
+                                var statusClass = "";
+                                switch (order.Status)
+                                {
+                                    case OrderStatus.Pending:
+                                        statusText = "Chờ xử lý";
+                                        statusClass = "bg-warning";
+                                        break;
+                                    case OrderStatus.Shipped:
+                                        statusText = "Đang giao";
+                                        statusClass = "bg-info";
+                                        break;
+                                    case OrderStatus.Completed:
+                                        statusText = "Hoàn thành";
+                                        statusClass = "bg-success";
+                                        break;
+                                    case OrderStatus.Cancelled:
+                                        statusText = "Đã hủy";
+                                        statusClass = "bg-secondary";
+                                        break;
+                                    default:
+                                        statusText = "Không xác định";
+                                        statusClass = "bg-light text-dark";
+                                        break;
+                                }
+                            }
+                            <td><span class="badge @statusClass">@statusText</span></td>
+                            <td class="text-end">@order.Total.ToString("N0") đ</td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="#" class="btn btn-sm btn-outline-primary">Xem Chi Tiết</a>
+                                    @if (order.Status == OrderStatus.Pending)
+                                    {
+                                        <form method="post" asp-page-handler="Cancel" asp-route-orderId="@order.Id" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Hủy Đơn</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center p-4">
+            <p>Bạn chưa có đơn hàng nào.</p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-shopee">Bắt đầu mua sắm</a>
+        </div>
+    }
+</div>

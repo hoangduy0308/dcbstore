@@ -29,11 +29,11 @@
             <i class="fa-solid fa-key fa-fw me-2 icon-blue"></i>
             <span>Đổi Mật Khẩu</span>
         </a>
-        <a asp-page="#" class="nav-item">
+        <a asp-page="./Orders" class="nav-item @ManageNavPages.OrdersNavClass(ViewContext)">
             <i class="fa-solid fa-clipboard-list fa-fw me-2 icon-orange"></i>
             <span>Đơn Mua</span>
         </a>
-         <a asp-page="./TwoFactorAuthentication" class="nav-item @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)">
+        <a asp-page="./TwoFactorAuthentication" class="nav-item @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)">
             <i class="fa-solid fa-shield-halved fa-fw me-2 icon-orange"></i>
             <span>Bảo Mật 2 Lớp</span>
         </a>
