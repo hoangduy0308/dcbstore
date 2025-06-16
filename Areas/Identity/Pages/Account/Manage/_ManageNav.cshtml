@@ -1,15 +1,41 @@
-@inject SignInManager<IdentityUser> SignInManager
+@using DCBStore.Data
+@inject UserManager<ApplicationUser> UserManager
 @{
-    var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+    var user = await UserManager.GetUserAsync(User);
+    var displayName = user?.FullName ?? user?.UserName ?? "User";
 }
-<ul class="nav nav-pills flex-column">
-    <li class="nav-item"><a class="nav-link @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="./Index">Profile</a></li>
-    <li class="nav-item"><a class="nav-link @ManageNavPages.EmailNavClass(ViewContext)" id="email" asp-page="./Email">Email</a></li>
-    <li class="nav-item"><a class="nav-link @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">Password</a></li>
-    @if (hasExternalLogins)
-    {
-        <li id="external-logins" class="nav-item"><a id="external-login" class="nav-link @ManageNavPages.ExternalLoginsNavClass(ViewContext)" asp-page="./ExternalLogins">External logins</a></li>
-    }
-    <li class="nav-item"><a class="nav-link @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)" id="two-factor" asp-page="./TwoFactorAuthentication">Two-factor authentication</a></li>
-    <li class="nav-item"><a class="nav-link @ManageNavPages.PersonalDataNavClass(ViewContext)" id="personal-data" asp-page="./PersonalData">Personal data</a></li>
-</ul>
+
+<div class="account-nav-container">
+    <div class="account-nav-user-info">
+        <a asp-page="./Index" class="account-nav-avatar-link">
+            <div class="account-nav-avatar">
+                <img src="@(user?.AvatarUrl ?? "https://via.placeholder.com/48")" alt="User Avatar" />
+            </div>
+        </a>
+        <div class="account-nav-username">
+            <strong>@displayName</strong>
+            <a asp-page="./Index" class="edit-profile-link">
+                <i class="fa-solid fa-pencil me-1"></i>Sửa Hồ Sơ
+            </a>
+        </div>
+    </div>
+    <hr class="account-nav-divider">
+    <nav class="account-nav-menu">
+        <a asp-page="./Index" class="nav-item @ManageNavPages.IndexNavClass(ViewContext)">
+            <i class="fa-regular fa-user fa-fw me-2 icon-blue"></i>
+            <span>Hồ Sơ</span>
+        </a>
+        <a asp-page="./ChangePassword" class="nav-item @ManageNavPages.ChangePasswordNavClass(ViewContext)">
+            <i class="fa-solid fa-key fa-fw me-2 icon-blue"></i>
+            <span>Đổi Mật Khẩu</span>
+        </a>
+        <a asp-page="#" class="nav-item">
+            <i class="fa-solid fa-clipboard-list fa-fw me-2 icon-orange"></i>
+            <span>Đơn Mua</span>
+        </a>
+         <a asp-page="./TwoFactorAuthentication" class="nav-item @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)">
+            <i class="fa-solid fa-shield-halved fa-fw me-2 icon-orange"></i>
+            <span>Bảo Mật 2 Lớp</span>
+        </a>
+    </nav>
+</div>

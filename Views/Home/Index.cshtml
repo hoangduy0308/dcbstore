@@ -1,13 +1,11 @@
 ﻿@model IEnumerable<DCBStore.Models.Product>
 @{
     ViewData["Title"] = "Trang Chủ";
-    // Lấy thông tin phân trang từ ViewData mà Controller đã gửi qua
     int currentPage = (int)(ViewData["CurrentPage"] ?? 1);
     int totalPages = (int)(ViewData["TotalPages"] ?? 1);
     string currentFilter = ViewData["CurrentFilter"] as string;
 }
 
-@* Kế thừa các style để đảm bảo tính đồng bộ *@
 <style>
     .product-card {
         transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
@@ -16,7 +14,7 @@
 
     .product-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15)!important;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .15);
     }
 
     .product-card-img-container {
@@ -33,7 +31,7 @@
     .product-card-img-container img {
         height: 100%;
         width: 100%;
-        object-fit: contain !important;
+        object-fit: contain;
     }
 
     .add-to-cart-btn {
@@ -48,7 +46,7 @@
         color: white;
         padding: 1rem 1.5rem;
         border-radius: 0.5rem;
-        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.1);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .1);
         z-index: 1050;
         opacity: 0;
         visibility: hidden;
@@ -66,39 +64,24 @@
         border-radius: 0.25rem;
         margin: 0 0.25rem;
     }
+
     .pagination .page-item.active .page-link {
-        z-index: 3;
-        color: #fff;
         background-color: #0d6efd;
+        color: #fff;
         border-color: #0d6efd;
     }
 </style>
 
-<div class="container pt-5">
-    
+<div class="container py-5">
     <div class="text-center mb-5">
-        <h2 class="display-5 fw-bold">Sản phẩm Nổi bật</h2>
+        <h2 class="fw-bold display-6">Sản phẩm Nổi bật</h2>
         <p class="text-muted">Khám phá những sản phẩm được yêu thích nhất tại DCBStore</p>
-    </div>
-
-    <!-- === SỬA LỖI: Xóa câu lệnh @if, để thanh tìm kiếm luôn hiển thị === -->
-    <div class="row justify-content-center mb-5">
-        <div class="col-md-6">
-            <form asp-controller="Home" asp-action="Index" method="get">
-                <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Nhập tên sản phẩm để tìm kiếm..." name="SearchString" value="@ViewData["CurrentFilter"]">
-                    <button class="btn btn-primary" type="submit">
-                        <i class="fas fa-search"></i> Tìm kiếm
-                    </button>
-                </div>
-            </form>
-        </div>
     </div>
 
     @if (!Model.Any())
     {
         <div class="text-center py-5">
-            <p class="lead">Không tìm thấy sản phẩm nào phù hợp.</p>
+            <p class="lead">Không tìm thấy sản phẩm nào.</p>
         </div>
     }
     else
@@ -109,21 +92,20 @@
                 <div class="col">
                     <div class="card h-100 border-0 shadow-sm product-card">
                         <div class="product-card-img-container">
-                             <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id">
-                                <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name">
+                            <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id">
+                                <img src="@product.ImageUrl" alt="@product.Name" class="card-img-top">
                             </a>
                         </div>
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title h6">
-                                <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="text-dark text-decoration-none stretched-link">@product.Name</a>
+                                <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id"
+                                    class="text-dark text-decoration-none stretched-link">@product.Name</a>
                             </h5>
                             <p class="card-text small text-muted flex-grow-1">@product.Description</p>
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <p class="card-text fw-bold text-primary mb-0">@product.Price.ToString("N0") VNĐ</p>
-                                <button class="btn btn-outline-primary border-2 rounded-circle add-to-cart-btn" 
-                                        data-productid="@product.Id" 
-                                        title="Thêm vào giỏ hàng"
-                                        style="z-index: 2;">
+                                <button class="btn btn-outline-primary border-2 rounded-circle add-to-cart-btn"
+                                    data-productid="@product.Id" title="Thêm vào giỏ hàng" style="z-index: 2;">
                                     <i class="fas fa-cart-plus"></i>
                                 </button>
                             </div>
@@ -133,42 +115,39 @@
             }
         </div>
 
-        <nav aria-label="Product navigation" class="mt-5 d-flex justify-content-center">
-            <ul class="pagination">
-                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                    <a class="page-link" asp-action="Index"
-                       asp-route-pageNumber="@(currentPage - 1)"
-                       asp-route-searchString="@currentFilter">
-                        <span>&laquo;</span>
-                    </a>
-                </li>
-                
-                @for (int i = 1; i <= totalPages; i++)
-                {
-                    <li class="page-item @(i == currentPage ? "active" : "")">
-                        <a class="page-link" asp-action="Index"
-                           asp-route-pageNumber="@i"
-                           asp-route-searchString="@currentFilter">@i</a>
+        <!-- PHÂN TRANG -->
+        @if (totalPages > 1)
+        {
+            <nav class="mt-5 d-flex justify-content-center" aria-label="Product navigation">
+                <ul class="pagination">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage - 1)"
+                            asp-route-searchString="@currentFilter">&laquo;</a>
                     </li>
-                }
 
-                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                     <a class="page-link" asp-action="Index"
-                       asp-route-pageNumber="@(currentPage + 1)"
-                       asp-route-searchString="@currentFilter">
-                        <span>&raquo;</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-pageNumber="@i"
+                                asp-route-searchString="@currentFilter">@i</a>
+                        </li>
+                    }
+
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)"
+                            asp-route-searchString="@currentFilter">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        }
     }
 </div>
 
+<!-- Toast Notification -->
 <div id="toast-notification">
     <i class="fas fa-check-circle me-2"></i>
     <span id="toast-message"></span>
 </div>
-
 
 @section Scripts {
     <script>
@@ -189,26 +168,28 @@
                 button.addEventListener('click', function (event) {
                     event.preventDefault();
                     event.stopPropagation();
+
                     const productId = this.dataset.productid;
+
                     fetch(`/Cart/AddToCart?productId=${productId}`, {
                         method: 'POST',
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const cartCountSpan = document.getElementById('cart-item-count');
-                            if(cartCountSpan) {
-                                cartCountSpan.innerText = data.newCartCount;
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                const cartCountSpan = document.getElementById('cart-item-count');
+                                if (cartCountSpan) {
+                                    cartCountSpan.innerText = data.newCartCount;
+                                }
+                                showToast(data.message);
+                            } else {
+                                showToast('Lỗi: ' + data.message);
                             }
-                            showToast(data.message);
-                        } else {
-                            showToast('Lỗi: ' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Lỗi khi thêm vào giỏ hàng:', error);
-                        showToast('Đã có lỗi xảy ra, vui lòng thử lại.');
-                    });
+                        })
+                        .catch(error => {
+                            console.error('Lỗi khi thêm vào giỏ hàng:', error);
+                            showToast('Đã có lỗi xảy ra, vui lòng thử lại.');
+                        });
                 });
             });
         });

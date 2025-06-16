@@ -1,17 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using DCBStore.Data;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication; 
+using Microsoft.AspNetCore.Authentication;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// --- Bắt đầu vùng cấu hình dịch vụ ---
-
-// 1. Cấu hình kết nối Cơ sở dữ liệu
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// 2. Cấu hình dịch vụ Session cho Giỏ hàng
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -20,36 +17,31 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// 3. Cấu hình dịch vụ Identity cho Tài khoản người dùng
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// 4. Cấu hình các dịch vụ xác thực bên ngoài (Google)
 builder.Services.AddAuthentication()
     .AddGoogle(options =>
     {
-        // Code này sẽ tự động đọc ClientId và ClientSecret từ user-secrets
         options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
         options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
     });
 
-// Cấu hình lại đường dẫn đăng nhập mặc định cho Admin
+/*
+// Đã vô hiệu hóa để sử dụng đường dẫn đăng nhập mặc định
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Admin/Account/Login";
     options.AccessDeniedPath = "/Admin/Account/AccessDenied";
 });
+*/
 
-// 5. Đăng ký các dịch vụ MVC
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
-// --- Kết thúc vùng cấu hình dịch vụ ---
-
 var app = builder.Build();
 
-// Tự động tạo Vai trò và tài khoản Admin khi ứng dụng chạy
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -64,7 +56,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -76,12 +67,10 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Quan trọng: Phải đặt các middleware này theo đúng thứ tự
-app.UseSession(); 
-app.UseAuthentication(); 
-app.UseAuthorization(); 
+app.UseSession();
+app.UseAuthentication();
+app.UseAuthorization();
 
-// Cấu hình các endpoint
 app.MapRazorPages();
 app.MapControllerRoute(
   name: "MyArea",

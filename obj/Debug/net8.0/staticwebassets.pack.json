@@ -13,6 +13,14 @@
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\avatars\\7e3f8ccd-1e95-4504-a8c8-98678eea357d_481712981_1183858823098434_6008174039502110759_n.jpg",
+      "PackagePath": "staticwebassets\\images\\avatars\\7e3f8ccd-1e95-4504-a8c8-98678eea357d_481712981_1183858823098434_6008174039502110759_n.jpg"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\avatars\\80a5c6c5-3a54-4fc5-9033-3d523bc91b14_GmeNfrMbYAAHWRk.jpg",
+      "PackagePath": "staticwebassets\\images\\avatars\\80a5c6c5-3a54-4fc5-9033-3d523bc91b14_GmeNfrMbYAAHWRk.jpg"
+    },
+    {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\chanel-no5.jpg",
       "PackagePath": "staticwebassets\\images\\chanel-no5.jpg"
     },
