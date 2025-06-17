@@ -5,7 +5,7 @@
 
 @if (SignInManager.IsSignedIn(User))
 {
-    <h6 class="dropdown-header">Xin chào, @UserManager.GetUserName(User)</h6>
+    <h6 class="dropdown-header" id="current-username">Xin chào, @UserManager.GetUserName(User)</h6>
     
     @if (User.IsInRole("Admin"))
     {

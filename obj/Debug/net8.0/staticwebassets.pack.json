@@ -37,16 +37,52 @@
       "PackagePath": "staticwebassets\\images\\nha-gia-kim.jpg"
     },
     {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\1ec9e873-6a6f-496e-b7cb-5c5d780f6f51_Figure_1.png",
+      "PackagePath": "staticwebassets\\images\\products\\1ec9e873-6a6f-496e-b7cb-5c5d780f6f51_Figure_1.png"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\2b405fc0-119b-49a8-b74e-28be1b1963d4_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp",
+      "PackagePath": "staticwebassets\\images\\products\\2b405fc0-119b-49a8-b74e-28be1b1963d4_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\5ed80bd6-04e0-429c-8cad-0ee8a8c8c839_Figure_1.png",
+      "PackagePath": "staticwebassets\\images\\products\\5ed80bd6-04e0-429c-8cad-0ee8a8c8c839_Figure_1.png"
+    },
+    {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\621dc3f1-6ee8-4966-a2f2-349b042c8611_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp",
       "PackagePath": "staticwebassets\\images\\products\\621dc3f1-6ee8-4966-a2f2-349b042c8611_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\99dcdfef-45f2-436d-ae9d-e0ae3752f1f6_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp",
+      "PackagePath": "staticwebassets\\images\\products\\99dcdfef-45f2-436d-ae9d-e0ae3752f1f6_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\aa4cdc46-d33d-4a75-b5f5-f509f8a60779_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg",
+      "PackagePath": "staticwebassets\\images\\products\\aa4cdc46-d33d-4a75-b5f5-f509f8a60779_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg"
     },
     {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\de848b7f-fcd7-43fa-9ab0-88adf7965531_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg",
       "PackagePath": "staticwebassets\\images\\products\\de848b7f-fcd7-43fa-9ab0-88adf7965531_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg"
     },
     {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\f3769503-41b8-4146-83a1-08de47c366a5_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp",
+      "PackagePath": "staticwebassets\\images\\products\\f3769503-41b8-4146-83a1-08de47c366a5_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp"
+    },
+    {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\sony-headphone.jpg",
       "PackagePath": "staticwebassets\\images\\sony-headphone.jpg"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\js\\admin-chat.js",
+      "PackagePath": "staticwebassets\\js\\admin-chat.js"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\js\\chat.js",
+      "PackagePath": "staticwebassets\\js\\chat.js"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\js\\signalr.min.js",
+      "PackagePath": "staticwebassets\\js\\signalr.min.js"
     },
     {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\js\\site.js",

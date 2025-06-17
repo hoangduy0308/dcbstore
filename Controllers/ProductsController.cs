@@ -21,10 +21,10 @@ namespace DCBStore.Controllers
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentCategory"] = categoryId;
 
-            // Bắt đầu câu truy vấn, bao gồm cả thông tin biến thể
+            // THAY ĐỔI: Include Images thay vì Variants
             var productsQuery = _context.Products
                                         .Include(p => p.Category)
-                                        .Include(p => p.Variants) // <-- CẬP NHẬT QUAN TRỌNG
+                                        .Include(p => p.Images) 
                                         .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
@@ -40,15 +40,14 @@ namespace DCBStore.Controllers
             ViewData["Categories"] = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
 
             int pageSize = 8;
-            int currentPage = pageNumber ?? 1;
             var count = await productsQuery.CountAsync();
             var products = await productsQuery
-                                    .Skip((currentPage - 1) * pageSize)
-                                    .Take(pageSize)
-                                    .ToListAsync();
+                                 .Skip(((pageNumber ?? 1) - 1) * pageSize)
+                                 .Take(pageSize)
+                                 .ToListAsync();
 
             ViewData["TotalPages"] = (int)Math.Ceiling(count / (double)pageSize);
-            ViewData["CurrentPage"] = currentPage;
+            ViewData["CurrentPage"] = pageNumber ?? 1;
 
             return View(products);
         }
@@ -60,13 +59,14 @@ namespace DCBStore.Controllers
                 return NotFound();
             }
             
-            // Cập nhật để lấy sản phẩm cùng với danh sách các biến thể của nó
+            // THAY ĐỔI: Include Images thay vì Variants
             var product = await _context.Products
                                         .Include(p => p.Category)
-                                        .Include(p => p.Variants) // <-- THAY THẾ .Images bằng .Variants
+                                        .Include(p => p.Images)
                                         .FirstOrDefaultAsync(p => p.Id == id);
 
-            if (product == null || !product.Variants.Any()) // Không hiển thị sản phẩm nếu nó không có biến thể nào
+            // THAY ĐỔI: Đơn giản hóa điều kiện kiểm tra
+            if (product == null)
             {
                 return NotFound();
             }

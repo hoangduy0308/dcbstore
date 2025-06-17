@@ -36,13 +36,11 @@
     @if (Model.Count > 0)
     {
         <div class="row g-5">
-            <!-- Cột danh sách sản phẩm -->
             <div class="col-lg-8">
                 <div id="cart-items-container">
                     @foreach (var item in Model)
                     {
-                        <!-- THAY ĐỔI: Sử dụng VariantId cho ID của phần tử -->
-                        <div class="card mb-3 border-0 shadow-sm" id="cart-item-@item.VariantId">
+                        <div class="card mb-3 border-0 shadow-sm" id="cart-item-@item.ProductId">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <img src="@(item.ImageUrl ?? "/images/placeholder.png")" alt="@item.ProductName" class="me-4 rounded" style="width: 100px; height: 100px; object-fit: contain;">
@@ -53,10 +51,9 @@
                                     </div>
                                     
                                     <div class="d-flex align-items-center mx-4">
-                                        <!-- THAY ĐỔI: Sử dụng data-variantid -->
-                                        <button class="btn btn-sm quantity-btn decrease-qty" data-variantid="@item.VariantId">-</button>
+                                        <button class="btn btn-sm quantity-btn decrease-qty" data-productid="@item.ProductId">-</button>
                                         <input type="text" value="@item.Quantity" class="form-control form-control-sm quantity-input" readonly>
-                                        <button class="btn btn-sm quantity-btn increase-qty" data-variantid="@item.VariantId">+</button>
+                                        <button class="btn btn-sm quantity-btn increase-qty" data-productid="@item.ProductId">+</button>
                                     </div>
 
                                     <div class="mx-4">
@@ -64,8 +61,7 @@
                                     </div>
                                     
                                     <div>
-                                        <!-- THAY ĐỔI: Sử dụng data-variantid -->
-                                        <button class="btn btn-link text-muted remove-item-btn" data-variantid="@item.VariantId" title="Xóa sản phẩm">
+                                        <button class="btn btn-link text-muted remove-item-btn" data-productid="@item.ProductId" title="Xóa sản phẩm">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </div>
@@ -76,7 +72,6 @@
                 </div>
             </div>
 
-            <!-- Cột tóm tắt đơn hàng (giữ nguyên) -->
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
@@ -130,60 +125,66 @@
             }
         }
 
-        cartContainer.addEventListener('click', function(e) {
-            const target = e.target.closest('.quantity-btn, .remove-item-btn');
-            if (!target) return;
+        if (cartContainer) {
+            cartContainer.addEventListener('click', function(e) {
+                const target = e.target.closest('.quantity-btn, .remove-item-btn');
+                if (!target) return;
 
-            // THAY ĐỔI: Lấy variantId thay vì productId
-            const variantId = target.dataset.variantid;
-            let actionUrl = '';
+                // THAY ĐỔI: Lấy productId thay vì variantId
+                const productId = target.dataset.productid;
+                let actionUrl = '';
 
-            if (target.matches('.increase-qty')) {
-                actionUrl = '/Cart/IncreaseQuantity';
-            } else if (target.matches('.decrease-qty')) {
-                actionUrl = '/Cart/DecreaseQuantity';
-            } else if (target.matches('.remove-item-btn')) {
-                actionUrl = '/Cart/RemoveFromCart';
-            }
-
-            if (!actionUrl) return;
-
-            // THAY ĐỔI: Gửi variantId trong URL
-            fetch(`${actionUrl}?variantId=${variantId}`, {
-                method: 'POST',
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                if (target.matches('.increase-qty')) {
+                    actionUrl = '/Cart/IncreaseQuantity';
+                } else if (target.matches('.decrease-qty')) {
+                    actionUrl = '/Cart/DecreaseQuantity';
+                } else if (target.matches('.remove-item-btn')) {
+                    actionUrl = '/Cart/RemoveFromCart';
                 }
-                return response.json();
-            })
-            .then(data => {
-                if(data.success) {
-                    updateSummary(data.newTotal);
-                    updateCartCount(data.newCartCount);
 
-                    // THAY ĐỔI: Tìm item row bằng variantId
-                    const itemRow = document.getElementById(`cart-item-${variantId}`);
-                    if (!itemRow) return;
+                if (!actionUrl) return;
 
-                    if(actionUrl.includes('RemoveFromCart') || data.itemRemoved) {
-                        itemRow.style.transition = 'opacity 0.5s ease';
-                        itemRow.style.opacity = '0';
-                        setTimeout(() => {
-                            itemRow.remove();
-                            if (document.querySelectorAll('[id^="cart-item-"]').length === 0) {
-                                window.location.reload();
-                            }
-                        }, 500);
-                    } else {
-                        itemRow.querySelector('.quantity-input').value = data.newQuantity;
-                        itemRow.querySelector('.item-total').textContent = data.newItemTotal.toLocaleString('vi-VN') + ' VNĐ';
+                // THAY ĐỔI: Gửi productId trong URL
+                fetch(`${actionUrl}?productId=${productId}`, {
+                    method: 'POST',
+                    headers: {
+                       // Thêm token để bảo mật cho các request POST từ JavaScript
+                       "RequestVerificationToken": document.getElementsByName('__RequestVerificationToken')[0]?.value
+                    },
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
                     }
-                }
-            })
-            .catch(error => console.error('Lỗi khi cập nhật giỏ hàng:', error));
-        });
+                    return response.json();
+                })
+                .then(data => {
+                    if(data.success) {
+                        updateSummary(data.newTotal);
+                        updateCartCount(data.newCartCount);
+
+                        // THAY ĐỔI: Tìm item row bằng productId
+                        const itemRow = document.getElementById(`cart-item-${productId}`);
+                        if (!itemRow) return;
+
+                        if(actionUrl.includes('RemoveFromCart') || data.itemRemoved) {
+                            itemRow.style.transition = 'opacity 0.5s ease';
+                            itemRow.style.opacity = '0';
+                            setTimeout(() => {
+                                itemRow.remove();
+                                if (document.querySelectorAll('[id^="cart-item-"]').length === 0) {
+                                    window.location.reload();
+                                }
+                            }, 500);
+                        } else {
+                            itemRow.querySelector('.quantity-input').value = data.newQuantity;
+                            itemRow.querySelector('.item-total').textContent = data.newItemTotal.toLocaleString('vi-VN') + ' VNĐ';
+                        }
+                    }
+                })
+                .catch(error => console.error('Lỗi khi cập nhật giỏ hàng:', error));
+            });
+        }
     });
     </script>
 }

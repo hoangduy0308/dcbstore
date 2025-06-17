@@ -1,10 +1,10 @@
+// File: Models/CartItem.cs
 namespace DCBStore.Models
 {
     public class CartItem
     {
-        // Thay thế ProductId bằng VariantId
-        public int VariantId { get; set; }
-        
+        // Thay thế VariantId bằng ProductId
+        public int ProductId { get; set; }
         public string ProductName { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public int Quantity { get; set; }

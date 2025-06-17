@@ -3,6 +3,7 @@ using DCBStore.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System; // Thêm để dùng Enum
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -22,6 +23,7 @@ namespace DCBStore.Areas.Admin.Controllers
         public async Task<IActionResult> Index()
         {
             var orders = await _context.Orders
+                                       .Include(o => o.User) // Câu lệnh này bây giờ sẽ hoạt động
                                        .OrderByDescending(o => o.OrderDate)
                                        .ToListAsync();
             return View(orders);
@@ -30,12 +32,10 @@ namespace DCBStore.Areas.Admin.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var order = await _context.Orders
+                                      .Include(o => o.User) // Câu lệnh này bây giờ sẽ hoạt động
                                       .Include(o => o.OrderDetails)
-                                      // --- THAY ĐỔI QUAN TRỌNG ---
-                                      // 1. Trỏ đến ProductVariant thay vì Product
-                                      // 2. Tải thêm thông tin của sản phẩm gốc (Product) từ ProductVariant
-                                      .ThenInclude(od => od.ProductVariant)
-                                        .ThenInclude(pv => pv.Product)
+                                          .ThenInclude(od => od.Product)
+                                              .ThenInclude(p => p.Images)
                                       .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
@@ -48,7 +48,7 @@ namespace DCBStore.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateStatus(int orderId, OrderStatus status)
+        public async Task<IActionResult> UpdateStatus(int orderId, OrderStatus status) // THAY ĐỔI: Nhận trực tiếp enum
         {
             var order = await _context.Orders.FindAsync(orderId);
             if (order == null)
@@ -56,7 +56,7 @@ namespace DCBStore.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            order.Status = status;
+            order.Status = status; // Gán trực tiếp enum
             _context.Update(order);
             await _context.SaveChangesAsync();
             

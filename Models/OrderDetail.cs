@@ -8,17 +8,17 @@ namespace DCBStore.Models
         public int OrderId { get; set; }
         
         // --- THAY ĐỔI QUAN TRỌNG ---
-        // Thay thế ProductId bằng ProductVariantId
-        public int ProductVariantId { get; set; }
+        // Thay thế ProductVariantId bằng ProductId
+        public int ProductId { get; set; }
         
         public int Quantity { get; set; }
 
         [Column(TypeName = "decimal(18, 2)")]
-        public decimal Price { get; set; }
+        public decimal Price { get; set; } // Giá tại thời điểm mua
 
         public Order? Order { get; set; }
         
-        // Trỏ đến biến thể sản phẩm cụ thể
-        public ProductVariant? ProductVariant { get; set; }
+        // Trỏ đến sản phẩm chung, không còn biến thể
+        public Product? Product { get; set; }
     }
 }

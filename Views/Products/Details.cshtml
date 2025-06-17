@@ -1,72 +1,78 @@
 @model DCBStore.Models.Product
 @{
     ViewData["Title"] = Model.Name;
-    // Lấy ra tất cả các lựa chọn màu, size, storage duy nhất
-    var availableColors = Model.Variants.Where(v => !string.IsNullOrEmpty(v.Color)).Select(v => v.Color).Distinct().ToList();
-    var availableSizes = Model.Variants.Where(v => !string.IsNullOrEmpty(v.Size)).Select(v => v.Size).Distinct().ToList();
-    var availableStorages = Model.Variants.Where(v => !string.IsNullOrEmpty(v.Storage)).Select(v => v.Storage).Distinct().ToList();
+    var firstImage = Model.Images?.FirstOrDefault()?.Url ?? "/images/placeholder.png";
 }
+
+<style>
+    .main-product-image {
+        height: 500px;
+        width: 100%;
+        object-fit: contain;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        cursor: pointer;
+    }
+    .thumbnail-list {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+    .thumbnail-item {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        border: 2px solid #dee2e6;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        transition: border-color 0.2s;
+    }
+    .thumbnail-item.active,
+    .thumbnail-item:hover {
+        border-color: var(--bs-primary);
+    }
+</style>
 
 <div class="container mt-5">
     <div class="row">
-        <!-- Cột Ảnh -->
         <div class="col-lg-6">
-            <img id="product-image" src="@(Model.Variants.FirstOrDefault()?.ImageUrl ?? "/images/placeholder.png")" class="img-fluid rounded border shadow-sm" style="height: 500px; width: 100%; object-fit: contain;" alt="@Model.Name">
+            <img id="main-product-image" src="@firstImage" class="img-fluid main-product-image" alt="@Model.Name">
+            
+            <div id="thumbnail-container" class="thumbnail-list">
+                @if (Model.Images != null && Model.Images.Count > 1)
+                {
+                    foreach (var image in Model.Images)
+                    {
+                        <img src="@image.Url" class="thumbnail-item @(image.Url == firstImage ? "active" : "")" data-large-src="@image.Url" alt="Thumbnail">
+                    }
+                }
+            </div>
         </div>
 
-        <!-- Cột Thông tin và Lựa chọn -->
         <div class="col-lg-6">
             <h1 class="display-5">@Model.Name</h1>
-            <p class="text-muted">Danh mục: @Model.Category.Name</p>
+            <p class="text-muted">Danh mục: <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@Model.CategoryId">@Model.Category.Name</a></p>
             <hr>
             <p class="lead">@Model.Description</p>
             
-            <h3 id="product-price" class="my-3" style="color: #d9534f;"></h3>
-            <p id="product-stock" class="text-muted"></p>
+            <h3 class="my-3" style="color: #d9534f;">@Model.Price.ToString("N0") VNĐ</h3>
+            
+            @if(Model.Stock > 0)
+            {
+                <p class="text-success fw-bold">Còn hàng (còn lại @Model.Stock sản phẩm)</p>
+            }
+            else
+            {
+                <p class="text-danger fw-bold">Hết hàng</p>
+            }
 
-            <form id="add-to-cart-form">
-                <!-- Các lựa chọn biến thể -->
-                @if(availableColors.Any())
-                {
-                    <div class="mb-3">
-                        <h5>Màu sắc</h5>
-                        <div class="btn-group" role="group" id="color-options">
-                            @foreach (var color in availableColors)
-                            {
-                                <button type="button" class="btn btn-outline-secondary" data-value="@color">@color</button>
-                            }
-                        </div>
-                    </div>
-                }
-                @if(availableSizes.Any())
-                {
-                    <div class="mb-3">
-                        <h5>Kích thước</h5>
-                        <div class="btn-group" role="group" id="size-options">
-                            @foreach (var size in availableSizes)
-                            {
-                                <button type="button" class="btn btn-outline-secondary" data-value="@size">@size</button>
-                            }
-                        </div>
-                    </div>
-                }
-                @if(availableStorages.Any())
-                {
-                    <div class="mb-3">
-                        <h5>Dung lượng</h5>
-                        <div class="btn-group" role="group" id="storage-options">
-                            @foreach (var storage in availableStorages)
-                            {
-                                <button type="button" class="btn btn-outline-secondary" data-value="@storage">@storage</button>
-                            }
-                        </div>
-                    </div>
-                }
-
-                <div class="d-grid gap-2 mt-4">
-                     <button type="submit" id="add-to-cart-btn" class="btn btn-primary btn-lg" disabled>
+            <form id="add-to-cart-form" class="mt-4">
+                <input type="hidden" name="productId" value="@Model.Id" />
+                <div class="d-grid gap-2">
+                     <button type="submit" id="add-to-cart-btn" class="btn btn-primary btn-lg" @(Model.Stock > 0 ? "" : "disabled")>
                         <i class="fas fa-cart-plus me-2"></i> 
-                        <span id="add-to-cart-text">Vui lòng chọn biến thể</span>
+                        @(Model.Stock > 0 ? "Thêm vào giỏ hàng" : "Hết hàng")
                     </button>
                 </div>
             </form>
@@ -77,120 +83,63 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Lấy dữ liệu tất cả các biến thể từ Model và chuyển thành JSON
-            const variants = @Json.Serialize(Model.Variants);
-            
-            // Các đối tượng trên trang
-            const colorOptions = document.getElementById('color-options');
-            const sizeOptions = document.getElementById('size-options');
-            const storageOptions = document.getElementById('storage-options');
-            const productImage = document.getElementById('product-image');
-            const productPrice = document.getElementById('product-price');
-            const productStock = document.getElementById('product-stock');
-            const addToCartBtn = document.getElementById('add-to-cart-btn');
-            const addToCartText = document.getElementById('add-to-cart-text');
-            const form = document.getElementById('add-to-cart-form');
+            // Xử lý thư viện ảnh
+            const mainImage = document.getElementById('main-product-image');
+            const thumbnailContainer = document.getElementById('thumbnail-container');
 
-            // Biến lưu trữ lựa chọn hiện tại của người dùng
-            let selectedColor = null;
-            let selectedSize = null;
-            let selectedStorage = null;
-            let selectedVariant = null;
-
-            // Hàm để tìm biến thể phù hợp
-            function findSelectedVariant() {
-                selectedVariant = variants.find(v => 
-                    (selectedColor ? v.color === selectedColor : true) &&
-                    (selectedSize ? v.size === selectedSize : true) &&
-                    (selectedStorage ? v.storage === selectedStorage : true)
-                );
-                updateUI();
-            }
-
-            // Hàm cập nhật giao diện
-            function updateUI() {
-                if (selectedVariant) {
-                    productImage.src = selectedVariant.imageUrl || '/images/placeholder.png';
-                    productPrice.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedVariant.price);
-                    
-                    if (selectedVariant.stock > 0) {
-                        productStock.textContent = `Còn lại: ${selectedVariant.stock} sản phẩm`;
-                        productStock.classList.remove('text-danger');
-                        addToCartBtn.disabled = false;
-                        addToCartText.textContent = 'Thêm vào giỏ hàng';
-                    } else {
-                        productStock.textContent = 'Hết hàng';
-                        productStock.classList.add('text-danger');
-                        addToCartBtn.disabled = true;
-                        addToCartText.textContent = 'Hết hàng';
-                    }
-                } else {
-                     // Nếu không tìm thấy biến thể (kết hợp không hợp lệ)
-                    productPrice.textContent = '';
-                    productStock.textContent = 'Vui lòng chọn các thuộc tính';
-                    addToCartBtn.disabled = true;
-                    addToCartText.textContent = 'Vui lòng chọn biến thể';
-                }
-            }
-            
-            // Gán sự kiện cho các nút lựa chọn
-            function setupOptionListeners(container, selectionVariable) {
-                if (!container) return;
-                container.addEventListener('click', function(e) {
-                    if (e.target.tagName === 'BUTTON') {
-                        // Bỏ chọn tất cả các nút khác trong nhóm
-                        Array.from(container.children).forEach(child => child.classList.remove('active'));
-                        // Chọn nút được click
-                        e.target.classList.add('active');
+            if (thumbnailContainer) {
+                thumbnailContainer.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('thumbnail-item')) {
+                        // Cập nhật ảnh chính
+                        mainImage.src = e.target.dataset.largeSrc;
                         
-                        // Cập nhật lựa chọn
-                        if (selectionVariable === 'color') selectedColor = e.target.dataset.value;
-                        if (selectionVariable === 'size') selectedSize = e.target.dataset.value;
-                        if (selectionVariable === 'storage') selectedStorage = e.target.dataset.value;
-
-                        findSelectedVariant();
+                        // Cập nhật trạng thái active
+                        thumbnailContainer.querySelectorAll('.thumbnail-item').forEach(thumb => thumb.classList.remove('active'));
+                        e.target.classList.add('active');
                     }
                 });
             }
 
-            setupOptionListeners(colorOptions, 'color');
-            setupOptionListeners(sizeOptions, 'size');
-            setupOptionListeners(storageOptions, 'storage');
+            // Xử lý thêm vào giỏ hàng
+            const form = document.getElementById('add-to-cart-form');
+            if(form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const productId = this.querySelector('input[name="productId"]').value;
+                    const btn = this.querySelector('#add-to-cart-btn');
+                    const originalText = btn.innerHTML;
+                    
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang thêm...';
+                    btn.disabled = true;
 
-            // Xử lý sự kiện submit form (thêm vào giỏ hàng)
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                if (!selectedVariant) return;
-
-                fetch(`/Cart/AddToCart?variantId=${selectedVariant.id}`, { // Gửi variantId thay vì productId
-                    method: 'POST'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        const cartCountSpan = document.getElementById('cart-item-count');
-                        if (cartCountSpan) {
-                            cartCountSpan.innerText = data.newCartCount;
+                    fetch(`/Cart/AddToCart?productId=${productId}`, {
+                        method: 'POST',
+                        headers: {
+                           "RequestVerificationToken": document.getElementsByName('__RequestVerificationToken')[0]?.value
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message); // Hoặc hiển thị toast notification
+                            const cartCountSpan = document.getElementById('cart-item-count');
+                            if (cartCountSpan) {
+                                cartCountSpan.innerText = data.newCartCount;
+                            }
+                        } else {
+                            alert(`Lỗi: ${data.message}`);
                         }
-                    } else {
-                        alert(`Lỗi: ${data.message}`);
-                    }
-                })
-                .catch(error => {
-                    console.error('Lỗi khi thêm vào giỏ hàng:', error);
-                    alert('Đã có lỗi xảy ra.');
+                    })
+                    .catch(error => {
+                        console.error('Lỗi khi thêm vào giỏ hàng:', error);
+                        alert('Đã có lỗi xảy ra.');
+                    })
+                    .finally(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = @(Model.Stock > 0 ? "false" : "true");
+                    });
                 });
-            });
-
-            // Khởi tạo trạng thái ban đầu
-            // Nếu chỉ có 1 biến thể, tự động chọn nó
-            if (variants.length === 1) {
-                selectedVariant = variants[0];
-                // Bạn có thể thêm logic để tự động active các nút nếu cần
-                updateUI();
-            } else {
-                updateUI();
             }
         });
     </script>

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
 using System;
-
+using Microsoft.EntityFrameworkCore; // Thêm
 namespace DCBStore.Controllers
 {
     [Authorize]
@@ -54,12 +54,24 @@ namespace DCBStore.Controllers
 
             checkoutViewModel.CartItems = cart;
 
-            if (!ModelState.IsValid)
+            // Lấy danh sách ProductId từ giỏ hàng để truy vấn một lần
+            var productIds = cart.Select(c => c.ProductId).ToList();
+            var productsInDb = await _context.Products
+                                             .Where(p => productIds.Contains(p.Id))
+                                             .ToListAsync();
+
+            // Kiểm tra tồn kho trước khi vào transaction
+            foreach (var item in cart)
             {
-                return View("Index", checkoutViewModel);
+                var product = productsInDb.FirstOrDefault(p => p.Id == item.ProductId);
+                if (product == null || product.Stock < item.Quantity)
+                {
+                    TempData["ErrorMessage"] = $"Sản phẩm '{item.ProductName}' không đủ số lượng tồn kho hoặc không còn tồn tại.";
+                    return RedirectToAction("Index", "Cart");
+                }
             }
-            
-            // --- BẮT ĐẦU LOGIC CẬP NHẬT TỒN KHO VÀ ĐƠN HÀNG ---
+
+
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
@@ -69,30 +81,23 @@ namespace DCBStore.Controllers
                 order.UserId = user.Id;
                 order.OrderDate = DateTime.Now;
                 order.Total = cart.Sum(item => item.Total);
-                order.Status = OrderStatus.Pending;
+                order.Status = OrderStatus.Pending; // Sửa lại nếu bạn dùng Enum
 
                 _context.Orders.Add(order);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(); // Lưu để lấy OrderId
 
                 foreach (var item in cart)
                 {
-                    // Lấy biến thể từ DB để kiểm tra tồn kho lần cuối
-                    var variant = await _context.ProductVariants.FindAsync(item.VariantId);
-                    if (variant == null || variant.Stock < item.Quantity)
-                    {
-                        // Nếu sản phẩm hết hàng hoặc không đủ, hủy giao dịch và báo lỗi
-                        await transaction.RollbackAsync();
-                        TempData["ErrorMessage"] = $"Sản phẩm '{item.ProductName}' không đủ số lượng tồn kho.";
-                        return RedirectToAction("Index", "Cart");
-                    }
+                    // Lấy lại sản phẩm từ danh sách đã truy vấn
+                    var product = productsInDb.FirstOrDefault(p => p.Id == item.ProductId);
                     
                     // Trừ số lượng tồn kho
-                    variant.Stock -= item.Quantity;
+                    product.Stock -= item.Quantity;
 
                     var orderDetail = new OrderDetail
                     {
                         OrderId = order.Id,
-                        ProductVariantId = item.VariantId, // <-- SỬ DỤNG VARIANT ID
+                        ProductId = item.ProductId, // Sửa thành ProductId
                         Quantity = item.Quantity,
                         Price = item.Price
                     };

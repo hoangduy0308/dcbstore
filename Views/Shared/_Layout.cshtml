@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using DCBStore.Data
+@inject SignInManager<ApplicationUser> SignInManager
+
+<!DOCTYPE html>
 <html lang="vi">
 
 <head>
@@ -11,61 +15,50 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-        xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
+          integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8f9fa;
         }
-
         .navbar-brand {
             font-weight: 700;
             letter-spacing: .5px;
         }
-
         .nav-link {
             font-weight: 500;
         }
-
         .main-container {
             min-height: 70vh;
         }
-
         .footer-custom {
             background: linear-gradient(to right, #007bff, #00c6ff);
         }
-
         .footer-link {
             color: #e9ecef;
             text-decoration: none;
             transition: color 0.2s;
         }
-
         .footer-link:hover {
             color: #ffd700;
         }
-
         .footer-icon {
             font-size: 1.25rem;
             color: white;
             transition: color 0.3s;
         }
-
         .footer-icon:hover {
             color: #ffd700;
         }
-
         .dropdown-menu {
             border-radius: 0.75rem;
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .15) !important;
         }
-
         .nav-search {
             min-width: 300px;
         }
-
         .hero-section {
             background: linear-gradient(to right, #007bff, #00c6ff);
             color: white;
@@ -73,33 +66,95 @@
             border-bottom-right-radius: 50px;
             overflow: hidden;
         }
-
         .hero-title {
             font-size: 3rem;
             font-weight: 800;
         }
-
         .hero-subtitle {
             font-size: 1.2rem;
             opacity: 0.95;
             max-width: 600px;
         }
-
         .hero-image {
             max-height: 300px;
             animation: float 4s ease-in-out infinite;
         }
-
         @@keyframes float {
-
             0%,
             100% {
                 transform: translateY(0px);
             }
-
             50% {
                 transform: translateY(-10px);
             }
+        }
+        .chat-widget-button {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--bs-primary);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            z-index: 999;
+        }
+        .chat-widget-button:hover {
+            transform: scale(1.1);
+        }
+        .chat-window {
+            position: fixed;
+            bottom: 100px;
+            right: 25px;
+            width: 350px;
+            max-width: 90%;
+            height: 500px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.95) translateY(10px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease-in-out;
+            z-index: 1000;
+        }
+        .chat-window.show {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+        .chat-header {
+            background-color: var(--bs-primary);
+            color: white;
+            padding: 1rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+        .chat-body {
+            flex-grow: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background-color: #f4f7f9;
+        }
+        .chat-footer {
+            padding: 0.75rem;
+            background-color: #fff;
+            border-top: 1px solid #dee2e6;
         }
     </style>
 </head>
@@ -108,54 +163,44 @@
     <header>
         <nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top py-3">
             <div class="container">
-                <!-- Logo -->
                 <a class="navbar-brand fw-bold fs-4 text-primary" asp-area="" asp-controller="Home" asp-action="Index">
                     <i class="fas fa-store"></i> DCBStore
                 </a>
-
-                <!-- Toggle button for mobile -->
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
+                        data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-
-                <!-- Navbar content -->
                 <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
-                    <!-- Left menu -->
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link fw-semibold" asp-controller="Home" asp-action="Index">Trang Chủ</a>
+                            <a class="nav-link fw-semibold" asp-area="" asp-controller="Home" asp-action="Index">Trang Chủ</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link fw-semibold" asp-controller="Products" asp-action="Index">Sản Phẩm</a>
+                            <a class="nav-link fw-semibold" asp-area="" asp-controller="Products" asp-action="Index">Sản Phẩm</a>
                         </li>
                     </ul>
-
-                    <!-- Center Search -->
                     <form asp-controller="Products" asp-action="Index" method="get" class="d-flex me-3 nav-search"
-                        role="search">
+                          role="search">
                         <input class="form-control me-2 rounded-pill shadow-sm px-3" type="search" name="SearchString"
-                            placeholder="Tìm kiếm sản phẩm..." aria-label="Search" value="@ViewData["CurrentFilter"]">
+                               placeholder="Tìm kiếm sản phẩm..." aria-label="Search" value="@ViewData["CurrentFilter"]">
                         <button class="btn btn-outline-primary rounded-pill px-3" type="submit">
                             <i class="fas fa-search"></i>
                         </button>
                     </form>
                     <div class="d-flex align-items-center gap-4">
-                        <!-- Cart Icon -->
                         <a asp-controller="Cart" asp-action="Index" class="position-relative text-decoration-none"
-                            title="Giỏ hàng">
+                           title="Giỏ hàng">
                             <i class="fas fa-shopping-cart fs-5 text-dark"></i>
                             <span class="badge bg-danger rounded-circle position-absolute" id="cart-item-count"
-                                style="top: -5px; right: -10px; font-size: 0.65rem; min-width: 18px; height: 18px; line-height: 1.3;">
+                                  style="top: -5px; right: -10px; font-size: 0.65rem; min-width: 18px; height: 18px; line-height: 1.3;">
                                 0
                             </span>
                         </a>
-
                         <div class="dropdown">
                             <a href="#" class="d-flex align-items-center text-decoration-none text-dark"
-                                id="accountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
-                                title="Tài khoản">
+                               id="accountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                               title="Tài khoản">
                                 <i class="fas fa-user-circle fs-4"></i>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 mt-2 p-2"
@@ -164,57 +209,68 @@
                             </ul>
                         </div>
                     </div>
-
                 </div>
             </div>
         </nav>
     </header>
 
-
     @if (ViewContext.RouteData.Values["controller"]?.ToString() == "Home" &&
-        ViewContext.RouteData.Values["action"]?.ToString() == "Index" &&
-        string.IsNullOrEmpty(ViewData["CurrentFilter"] as string))
+         ViewContext.RouteData.Values["action"]?.ToString() == "Index" &&
+         string.IsNullOrEmpty(ViewData["CurrentFilter"] as string))
     {
         <section class="hero-section">
             <div class="container py-5">
                 <div class="row align-items-center">
-                    <!-- Left content -->
                     <div class="col-md-6 text-white text-center text-md-start">
                         <h1 class="hero-title">Chào mừng đến với <span class="text-warning">DCBStore</span></h1>
-                        <p class="hero-subtitle mt-3">Khám phá thế giới mua sắm hiện đại với hàng ngàn sản phẩm chất lượng,
-                            giá cả hợp lý và giao hàng nhanh chóng.</p>
+                        <p class="hero-subtitle mt-3">Khám phá thế giới mua sắm hiện đại với hàng ngàn sản phẩm chất lượng, giá cả hợp lý và giao hàng nhanh chóng.</p>
                         <a href="@Url.Action("Index", "Products")" class="btn btn-warning btn-lg mt-4 shadow">
                             <i class="fas fa-shopping-bag me-2"></i> Bắt đầu mua sắm
                         </a>
                     </div>
-
-                    <!-- Right image -->
                     <div class="col-md-6 text-center mt-4 mt-md-0">
-                        <img src="https://cdn-icons-png.flaticon.com/512/891/891462.png" alt="Shopping"
-                            class="hero-image img-fluid" />
+                        <img src="https://cdn-icons-png.flaticon.com/512/891/891462.png" alt="Shopping" class="hero-image img-fluid" />
                     </div>
                 </div>
             </div>
         </section>
     }
 
-
     <div class="container main-container mt-5">
         <main role="main" class="pb-5">
             @RenderBody()
         </main>
     </div>
+
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <div id="chat-toggle-button" class="chat-widget-button">
+            <i class="fas fa-comment-dots"></i>
+        </div>
+        <div id="chat-window" class="chat-window">
+            <div class="chat-header">
+                <span>Hỗ trợ trực tuyến</span>
+                <button type="button" class="btn-close" id="chat-close-button"></button>
+            </div>
+            <div id="chat-messages-list" class="chat-body">
+                <div class="text-center text-muted p-3">Bắt đầu trò chuyện với chúng tôi!</div>
+            </div>
+            <div class="chat-footer">
+                <form id="chat-form" class="d-flex">
+                    <input type="text" id="chat-message-input" class="form-control" placeholder="Nhập tin nhắn..." autocomplete="off">
+                    <button type="submit" class="btn btn-primary ms-2"><i class="fas fa-paper-plane"></i></button>
+                </form>
+            </div>
+        </div>
+    }
+
     <footer class="footer-custom text-white pt-5 pb-4">
         <div class="container">
             <div class="row">
-                <!-- Thương hiệu -->
                 <div class="col-md-4 mb-4">
                     <h4 class="fw-bold text-warning">DCBStore</h4>
-                    <p class="text-light">Nền tảng thương mại điện tử uy tín, mang đến trải nghiệm mua sắm tuyệt vời cho
-                        mọi nhà.</p>
+                    <p class="text-light">Nền tảng thương mại điện tử uy tín, mang đến trải nghiệm mua sắm tuyệt vời cho mọi nhà.</p>
                 </div>
-
-                <!-- Sản phẩm -->
                 <div class="col-md-2 mb-4">
                     <h6 class="text-uppercase fw-bold text-warning mb-3">Sản phẩm</h6>
                     <ul class="list-unstyled">
@@ -223,8 +279,6 @@
                         <li><a href="#" class="footer-link">Bán chạy</a></li>
                     </ul>
                 </div>
-
-                <!-- Hỗ trợ -->
                 <div class="col-md-3 mb-4">
                     <h6 class="text-uppercase fw-bold text-warning mb-3">Hỗ trợ</h6>
                     <ul class="list-unstyled">
@@ -233,8 +287,6 @@
                         <li><a href="#" class="footer-link">Hướng dẫn mua hàng</a></li>
                     </ul>
                 </div>
-
-                <!-- MXH -->
                 <div class="col-md-3 mb-4">
                     <h6 class="text-uppercase fw-bold text-warning mb-3">Kết nối</h6>
                     <div class="d-flex gap-3">
@@ -244,22 +296,42 @@
                     </div>
                 </div>
             </div>
-
             <hr class="border-light">
-
             <p class="text-center text-light mb-0">
                 &copy; @DateTime.Now.Year - <span class="text-warning fw-semibold">DCBStore</span>. All rights reserved.
             </p>
         </div>
     </footer>
 
-
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/signalr.min.js"></script>
+    <script src="~/js/chat.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
-</body>
 
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const chatWindow = document.getElementById('chat-window');
+                const toggleButton = document.getElementById('chat-toggle-button');
+                const closeButton = document.getElementById('chat-close-button');
+
+                if (toggleButton) {
+                    toggleButton.addEventListener('click', function () {
+                        chatWindow.classList.toggle('show');
+                    });
+                }
+                
+                if (closeButton) {
+                    closeButton.addEventListener('click', function () {
+                        chatWindow.classList.remove('show');
+                    });
+                }
+            });
+        </script>
+    }
+</body>
 </html>

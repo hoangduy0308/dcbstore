@@ -5,22 +5,43 @@
 }
 
 <h1>@ViewData["Title"]</h1>
-<h4>Bước 1: Nhập thông tin chung của sản phẩm</h4>
 <hr />
 <div class="row">
-    <div class="col-md-6">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="col-md-8">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            
+            @* THAY ĐỔI: Chuyển "ModelOnly" thành "All" để hiển thị mọi lỗi validation *@
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
             <div class="form-group mb-3">
                 <label asp-for="Name" class="control-label">Tên sản phẩm</label>
                 <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                     <div class="form-group mb-3">
+                        <label asp-for="Price" class="control-label">Giá</label>
+                        <input asp-for="Price" class="form-control" type="number" />
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="Stock" class="control-label">Số lượng tồn kho</label>
+                        <input asp-for="Stock" class="form-control" type="number" />
+                        <span asp-validation-for="Stock" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
             <div class="form-group mb-3">
                 <label asp-for="Description" class="control-label">Mô tả chi tiết</label>
                 <textarea asp-for="Description" class="form-control" rows="5"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
+            
             <div class="form-group mb-3">
                 <label asp-for="CategoryId" class="control-label">Danh mục</label>
                 <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryId">
@@ -28,9 +49,15 @@
                 </select>
                 <span asp-validation-for="CategoryId" class="text-danger"></span>
             </div>
+
+            <div class="form-group mb-3">
+                <label class="control-label">Hình ảnh sản phẩm</label>
+                <input type="file" name="imageFiles" class="form-control" multiple />
+            </div>
+
             <div class="form-group">
-                <input type="submit" value="Lưu và tiếp tục thêm biến thể" class="btn btn-primary" />
-                 <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+                <input type="submit" value="Tạo mới sản phẩm" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
             </div>
         </form>
     </div>

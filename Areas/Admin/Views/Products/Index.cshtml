@@ -17,7 +17,9 @@
         <tr>
             <th>Tên sản phẩm</th>
             <th>Danh mục</th>
-            <th class="text-center">Số lượng biến thể</th>
+            <th class="text-end">Giá</th>
+            <th class="text-center">Tồn kho</th>
+            <th class="text-center">Số lượng ảnh</th>
             <th style="width: 200px;"></th>
         </tr>
     </thead>
@@ -27,13 +29,18 @@
             <tr>
                 <td>@Html.DisplayFor(modelItem => item.Name)</td>
                 <td>@Html.DisplayFor(modelItem => item.Category.Name)</td>
-                <td class="text-center">@item.Variants.Count()</td>
+                <td class="text-end">@item.Price.ToString("N0") đ</td>
+                <td class="text-center">@item.Stock</td>
+                <td class="text-center">@item.Images.Count()</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">
-                        <i class="fas fa-edit me-1"></i> Quản lý
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm" title="Sửa">
+                        <i class="fas fa-edit"></i>
                     </a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">
-                        <i class="fas fa-trash-alt me-1"></i> Xóa
+                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm" title="Chi tiết">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" title="Xóa">
+                        <i class="fas fa-trash-alt"></i>
                     </a>
                 </td>
             </tr>
