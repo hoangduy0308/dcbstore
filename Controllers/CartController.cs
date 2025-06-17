@@ -2,7 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using DCBStore.Data;
 using DCBStore.Models;
 using DCBStore.Helpers;
+using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace DCBStore.Controllers
 {
@@ -23,109 +26,108 @@ namespace DCBStore.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddToCart(int productId)
+        public async Task<IActionResult> AddToCart(int variantId)
         {
-            var product = _context.Products.FirstOrDefault(p => p.Id == productId);
-            if (product == null)
+            // Tìm biến thể cụ thể, bao gồm cả thông tin sản phẩm gốc
+            var variant = await _context.ProductVariants
+                                        .Include(v => v.Product)
+                                        .FirstOrDefaultAsync(v => v.Id == variantId);
+
+            if (variant == null)
             {
-                return NotFound(new { success = false, message = "Sản phẩm không tồn tại." });
+                return NotFound(new { success = false, message = "Phiên bản sản phẩm không tồn tại." });
             }
 
             var cart = HttpContext.Session.GetObjectFromJson<List<CartItem>>(CartSessionKey) ?? new List<CartItem>();
-            var cartItem = cart.FirstOrDefault(item => item.ProductId == productId);
+            var cartItem = cart.FirstOrDefault(item => item.VariantId == variantId);
 
-            if (cartItem == null)
+            if (cartItem != null) // Nếu biến thể đã có trong giỏ, tăng số lượng
             {
-                // Thêm mới, bao gồm cả ImageUrl
-                cart.Add(new CartItem 
-                { 
-                    ProductId = productId, 
-                    ProductName = product.Name, 
-                    Price = product.Price, 
-                    Quantity = 1,
-                    ImageUrl = product.ImageUrl // Thêm ImageUrl vào giỏ hàng
-                });
+                // Kiểm tra tồn kho trước khi tăng
+                if (cartItem.Quantity < variant.Stock)
+                {
+                    cartItem.Quantity++;
+                }
+                else
+                {
+                    return Ok(new { success = false, message = "Số lượng trong giỏ đã đạt tối đa." });
+                }
             }
-            else
+            else // Nếu chưa có, thêm mới vào giỏ
             {
-                cartItem.Quantity++;
+                // Kiểm tra tồn kho
+                if (variant.Stock > 0)
+                {
+                    // Tạo tên sản phẩm đầy đủ
+                    string fullName = variant.Product.Name;
+                    if (!string.IsNullOrEmpty(variant.Color)) fullName += $" - {variant.Color}";
+                    if (!string.IsNullOrEmpty(variant.Size)) fullName += $" - {variant.Size}";
+                    if (!string.IsNullOrEmpty(variant.Storage)) fullName += $" - {variant.Storage}";
+
+                    cart.Add(new CartItem 
+                    { 
+                        VariantId = variantId, 
+                        ProductName = fullName, 
+                        Price = variant.Price, 
+                        Quantity = 1,
+                        ImageUrl = variant.ImageUrl 
+                    });
+                }
+                else
+                {
+                     return Ok(new { success = false, message = "Sản phẩm đã hết hàng." });
+                }
             }
 
             HttpContext.Session.SetObjectAsJson(CartSessionKey, cart);
             var cartItemCount = cart.Sum(item => item.Quantity);
             return Ok(new { success = true, message = "Đã thêm sản phẩm vào giỏ hàng!", newCartCount = cartItemCount });
         }
-
-        // --- BẮT ĐẦU VÙNG CODE MỚI ---
-
-        // Action để xóa sản phẩm khỏi giỏ hàng
+        
+        // Các hàm Remove, Increase, Decrease sẽ cần được cập nhật để dùng variantId
         [HttpPost]
-        public IActionResult RemoveFromCart(int productId)
+        public IActionResult RemoveFromCart(int variantId)
         {
             var cart = HttpContext.Session.GetObjectFromJson<List<CartItem>>(CartSessionKey) ?? new List<CartItem>();
-            var itemToRemove = cart.FirstOrDefault(item => item.ProductId == productId);
+            var itemToRemove = cart.FirstOrDefault(item => item.VariantId == variantId);
             if (itemToRemove != null)
             {
                 cart.Remove(itemToRemove);
                 HttpContext.Session.SetObjectAsJson(CartSessionKey, cart);
             }
-            // Trả về tổng số tiền và số lượng mới để cập nhật giao diện
-            return Json(new { 
-                success = true, 
-                newTotal = cart.Sum(i => i.Total), 
-                newCartCount = cart.Sum(i => i.Quantity) 
-            });
+            return Json(new { success = true, newTotal = cart.Sum(i => i.Total), newCartCount = cart.Sum(i => i.Quantity) });
         }
 
-        // Action để tăng số lượng
         [HttpPost]
-        public IActionResult IncreaseQuantity(int productId)
+        public async Task<IActionResult> IncreaseQuantity(int variantId)
         {
             var cart = HttpContext.Session.GetObjectFromJson<List<CartItem>>(CartSessionKey) ?? new List<CartItem>();
-            var itemToUpdate = cart.FirstOrDefault(item => item.ProductId == productId);
+            var itemToUpdate = cart.FirstOrDefault(item => item.VariantId == variantId);
+            
             if (itemToUpdate != null)
             {
-                itemToUpdate.Quantity++;
-                HttpContext.Session.SetObjectAsJson(CartSessionKey, cart);
+                var variant = await _context.ProductVariants.FindAsync(variantId);
+                if (variant != null && itemToUpdate.Quantity < variant.Stock)
+                {
+                    itemToUpdate.Quantity++;
+                    HttpContext.Session.SetObjectAsJson(CartSessionKey, cart);
+                }
             }
-            return Json(new { 
-                success = true, 
-                newQuantity = itemToUpdate?.Quantity, 
-                newItemTotal = itemToUpdate?.Total, 
-                newTotal = cart.Sum(i => i.Total),
-                newCartCount = cart.Sum(i => i.Quantity) 
-            });
+            return Json(new { success = true, newQuantity = itemToUpdate?.Quantity, newItemTotal = itemToUpdate?.Total, newTotal = cart.Sum(i => i.Total), newCartCount = cart.Sum(i => i.Quantity) });
         }
 
-        // Action để giảm số lượng
         [HttpPost]
-        public IActionResult DecreaseQuantity(int productId)
+        public IActionResult DecreaseQuantity(int variantId)
         {
             var cart = HttpContext.Session.GetObjectFromJson<List<CartItem>>(CartSessionKey) ?? new List<CartItem>();
-            var itemToUpdate = cart.FirstOrDefault(item => item.ProductId == productId);
+            var itemToUpdate = cart.FirstOrDefault(item => item.VariantId == variantId);
             if (itemToUpdate != null)
             {
-                if (itemToUpdate.Quantity > 1)
-                {
-                    itemToUpdate.Quantity--;
-                }
-                else
-                {
-                    // Nếu số lượng là 1, xóa luôn sản phẩm
-                    cart.Remove(itemToUpdate);
-                }
+                if (itemToUpdate.Quantity > 1) itemToUpdate.Quantity--;
+                else cart.Remove(itemToUpdate);
                 HttpContext.Session.SetObjectAsJson(CartSessionKey, cart);
             }
-            return Json(new { 
-                success = true, 
-                newQuantity = itemToUpdate?.Quantity, 
-                newItemTotal = itemToUpdate?.Total, 
-                newTotal = cart.Sum(i => i.Total),
-                newCartCount = cart.Sum(i => i.Quantity),
-                itemRemoved = itemToUpdate == null || itemToUpdate.Quantity < 1 // Báo cho client biết item đã bị xóa
-            });
+            return Json(new { success = true, newQuantity = itemToUpdate?.Quantity, newItemTotal = itemToUpdate?.Total, newTotal = cart.Sum(i => i.Total), newCartCount = cart.Sum(i => i.Quantity), itemRemoved = itemToUpdate == null || itemToUpdate.Quantity < 1 });
         }
-
-        // --- KẾT THÚC VÙNG CODE MỚI ---
     }
 }

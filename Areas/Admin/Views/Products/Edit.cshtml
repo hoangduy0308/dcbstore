@@ -1,78 +1,102 @@
 @model DCBStore.Models.Product
 
 @{
-    ViewData["Title"] = "Chỉnh sửa Sản phẩm";
+    ViewData["Title"] = "Quản lý Sản phẩm và Biến thể";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="mb-0"><i class="fas fa-pencil-alt me-2"></i>@ViewData["Title"]</h3>
+    <h3 class="mb-0">@ViewData["Title"]</h3>
     <a asp-action="Index" class="btn btn-secondary">
         <i class="fas fa-arrow-left me-2"></i>Quay lại Danh sách
     </a>
 </div>
 
-<form asp-action="Edit" method="post">
-    <div class="row">
-        <div class="col-md-8">
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-            <input type="hidden" asp-for="Id" />
 
-            <div class="row mb-3">
-                <label asp-for="Name" class="col-sm-3 col-form-label">Tên sản phẩm</label>
-                <div class="col-sm-9">
-                    <input asp-for="Name" class="form-control" />
-                    <span asp-validation-for="Name" class="text-danger"></span>
-                </div>
+<div class="row">
+    <!-- Cột trái: Thông tin sản phẩm chung -->
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <h5>Thông tin chung</h5>
             </div>
-
-            <div class="row mb-3">
-                <label asp-for="Description" class="col-sm-3 col-form-label">Mô tả</label>
-                <div class="col-sm-9">
-                    <textarea asp-for="Description" class="form-control" rows="5"></textarea>
-                    <span asp-validation-for="Description" class="text-danger"></span>
-                </div>
+            <div class="card-body">
+                <form asp-action="Edit" asp-route-id="@Model.Id">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="Id" />
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label"></label>
+                        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="CategoryId" class="form-label"></label>
+                        <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryId"></select>
+                        <span asp-validation-for="CategoryId" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Lưu thông tin chung</button>
+                </form>
             </div>
-
-            <div class="row mb-3">
-                <label asp-for="Price" class="col-sm-3 col-form-label">Giá</label>
-                <div class="col-sm-9">
-                    <input asp-for="Price" class="form-control" />
-                    <span asp-validation-for="Price" class="text-danger"></span>
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label asp-for="ImageUrl" class="col-sm-3 col-form-label">Đường dẫn hình ảnh</label>
-                <div class="col-sm-9">
-                    <input asp-for="ImageUrl" class="form-control" />
-                    <span asp-validation-for="ImageUrl" class="text-danger"></span>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-sm-9 offset-sm-3">
-                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <h6>Ảnh hiện tại</h6>
-            @if (!string.IsNullOrEmpty(Model.ImageUrl))
-            {
-                <img src="@Model.ImageUrl" alt="Ảnh sản phẩm" class="img-fluid rounded border p-2" />
-            }
-            else
-            {
-                <div class="d-flex align-items-center justify-content-center bg-light rounded border" style="height: 200px;">
-                    <span>Không có ảnh</span>
-                </div>
-            }
         </div>
     </div>
-</form>
+
+    <!-- Cột phải: Quản lý các biến thể -->
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <h5>Các biến thể của sản phẩm</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Variants.Any())
+                {
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Thuộc tính</th>
+                                <th>Giá</th>
+                                <th>Tồn kho</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var variant in Model.Variants)
+                            {
+                                <tr>
+                                    <td>
+                                        @if(!string.IsNullOrEmpty(variant.Color)) { <span>Màu: @variant.Color</span><br/> }
+                                        @if(!string.IsNullOrEmpty(variant.Size)) { <span>Size: @variant.Size</span><br/> }
+                                        @if(!string.IsNullOrEmpty(variant.Storage)) { <span>Lưu trữ: @variant.Storage</span> }
+                                    </td>
+                                    <td>@variant.Price.ToString("N0")</td>
+                                    <td>@variant.Stock</td>
+                                    <td>
+                                        @* Chức năng sửa/xóa biến thể sẽ được thêm sau *@
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="text-muted">Sản phẩm này chưa có biến thể nào.</p>
+                }
+                
+                <hr/>
+                
+                @* Chúng ta sẽ thêm form tạo biến thể mới ở đây trong các bước sau *@
+                <p class="text-center">
+                    <a href="#" class="btn btn-success">Thêm biến thể mới</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }

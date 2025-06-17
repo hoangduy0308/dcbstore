@@ -1,0 +1,22 @@
+@model DCBStore.Models.Category
+
+@{
+    ViewData["Title"] = "Xóa Danh mục";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<h3>Bạn có chắc chắn muốn xóa danh mục này không?</h3>
+<div>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">Tên Danh mục</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.Name)</dd>
+    </dl>
+    
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <input type="submit" value="Xóa" class="btn btn-danger" /> |
+        <a asp-action="Index">Quay lại Danh sách</a>
+    </form>
+</div>

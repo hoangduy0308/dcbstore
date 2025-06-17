@@ -13,6 +13,10 @@
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\avatars\\0aa48152-b283-40af-97c1-b7c0f53c6e21_481712981_1183858823098434_6008174039502110759_n.jpg",
+      "PackagePath": "staticwebassets\\images\\avatars\\0aa48152-b283-40af-97c1-b7c0f53c6e21_481712981_1183858823098434_6008174039502110759_n.jpg"
+    },
+    {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\avatars\\7e3f8ccd-1e95-4504-a8c8-98678eea357d_481712981_1183858823098434_6008174039502110759_n.jpg",
       "PackagePath": "staticwebassets\\images\\avatars\\7e3f8ccd-1e95-4504-a8c8-98678eea357d_481712981_1183858823098434_6008174039502110759_n.jpg"
     },
@@ -31,6 +35,14 @@
     {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\nha-gia-kim.jpg",
       "PackagePath": "staticwebassets\\images\\nha-gia-kim.jpg"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\621dc3f1-6ee8-4966-a2f2-349b042c8611_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp",
+      "PackagePath": "staticwebassets\\images\\products\\621dc3f1-6ee8-4966-a2f2-349b042c8611_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\de848b7f-fcd7-43fa-9ab0-88adf7965531_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg",
+      "PackagePath": "staticwebassets\\images\\products\\de848b7f-fcd7-43fa-9ab0-88adf7965531_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg"
     },
     {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\sony-headphone.jpg",

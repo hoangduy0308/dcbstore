@@ -1,14 +1,20 @@
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace DCBStore.Models
 {
     public class Product
     {
         public int Id { get; set; }
-        public string? Name { get; set; }
+        
+        [Required]
+        public string Name { get; set; } = string.Empty;
+        
         public string? Description { get; set; }
-        public decimal Price { get; set; }
-        public string? ThumbnailUrl { get; set; }
-        public List<ProductImage> Images { get; set; } = new List<ProductImage>();
+        
+        public int CategoryId { get; set; }
+        public Category Category { get; set; } = null!;
+
+        public ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
     }
 }

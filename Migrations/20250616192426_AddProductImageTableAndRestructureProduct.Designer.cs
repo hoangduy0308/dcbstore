@@ -4,6 +4,7 @@ using DCBStore.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DCBStore.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250616192426_AddProductImageTableAndRestructureProduct")]
+    partial class AddProductImageTableAndRestructureProduct
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -162,7 +165,7 @@ namespace DCBStore.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Total")
-                        .HasColumnType("decimal(18, 2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(max)");
@@ -184,9 +187,9 @@ namespace DCBStore.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18, 2)");
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("ProductVariantId")
+                    b.Property<int>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
@@ -196,7 +199,7 @@ namespace DCBStore.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.HasIndex("ProductVariantId");
+                    b.HasIndex("ProductId");
 
                     b.ToTable("OrderDetails");
                 });
@@ -219,6 +222,13 @@ namespace DCBStore.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
@@ -231,32 +241,40 @@ namespace DCBStore.Migrations
                             Id = 1,
                             CategoryId = 1,
                             Description = "Laptop doanh nhân mạnh mẽ, bền bỉ.",
-                            Name = "Laptop ThinkPad T14"
+                            Name = "Laptop ThinkPad T14",
+                            Price = 25000000m,
+                            ThumbnailUrl = "/images/laptop-thinkpad.jpg"
                         },
                         new
                         {
                             Id = 2,
                             CategoryId = 2,
                             Description = "Cuốn sách bán chạy nhất mọi thời đại của Paulo Coelho.",
-                            Name = "Tiểu thuyết 'Nhà Giả Kim'"
+                            Name = "Tiểu thuyết 'Nhà Giả Kim'",
+                            Price = 69000m,
+                            ThumbnailUrl = "/images/nha-gia-kim.jpg"
                         },
                         new
                         {
                             Id = 3,
                             CategoryId = 3,
                             Description = "Hương thơm cổ điển và quyến rũ cho phái nữ.",
-                            Name = "Nước hoa Chanel No. 5"
+                            Name = "Nước hoa Chanel No. 5",
+                            Price = 3500000m,
+                            ThumbnailUrl = "/images/chanel-no5.jpg"
                         },
                         new
                         {
                             Id = 4,
                             CategoryId = 1,
                             Description = "Tai nghe chống ồn chủ động hàng đầu thế giới.",
-                            Name = "Tai nghe Sony WH-1000XM5"
+                            Name = "Tai nghe Sony WH-1000XM5",
+                            Price = 8500000m,
+                            ThumbnailUrl = "/images/sony-headphone.jpg"
                         });
                 });
 
-            modelBuilder.Entity("DCBStore.Models.ProductVariant", b =>
+            modelBuilder.Entity("DCBStore.Models.ProductImage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -264,66 +282,18 @@ namespace DCBStore.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Color")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18, 2)");
-
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Size")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Stock")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Storage")
+                    b.Property<string>("Url")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductVariants");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            ImageUrl = "/images/laptop-thinkpad.jpg",
-                            Price = 25000000m,
-                            ProductId = 1,
-                            Stock = 10
-                        },
-                        new
-                        {
-                            Id = 2,
-                            ImageUrl = "/images/nha-gia-kim.jpg",
-                            Price = 69000m,
-                            ProductId = 2,
-                            Stock = 100
-                        },
-                        new
-                        {
-                            Id = 3,
-                            ImageUrl = "/images/chanel-no5.jpg",
-                            Price = 3500000m,
-                            ProductId = 3,
-                            Stock = 20
-                        },
-                        new
-                        {
-                            Id = 4,
-                            ImageUrl = "/images/sony-headphone.jpg",
-                            Price = 8500000m,
-                            ProductId = 4,
-                            Stock = 30
-                        });
+                    b.ToTable("ProductImages");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -471,15 +441,15 @@ namespace DCBStore.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DCBStore.Models.ProductVariant", "ProductVariant")
+                    b.HasOne("DCBStore.Models.Product", "Product")
                         .WithMany()
-                        .HasForeignKey("ProductVariantId")
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Order");
 
-                    b.Navigation("ProductVariant");
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("DCBStore.Models.Product", b =>
@@ -493,10 +463,10 @@ namespace DCBStore.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("DCBStore.Models.ProductVariant", b =>
+            modelBuilder.Entity("DCBStore.Models.ProductImage", b =>
                 {
                     b.HasOne("DCBStore.Models.Product", "Product")
-                        .WithMany("Variants")
+                        .WithMany("Images")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -567,7 +537,7 @@ namespace DCBStore.Migrations
 
             modelBuilder.Entity("DCBStore.Models.Product", b =>
                 {
-                    b.Navigation("Variants");
+                    b.Navigation("Images");
                 });
 #pragma warning restore 612, 618
         }

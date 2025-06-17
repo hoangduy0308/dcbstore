@@ -1,0 +1,30 @@
+@model IEnumerable<DCBStore.Models.Category>
+
+@{
+    ViewData["Title"] = "Quản lý Danh mục";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-success">Tạo danh mục mới</a>
+</p>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Tên Danh mục</th>
+            <th style="width: 150px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>@Html.DisplayFor(modelItem => item.Name)</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Sửa</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Xóa</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

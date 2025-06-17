@@ -37,7 +37,11 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 */
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+    });
 builder.Services.AddRazorPages();
 
 var app = builder.Build();

@@ -1,74 +1,196 @@
 @model DCBStore.Models.Product
 @{
-    ViewData["Title"] = @Model.Name;
+    ViewData["Title"] = Model.Name;
+    // Lấy ra tất cả các lựa chọn màu, size, storage duy nhất
+    var availableColors = Model.Variants.Where(v => !string.IsNullOrEmpty(v.Color)).Select(v => v.Color).Distinct().ToList();
+    var availableSizes = Model.Variants.Where(v => !string.IsNullOrEmpty(v.Size)).Select(v => v.Size).Distinct().ToList();
+    var availableStorages = Model.Variants.Where(v => !string.IsNullOrEmpty(v.Storage)).Select(v => v.Storage).Distinct().ToList();
 }
 
-<h1>@Model.Name</h1>
+<div class="container mt-5">
+    <div class="row">
+        <!-- Cột Ảnh -->
+        <div class="col-lg-6">
+            <img id="product-image" src="@(Model.Variants.FirstOrDefault()?.ImageUrl ?? "/images/placeholder.png")" class="img-fluid rounded border shadow-sm" style="height: 500px; width: 100%; object-fit: contain;" alt="@Model.Name">
+        </div>
 
-<div class="row">
-    <div class="col-md-5">
-        <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid rounded" />
-    </div>
-    <div class="col-md-7">
-        <h4>Mô tả sản phẩm</h4>
-        <p>@Model.Description</p>
-        <hr />
-        <h3 class="text-danger">Giá: @Model.Price.ToString("N0") VNĐ</h3>
-        <div class="mt-4">
-            <button id="addToCartBtn" data-productid="@Model.Id" class="btn btn-lg btn-success">Thêm vào giỏ hàng</button>
+        <!-- Cột Thông tin và Lựa chọn -->
+        <div class="col-lg-6">
+            <h1 class="display-5">@Model.Name</h1>
+            <p class="text-muted">Danh mục: @Model.Category.Name</p>
+            <hr>
+            <p class="lead">@Model.Description</p>
+            
+            <h3 id="product-price" class="my-3" style="color: #d9534f;"></h3>
+            <p id="product-stock" class="text-muted"></p>
+
+            <form id="add-to-cart-form">
+                <!-- Các lựa chọn biến thể -->
+                @if(availableColors.Any())
+                {
+                    <div class="mb-3">
+                        <h5>Màu sắc</h5>
+                        <div class="btn-group" role="group" id="color-options">
+                            @foreach (var color in availableColors)
+                            {
+                                <button type="button" class="btn btn-outline-secondary" data-value="@color">@color</button>
+                            }
+                        </div>
+                    </div>
+                }
+                @if(availableSizes.Any())
+                {
+                    <div class="mb-3">
+                        <h5>Kích thước</h5>
+                        <div class="btn-group" role="group" id="size-options">
+                            @foreach (var size in availableSizes)
+                            {
+                                <button type="button" class="btn btn-outline-secondary" data-value="@size">@size</button>
+                            }
+                        </div>
+                    </div>
+                }
+                @if(availableStorages.Any())
+                {
+                    <div class="mb-3">
+                        <h5>Dung lượng</h5>
+                        <div class="btn-group" role="group" id="storage-options">
+                            @foreach (var storage in availableStorages)
+                            {
+                                <button type="button" class="btn btn-outline-secondary" data-value="@storage">@storage</button>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="d-grid gap-2 mt-4">
+                     <button type="submit" id="add-to-cart-btn" class="btn btn-primary btn-lg" disabled>
+                        <i class="fas fa-cart-plus me-2"></i> 
+                        <span id="add-to-cart-text">Vui lòng chọn biến thể</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-@* --- BẮT ĐẦU PHẦN CODE JAVASCRIPT THÊM MỚI --- *@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Tìm đến nút "Thêm vào giỏ hàng"
-            const addToCartButton = document.getElementById('addToCartBtn');
+            // Lấy dữ liệu tất cả các biến thể từ Model và chuyển thành JSON
+            const variants = @Json.Serialize(Model.Variants);
+            
+            // Các đối tượng trên trang
+            const colorOptions = document.getElementById('color-options');
+            const sizeOptions = document.getElementById('size-options');
+            const storageOptions = document.getElementById('storage-options');
+            const productImage = document.getElementById('product-image');
+            const productPrice = document.getElementById('product-price');
+            const productStock = document.getElementById('product-stock');
+            const addToCartBtn = document.getElementById('add-to-cart-btn');
+            const addToCartText = document.getElementById('add-to-cart-text');
+            const form = document.getElementById('add-to-cart-form');
 
-            // Gắn sự kiện 'click' cho nút
-            if (addToCartButton) {
-                addToCartButton.addEventListener('click', function () {
-                    const productId = this.dataset.productid;
+            // Biến lưu trữ lựa chọn hiện tại của người dùng
+            let selectedColor = null;
+            let selectedSize = null;
+            let selectedStorage = null;
+            let selectedVariant = null;
 
-                    // Gửi request POST đến CartController bằng Fetch API
-                    fetch(`/Cart/AddToCart?productId=${productId}`, {
-                        method: 'POST',
-                        headers: {
-                            // Cần thêm header này để ASP.NET Core xác thực request
-                            'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0]?.value
-                        }
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                             // Ném lỗi nếu server trả về status không thành công (4xx, 5xx)
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json(); // Chuyển đổi kết quả trả về thành JSON
-                    })
-                    .then(data => {
-                        // Xử lý dữ liệu JSON nhận được từ server
-                        if (data.success) {
-                            // Hiển thị thông báo thành công
-                            alert(data.message); 
+            // Hàm để tìm biến thể phù hợp
+            function findSelectedVariant() {
+                selectedVariant = variants.find(v => 
+                    (selectedColor ? v.color === selectedColor : true) &&
+                    (selectedSize ? v.size === selectedSize : true) &&
+                    (selectedStorage ? v.storage === selectedStorage : true)
+                );
+                updateUI();
+            }
 
-                            // Cập nhật số lượng sản phẩm trên icon giỏ hàng ở layout
-                            const cartCountSpan = document.getElementById('cart-item-count');
-                            if(cartCountSpan) {
-                                cartCountSpan.innerText = data.newCartCount;
-                            }
-                        } else {
-                            // Hiển thị thông báo lỗi từ server
-                            alert('Lỗi: ' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        // Xử lý các lỗi về mạng hoặc lỗi khi parse JSON
-                        console.error('Lỗi khi thêm vào giỏ hàng:', error);
-                        alert('Đã có lỗi xảy ra, vui lòng thử lại.');
-                    });
+            // Hàm cập nhật giao diện
+            function updateUI() {
+                if (selectedVariant) {
+                    productImage.src = selectedVariant.imageUrl || '/images/placeholder.png';
+                    productPrice.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedVariant.price);
+                    
+                    if (selectedVariant.stock > 0) {
+                        productStock.textContent = `Còn lại: ${selectedVariant.stock} sản phẩm`;
+                        productStock.classList.remove('text-danger');
+                        addToCartBtn.disabled = false;
+                        addToCartText.textContent = 'Thêm vào giỏ hàng';
+                    } else {
+                        productStock.textContent = 'Hết hàng';
+                        productStock.classList.add('text-danger');
+                        addToCartBtn.disabled = true;
+                        addToCartText.textContent = 'Hết hàng';
+                    }
+                } else {
+                     // Nếu không tìm thấy biến thể (kết hợp không hợp lệ)
+                    productPrice.textContent = '';
+                    productStock.textContent = 'Vui lòng chọn các thuộc tính';
+                    addToCartBtn.disabled = true;
+                    addToCartText.textContent = 'Vui lòng chọn biến thể';
+                }
+            }
+            
+            // Gán sự kiện cho các nút lựa chọn
+            function setupOptionListeners(container, selectionVariable) {
+                if (!container) return;
+                container.addEventListener('click', function(e) {
+                    if (e.target.tagName === 'BUTTON') {
+                        // Bỏ chọn tất cả các nút khác trong nhóm
+                        Array.from(container.children).forEach(child => child.classList.remove('active'));
+                        // Chọn nút được click
+                        e.target.classList.add('active');
+                        
+                        // Cập nhật lựa chọn
+                        if (selectionVariable === 'color') selectedColor = e.target.dataset.value;
+                        if (selectionVariable === 'size') selectedSize = e.target.dataset.value;
+                        if (selectionVariable === 'storage') selectedStorage = e.target.dataset.value;
+
+                        findSelectedVariant();
+                    }
                 });
+            }
+
+            setupOptionListeners(colorOptions, 'color');
+            setupOptionListeners(sizeOptions, 'size');
+            setupOptionListeners(storageOptions, 'storage');
+
+            // Xử lý sự kiện submit form (thêm vào giỏ hàng)
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (!selectedVariant) return;
+
+                fetch(`/Cart/AddToCart?variantId=${selectedVariant.id}`, { // Gửi variantId thay vì productId
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        const cartCountSpan = document.getElementById('cart-item-count');
+                        if (cartCountSpan) {
+                            cartCountSpan.innerText = data.newCartCount;
+                        }
+                    } else {
+                        alert(`Lỗi: ${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi thêm vào giỏ hàng:', error);
+                    alert('Đã có lỗi xảy ra.');
+                });
+            });
+
+            // Khởi tạo trạng thái ban đầu
+            // Nếu chỉ có 1 biến thể, tự động chọn nó
+            if (variants.length === 1) {
+                selectedVariant = variants[0];
+                // Bạn có thể thêm logic để tự động active các nút nếu cần
+                updateUI();
+            } else {
+                updateUI();
             }
         });
     </script>

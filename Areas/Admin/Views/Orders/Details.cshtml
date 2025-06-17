@@ -42,7 +42,14 @@
                         @foreach (var item in Model.OrderDetails)
                         {
                             <tr>
-                                <td>@item.Product.Name</td>
+                                <td>
+                                    <strong>@(item.ProductVariant.Product.Name)</strong><br>
+                                    <small class="text-muted">
+                                        @if(!string.IsNullOrEmpty(item.ProductVariant.Color)) { <span>@item.ProductVariant.Color</span> }
+                                        @if(!string.IsNullOrEmpty(item.ProductVariant.Size)) { <span>- @item.ProductVariant.Size</span> }
+                                        @if(!string.IsNullOrEmpty(item.ProductVariant.Storage)) { <span>- @item.ProductVariant.Storage</span> }
+                                    </small>
+                                </td>
                                 <td class="text-center">@item.Quantity</td>
                                 <td class="text-end">@item.Price.ToString("N0")</td>
                                 <td class="text-end">@((item.Quantity * item.Price).ToString("N0"))</td>

@@ -3,7 +3,7 @@
     ViewData["Title"] = "Trang Chủ";
     int currentPage = (int)(ViewData["CurrentPage"] ?? 1);
     int totalPages = (int)(ViewData["TotalPages"] ?? 1);
-    string currentFilter = ViewData["CurrentFilter"] as string;
+    string? currentFilter = ViewData["CurrentFilter"] as string;
 }
 
 <style>
@@ -33,43 +33,6 @@
         width: 100%;
         object-fit: contain;
     }
-
-    .add-to-cart-btn {
-        transition: all 0.2s ease;
-    }
-
-    #toast-notification {
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        background-color: #28a745;
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .1);
-        z-index: 1050;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(20px);
-        transition: all 0.3s ease-in-out;
-    }
-
-    #toast-notification.show {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0);
-    }
-
-    .pagination .page-link {
-        border-radius: 0.25rem;
-        margin: 0 0.25rem;
-    }
-
-    .pagination .page-item.active .page-link {
-        background-color: #0d6efd;
-        color: #fff;
-        border-color: #0d6efd;
-    }
 </style>
 
 <div class="container py-5">
@@ -87,13 +50,17 @@
     else
     {
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-            @foreach (var product in Model)
+            @foreach (var product in Model.Where(p => p.Variants.Any()))
             {
+                // Lấy biến thể mặc định để hiển thị
+                var defaultVariant = product.Variants.OrderBy(v => v.Price).FirstOrDefault();
+                if (defaultVariant == null) { continue; }
+
                 <div class="col">
                     <div class="card h-100 border-0 shadow-sm product-card">
                         <div class="product-card-img-container">
                             <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="@product.Id">
-                                <img src="@product.ImageUrl" alt="@product.Name" class="card-img-top">
+                                <img src="@(defaultVariant.ImageUrl ?? "/images/placeholder.png")" alt="@product.Name" class="card-img-top">
                             </a>
                         </div>
                         <div class="card-body d-flex flex-column">
@@ -103,11 +70,13 @@
                             </h5>
                             <p class="card-text small text-muted flex-grow-1">@product.Description</p>
                             <div class="d-flex justify-content-between align-items-center mt-3">
-                                <p class="card-text fw-bold text-primary mb-0">@product.Price.ToString("N0") VNĐ</p>
-                                <button class="btn btn-outline-primary border-2 rounded-circle add-to-cart-btn"
-                                        data-productid="@product.Id" title="Thêm vào giỏ hàng" style="z-index: 2;">
-                                    <i class="fas fa-cart-plus"></i>
-                                </button>
+                                <p class="card-text fw-bold text-primary mb-0">
+                                    @if (product.Variants.Count > 1)
+                                    {
+                                        <span>Từ </span>
+                                    }
+                                    @defaultVariant.Price.ToString("N0") VNĐ
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -121,7 +90,7 @@
                 <ul class="pagination">
                     <li class="page-item @(currentPage == 1 ? "disabled" : "")">
                         <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage - 1)"
-                           asp-route-searchString="@currentFilter">&laquo;</a>
+                           asp-route-searchString="@currentFilter">«</a>
                     </li>
 
                     @for (int i = 1; i <= totalPages; i++)
@@ -134,7 +103,7 @@
 
                     <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
                         <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)"
-                           asp-route-searchString="@currentFilter">&raquo;</a>
+                           asp-route-searchString="@currentFilter">»</a>
                     </li>
                 </ul>
             </nav>
@@ -142,54 +111,4 @@
     }
 </div>
 
-<div id="toast-notification">
-    <i class="fas fa-check-circle me-2"></i>
-    <span id="toast-message"></span>
-</div>
-
-@section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
-            const toastElement = document.getElementById('toast-notification');
-            const toastMessage = document.getElementById('toast-message');
-
-            function showToast(message) {
-                toastMessage.textContent = message;
-                toastElement.classList.add('show');
-                setTimeout(() => {
-                    toastElement.classList.remove('show');
-                }, 3000);
-            }
-
-            addToCartButtons.forEach(button => {
-                button.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-
-                    const productId = this.dataset.productid;
-
-                    fetch(`/Cart/AddToCart?productId=${productId}`, {
-                        method: 'POST',
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                const cartCountSpan = document.getElementById('cart-item-count');
-                                if (cartCountSpan) {
-                                    cartCountSpan.innerText = data.newCartCount;
-                                }
-                                showToast(data.message);
-                            } else {
-                                showToast('Lỗi: ' + data.message);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Lỗi khi thêm vào giỏ hàng:', error);
-                            showToast('Đã có lỗi xảy ra, vui lòng thử lại.');
-                        });
-                });
-            });
-        });
-    </script>
-}
+@* Không cần Toast và Script thêm vào giỏ hàng ở đây nữa *@

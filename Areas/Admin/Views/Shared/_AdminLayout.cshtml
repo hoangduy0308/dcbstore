@@ -131,6 +131,14 @@
                             Sản phẩm
                         </a>
                     </li>
+                    <!-- ===== MỤC MỚI ĐÃ ĐƯỢC THÊM VÀO ĐÂY ===== -->
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Categories" ? "active" : "")" asp-area="Admin" asp-controller="Categories" asp-action="Index">
+                            <i class="fas fa-tags fa-fw"></i>
+                            Danh mục
+                        </a>
+                    </li>
+                    <!-- ============================================= -->
                     <li class="nav-item">
                         <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Orders" ? "active" : "")" asp-area="Admin" asp-controller="Orders" asp-action="Index">
                             <i class="fas fa-file-invoice-dollar fa-fw"></i>

@@ -31,7 +31,11 @@ namespace DCBStore.Areas.Admin.Controllers
         {
             var order = await _context.Orders
                                       .Include(o => o.OrderDetails)
-                                      .ThenInclude(od => od.Product)
+                                      // --- THAY ĐỔI QUAN TRỌNG ---
+                                      // 1. Trỏ đến ProductVariant thay vì Product
+                                      // 2. Tải thêm thông tin của sản phẩm gốc (Product) từ ProductVariant
+                                      .ThenInclude(od => od.ProductVariant)
+                                        .ThenInclude(pv => pv.Product)
                                       .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)

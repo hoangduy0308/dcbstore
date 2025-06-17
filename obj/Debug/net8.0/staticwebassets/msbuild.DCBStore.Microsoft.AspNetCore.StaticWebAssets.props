@@ -48,6 +48,22 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\favicon.ico))</OriginalItemSpec>
     </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\images\avatars\0aa48152-b283-40af-97c1-b7c0f53c6e21_481712981_1183858823098434_6008174039502110759_n.jpg))">
+      <SourceType>Package</SourceType>
+      <SourceId>DCBStore</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DCBStore</BasePath>
+      <RelativePath>images/avatars/0aa48152-b283-40af-97c1-b7c0f53c6e21_481712981_1183858823098434_6008174039502110759_n.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\images\avatars\0aa48152-b283-40af-97c1-b7c0f53c6e21_481712981_1183858823098434_6008174039502110759_n.jpg))</OriginalItemSpec>
+    </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\images\avatars\7e3f8ccd-1e95-4504-a8c8-98678eea357d_481712981_1183858823098434_6008174039502110759_n.jpg))">
       <SourceType>Package</SourceType>
       <SourceId>DCBStore</SourceId>
@@ -127,6 +143,38 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\images\nha-gia-kim.jpg))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\images\products\621dc3f1-6ee8-4966-a2f2-349b042c8611_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp))">
+      <SourceType>Package</SourceType>
+      <SourceId>DCBStore</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DCBStore</BasePath>
+      <RelativePath>images/products/621dc3f1-6ee8-4966-a2f2-349b042c8611_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\images\products\621dc3f1-6ee8-4966-a2f2-349b042c8611_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\images\products\de848b7f-fcd7-43fa-9ab0-88adf7965531_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg))">
+      <SourceType>Package</SourceType>
+      <SourceId>DCBStore</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/DCBStore</BasePath>
+      <RelativePath>images/products/de848b7f-fcd7-43fa-9ab0-88adf7965531_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\images\products\de848b7f-fcd7-43fa-9ab0-88adf7965531_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\images\sony-headphone.jpg))">
       <SourceType>Package</SourceType>

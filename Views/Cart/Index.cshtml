@@ -41,10 +41,11 @@
                 <div id="cart-items-container">
                     @foreach (var item in Model)
                     {
-                        <div class="card mb-3 border-0 shadow-sm" id="cart-item-@item.ProductId">
+                        <!-- THAY ĐỔI: Sử dụng VariantId cho ID của phần tử -->
+                        <div class="card mb-3 border-0 shadow-sm" id="cart-item-@item.VariantId">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
-                                    <img src="@item.ImageUrl" alt="@item.ProductName" class="me-4 rounded" style="width: 100px; height: 100px; object-fit: contain;">
+                                    <img src="@(item.ImageUrl ?? "/images/placeholder.png")" alt="@item.ProductName" class="me-4 rounded" style="width: 100px; height: 100px; object-fit: contain;">
                                     
                                     <div class="flex-grow-1">
                                         <h5 class="mb-1">@item.ProductName</h5>
@@ -52,9 +53,10 @@
                                     </div>
                                     
                                     <div class="d-flex align-items-center mx-4">
-                                        <button class="btn btn-sm quantity-btn decrease-qty" data-productid="@item.ProductId">-</button>
+                                        <!-- THAY ĐỔI: Sử dụng data-variantid -->
+                                        <button class="btn btn-sm quantity-btn decrease-qty" data-variantid="@item.VariantId">-</button>
                                         <input type="text" value="@item.Quantity" class="form-control form-control-sm quantity-input" readonly>
-                                        <button class="btn btn-sm quantity-btn increase-qty" data-productid="@item.ProductId">+</button>
+                                        <button class="btn btn-sm quantity-btn increase-qty" data-variantid="@item.VariantId">+</button>
                                     </div>
 
                                     <div class="mx-4">
@@ -62,7 +64,8 @@
                                     </div>
                                     
                                     <div>
-                                        <button class="btn btn-link text-muted remove-item-btn" data-productid="@item.ProductId" title="Xóa sản phẩm">
+                                        <!-- THAY ĐỔI: Sử dụng data-variantid -->
+                                        <button class="btn btn-link text-muted remove-item-btn" data-variantid="@item.VariantId" title="Xóa sản phẩm">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </div>
@@ -73,7 +76,7 @@
                 </div>
             </div>
 
-            <!-- Cột tóm tắt đơn hàng -->
+            <!-- Cột tóm tắt đơn hàng (giữ nguyên) -->
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
@@ -131,7 +134,8 @@
             const target = e.target.closest('.quantity-btn, .remove-item-btn');
             if (!target) return;
 
-            const productId = target.dataset.productid;
+            // THAY ĐỔI: Lấy variantId thay vì productId
+            const variantId = target.dataset.variantid;
             let actionUrl = '';
 
             if (target.matches('.increase-qty')) {
@@ -140,12 +144,12 @@
                 actionUrl = '/Cart/DecreaseQuantity';
             } else if (target.matches('.remove-item-btn')) {
                 actionUrl = '/Cart/RemoveFromCart';
-                // Đã loại bỏ hộp thoại confirm() để có trải nghiệm tốt hơn.
             }
 
             if (!actionUrl) return;
 
-            fetch(`${actionUrl}?productId=${productId}`, {
+            // THAY ĐỔI: Gửi variantId trong URL
+            fetch(`${actionUrl}?variantId=${variantId}`, {
                 method: 'POST',
             })
             .then(response => {
@@ -159,7 +163,8 @@
                     updateSummary(data.newTotal);
                     updateCartCount(data.newCartCount);
 
-                    const itemRow = document.getElementById(`cart-item-${productId}`);
+                    // THAY ĐỔI: Tìm item row bằng variantId
+                    const itemRow = document.getElementById(`cart-item-${variantId}`);
                     if (!itemRow) return;
 
                     if(actionUrl.includes('RemoveFromCart') || data.itemRemoved) {
@@ -168,7 +173,7 @@
                         setTimeout(() => {
                             itemRow.remove();
                             if (document.querySelectorAll('[id^="cart-item-"]').length === 0) {
-                                window.location.reload(); // Tải lại trang nếu giỏ hàng trống
+                                window.location.reload();
                             }
                         }, 500);
                     } else {

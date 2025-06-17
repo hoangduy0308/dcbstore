@@ -1,24 +1,23 @@
 @model IEnumerable<DCBStore.Models.Product>
 @{
     ViewData["Title"] = "Tất cả Sản phẩm";
-    // Lấy thông tin phân trang từ ViewData mà Controller đã gửi qua
     int currentPage = (int)(ViewData["CurrentPage"] ?? 1);
     int totalPages = (int)(ViewData["TotalPages"] ?? 1);
-    string currentFilter = ViewData["CurrentFilter"] as string;
+    string? currentFilter = ViewData["CurrentFilter"] as string;
+    int? currentCategory = ViewData["CurrentCategory"] as int?;
+    var categories = ViewData["Categories"] as List<Category>;
 }
 
-@* Kế thừa các style từ trang chủ để đảm bảo tính đồng bộ *@
+@* Các style của bạn được giữ nguyên *@
 <style>
     .product-card {
         transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         border-radius: 1rem;
     }
-
     .product-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15)!important;
     }
-
     .product-card-img-container {
         overflow: hidden;
         border-top-left-radius: 1rem;
@@ -29,17 +28,11 @@
         justify-content: center;
         background-color: #fff;
     }
-
     .product-card-img-container img {
         height: 100%;
         width: 100%;
         object-fit: contain !important;
     }
-
-    .add-to-cart-btn {
-        transition: all 0.2s ease;
-    }
-
     #toast-notification {
         position: fixed;
         bottom: 2rem;
@@ -55,13 +48,11 @@
         transform: translateY(20px);
         transition: all 0.3s ease-in-out;
     }
-
     #toast-notification.show {
         opacity: 1;
         visibility: visible;
         transform: translateY(0);
     }
-    
     .pagination .page-link {
         border-radius: 0.25rem;
         margin: 0 0.25rem;
@@ -72,139 +63,131 @@
         background-color: #0d6efd;
         border-color: #0d6efd;
     }
+    .category-sidebar .list-group-item {
+        border-radius: 0.5rem !important;
+        margin-bottom: 0.5rem;
+        border: 1px solid #dee2e6;
+    }
+    .category-sidebar .list-group-item.active {
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+    }
 </style>
 
 <div class="container py-5">
-    <div class="text-center mb-5">
-        @if (string.IsNullOrEmpty(currentFilter))
-        {
-            <h1 class="display-5 fw-bold">Tất cả Sản phẩm</h1>
-            <p class="text-muted">Khám phá toàn bộ danh mục sản phẩm đa dạng tại DCBStore.</p>
-        }
-        else
-        {
-            <h1 class="display-5 fw-bold">Kết quả tìm kiếm cho "@currentFilter"</h1>
-        }
-    </div>
-
-    @if (!Model.Any())
-    {
-        <div class="text-center py-5">
-            <p class="lead">Không tìm thấy sản phẩm nào phù hợp.</p>
-            <a asp-controller="Products" asp-action="Index" class="btn btn-link">Xem tất cả sản phẩm</a>
-        </div>
-    }
-    else
-    {
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-            @foreach (var product in Model)
-            {
-                <div class="col">
-                    <div class="card h-100 border-0 shadow-sm product-card">
-                        <div class="product-card-img-container">
-                             <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id">
-                                <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name">
+    <div class="row">
+        <!-- Cột Sidebar cho Danh mục (giữ nguyên) -->
+        <div class="col-lg-3">
+            <div class="category-sidebar">
+                <h4 class="mb-3">Danh mục</h4>
+                <div class="list-group">
+                    <a asp-action="Index"
+                       asp-route-searchString="@currentFilter"
+                       asp-route-categoryId="" 
+                       class="list-group-item list-group-item-action @(currentCategory == null ? "active" : "")">
+                        Tất cả sản phẩm
+                    </a>
+                    @if (categories != null)
+                    {
+                        @foreach (var category in categories)
+                        {
+                            <a asp-action="Index"
+                               asp-route-searchString="@currentFilter"
+                               asp-route-categoryId="@category.Id"
+                               class="list-group-item list-group-item-action @(currentCategory == category.Id ? "active" : "")">
+                                @category.Name
                             </a>
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title h6">
-                                <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="text-dark text-decoration-none stretched-link">@product.Name</a>
-                            </h5>
-                            <p class="card-text small text-muted flex-grow-1">@product.Description</p>
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <p class="card-text fw-bold text-primary mb-0">@product.Price.ToString("N0") VNĐ</p>
-                                <button class="btn btn-outline-primary border-2 rounded-circle add-to-cart-btn" 
-                                        data-productid="@product.Id" 
-                                        title="Thêm vào giỏ hàng"
-                                        style="z-index: 2;">
-                                    <i class="fas fa-cart-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột chính cho Sản phẩm -->
+        <div class="col-lg-9">
+            <div class="text-center mb-5">
+                 @if (string.IsNullOrEmpty(currentFilter) && !currentCategory.HasValue)
+                {
+                    <h1 class="display-5 fw-bold">Tất cả Sản phẩm</h1>
+                    <p class="text-muted">Khám phá toàn bộ danh mục sản phẩm đa dạng tại DCBStore.</p>
+                }
+                else
+                {
+                    <h1 class="display-5 fw-bold">Kết quả lọc</h1>
+                }
+            </div>
+            
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <p class="lead">Không tìm thấy sản phẩm nào phù hợp.</p>
+                    <a asp-controller="Products" asp-action="Index" class="btn btn-link">Xem tất cả sản phẩm</a>
                 </div>
             }
+            else
+            {
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-3 g-4">
+                    @foreach (var product in Model.Where(p => p.Variants.Any()))
+                    {
+                        // Tìm biến thể mặc định để hiển thị (ví dụ: biến thể đầu tiên hoặc biến thể có giá rẻ nhất)
+                        var defaultVariant = product.Variants.OrderBy(v => v.Price).FirstOrDefault();
+                        if (defaultVariant == null) continue; // Bỏ qua sản phẩm nếu không có biến thể nào
+
+                        <div class="col">
+                            <div class="card h-100 border-0 shadow-sm product-card">
+                                <div class="product-card-img-container">
+                                     <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id">
+                                        <img src="@(defaultVariant.ImageUrl ?? "/images/placeholder.png")" class="card-img-top" alt="@product.Name">
+                                    </a>
+                                </div>
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title h6">
+                                        <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="text-dark text-decoration-none stretched-link">@product.Name</a>
+                                    </h5>
+                                    <p class="card-text small text-muted flex-grow-1">@product.Description</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <p class="card-text fw-bold text-primary mb-0">
+                                            @if (product.Variants.Count > 1)
+                                            {
+                                                <span>Từ </span>
+                                            }
+                                            @defaultVariant.Price.ToString("N0") VNĐ
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Phân trang (giữ nguyên) -->
+                <nav aria-label="Product navigation" class="mt-5 d-flex justify-content-center">
+                    <ul class="pagination">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage - 1)" asp-route-searchString="@currentFilter" asp-route-categoryId="@currentCategory">
+                                <span>«</span>
+                            </a>
+                        </li>
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-route-searchString="@currentFilter" asp-route-categoryId="@currentCategory">@i</a>
+                            </li>
+                        }
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                             <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)" asp-route-searchString="@currentFilter" asp-route-categoryId="@currentCategory">
+                                <span>»</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
         </div>
-
-        <nav aria-label="Product navigation" class="mt-5 d-flex justify-content-center">
-            <ul class="pagination">
-                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                    <a class="page-link" asp-action="Index"
-                       asp-route-pageNumber="@(currentPage - 1)"
-                       asp-route-searchString="@currentFilter">
-                        <span>&laquo;</span>
-                    </a>
-                </li>
-                
-                @for (int i = 1; i <= totalPages; i++)
-                {
-                    <li class="page-item @(i == currentPage ? "active" : "")">
-                        <a class="page-link" asp-action="Index"
-                           asp-route-pageNumber="@i"
-                           asp-route-searchString="@currentFilter">@i</a>
-                    </li>
-                }
-
-                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                     <a class="page-link" asp-action="Index"
-                       asp-route-pageNumber="@(currentPage + 1)"
-                       asp-route-searchString="@currentFilter">
-                        <span>&raquo;</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    }
+    </div>
 </div>
-
-<!-- Toast Notification Element -->
-<div id="toast-notification">
-    <i class="fas fa-check-circle me-2"></i>
-    <span id="toast-message"></span>
-</div>
-
 
 @section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
-            const toastElement = document.getElementById('toast-notification');
-            const toastMessage = document.getElementById('toast-message');
-
-            function showToast(message) {
-                toastMessage.textContent = message;
-                toastElement.classList.add('show');
-                setTimeout(() => {
-                    toastElement.classList.remove('show');
-                }, 3000);
-            }
-
-            addToCartButtons.forEach(button => {
-                button.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    const productId = this.dataset.productid;
-                    fetch(`/Cart/AddToCart?productId=${productId}`, {
-                        method: 'POST',
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const cartCountSpan = document.getElementById('cart-item-count');
-                            if(cartCountSpan) {
-                                cartCountSpan.innerText = data.newCartCount;
-                            }
-                            showToast(data.message);
-                        } else {
-                            showToast('Lỗi: ' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Lỗi khi thêm vào giỏ hàng:', error);
-                        showToast('Đã có lỗi xảy ra, vui lòng thử lại.');
-                    });
-                });
-            });
-        });
-    </script>
+    @* Script thêm vào giỏ hàng sẽ không hoạt động ở đây nữa, 
+       vì người dùng phải vào trang chi tiết để chọn biến thể.
+       Chúng ta có thể tạm thời vô hiệu hóa hoặc xóa nó đi. *@
 }
