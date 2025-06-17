@@ -89,6 +89,10 @@
       "PackagePath": "staticwebassets\\js\\site.js"
     },
     {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\js\\wishlist.js",
+      "PackagePath": "staticwebassets\\js\\wishlist.js"
+    },
+    {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\lib\\bootstrap\\LICENSE",
       "PackagePath": "staticwebassets\\lib\\bootstrap"
     },

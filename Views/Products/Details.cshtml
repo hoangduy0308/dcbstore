@@ -1,4 +1,8 @@
 @model DCBStore.Models.Product
+@using Microsoft.AspNetCore.Identity
+@using DCBStore.Data
+@inject SignInManager<ApplicationUser> SignInManager
+
 @{
     ViewData["Title"] = Model.Name;
     var firstImage = Model.Images?.FirstOrDefault()?.Url ?? "/images/placeholder.png";
@@ -11,7 +15,6 @@
         object-fit: contain;
         border: 1px solid #dee2e6;
         border-radius: 0.5rem;
-        cursor: pointer;
     }
     .thumbnail-list {
         display: flex;
@@ -54,8 +57,7 @@
             <h1 class="display-5">@Model.Name</h1>
             <p class="text-muted">Danh mục: <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@Model.CategoryId">@Model.Category.Name</a></p>
             <hr>
-            <p class="lead">@Model.Description</p>
-            
+            <p class="lead">@Html.Raw(Model.Description)</p>
             <h3 class="my-3" style="color: #d9534f;">@Model.Price.ToString("N0") VNĐ</h3>
             
             @if(Model.Stock > 0)
@@ -67,15 +69,23 @@
                 <p class="text-danger fw-bold">Hết hàng</p>
             }
 
-            <form id="add-to-cart-form" class="mt-4">
-                <input type="hidden" name="productId" value="@Model.Id" />
-                <div class="d-grid gap-2">
-                     <button type="submit" id="add-to-cart-btn" class="btn btn-primary btn-lg" @(Model.Stock > 0 ? "" : "disabled")>
-                        <i class="fas fa-cart-plus me-2"></i> 
-                        @(Model.Stock > 0 ? "Thêm vào giỏ hàng" : "Hết hàng")
+            <div class="d-flex align-items-center gap-2 mt-4">
+                <form id="add-to-cart-form" class="flex-grow-1">
+                    <input type="hidden" name="productId" value="@Model.Id" />
+                    <div class="d-grid">
+                         <button type="submit" id="add-to-cart-btn" class="btn btn-primary btn-lg" @(Model.Stock > 0 ? "" : "disabled")>
+                            <i class="fas fa-cart-plus me-2"></i> 
+                            @(Model.Stock > 0 ? "Thêm vào giỏ hàng" : "Hết hàng")
+                        </button>
+                    </div>
+                </form>
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <button class="btn btn-outline-danger btn-lg toggle-wishlist-btn" data-product-id="@Model.Id" title="Thêm vào yêu thích">
+                        <i class="far fa-heart"></i>
                     </button>
-                </div>
-            </form>
+                }
+            </div>
         </div>
     </div>
 </div>
@@ -83,24 +93,20 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Xử lý thư viện ảnh
             const mainImage = document.getElementById('main-product-image');
             const thumbnailContainer = document.getElementById('thumbnail-container');
 
             if (thumbnailContainer) {
                 thumbnailContainer.addEventListener('click', function(e) {
                     if (e.target.classList.contains('thumbnail-item')) {
-                        // Cập nhật ảnh chính
                         mainImage.src = e.target.dataset.largeSrc;
                         
-                        // Cập nhật trạng thái active
                         thumbnailContainer.querySelectorAll('.thumbnail-item').forEach(thumb => thumb.classList.remove('active'));
                         e.target.classList.add('active');
                     }
                 });
             }
-
-            // Xử lý thêm vào giỏ hàng
+            
             const form = document.getElementById('add-to-cart-form');
             if(form) {
                 form.addEventListener('submit', function(e) {
@@ -122,7 +128,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert(data.message); // Hoặc hiển thị toast notification
+                            alert(data.message);
                             const cartCountSpan = document.getElementById('cart-item-count');
                             if (cartCountSpan) {
                                 cartCountSpan.innerText = data.newCartCount;

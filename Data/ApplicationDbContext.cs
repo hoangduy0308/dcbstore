@@ -14,9 +14,11 @@ namespace DCBStore.Data
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
-        
-        // Đã xóa ProductVariants và thêm lại ProductImages
         public DbSet<ProductImage> ProductImages { get; set; }
+
+        // ====> THÊM DÒNG NÀY VÀO <====
+        public DbSet<WishlistItem> WishlistItems { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,7 +27,7 @@ namespace DCBStore.Data
             // Chỉ định kiểu dữ liệu cho các cột decimal để tránh mất dữ liệu
             modelBuilder.Entity<Order>().Property(o => o.Total).HasColumnType("decimal(18, 2)");
             modelBuilder.Entity<OrderDetail>().Property(od => od.Price).HasColumnType("decimal(18, 2)");
-            modelBuilder.Entity<Product>().Property(p => p.Price).HasColumnType("decimal(18, 2)"); // Thêm cho Product
+            modelBuilder.Entity<Product>().Property(p => p.Price).HasColumnType("decimal(18, 2)");
 
             // --- DỮ LIỆU MẪU ĐÃ ĐƯỢC CẬP NHẬT ---
             modelBuilder.Entity<Category>().HasData(
