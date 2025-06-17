@@ -1,6 +1,7 @@
 @model DCBStore.Models.CheckoutViewModel
 @{
     ViewData["Title"] = "Thanh toán";
+    // Đảm bảo Model.CartItems là List<SessionCartItem> như đã cấu hình trong CheckoutViewModel
     var total = Model.CartItems.Sum(item => item.Total);
 }
 
@@ -36,10 +37,9 @@
         <h1 class="display-5 fw-bold">Hoàn tất Đơn hàng</h1>
     </div>
 
-    <form asp-action="ProcessOrder" method="post">
+    <form asp-action="PlaceOrder" method="post"> 
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
         <div class="row g-5">
-            <!-- Cột Thông tin giao hàng và thanh toán -->
             <div class="col-lg-7">
                 <h4 class="mb-3">Thông tin giao hàng</h4>
                 <div class="row g-3">
@@ -58,7 +58,7 @@
                         <input asp-for="Order.ShippingAddress" class="form-control" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố">
                         <span asp-validation-for="Order.ShippingAddress" class="text-danger"></span>
                     </div>
-                     <div class="col-12">
+                    <div class="col-12">
                         <label asp-for="Order.Notes" class="form-label">Ghi chú (tùy chọn)</label>
                         <textarea asp-for="Order.Notes" class="form-control" rows="3" placeholder="Ghi chú về đơn hàng, ví dụ: thời gian giao hàng..."></textarea>
                     </div>
@@ -79,11 +79,10 @@
                             <input asp-for="Order.PaymentMethod" type="radio" value="BankTransfer" class="form-check-input" id="bank">
                             <label class="form-check-label fw-bold w-100" for="bank">Chuyển khoản ngân hàng (VietQR)</label>
                         </div>
-                         <div class="payment-details p-3 text-center">
+                        <div class="payment-details p-3 text-center">
                             <p>Quét mã VietQR dưới đây để thanh toán <strong>@total.ToString("N0") VNĐ</strong></p>
                             
                             @{
-                                // === THÔNG TIN ĐÃ ĐƯỢC CẬP NHẬT ===
                                 var bankId = "970436"; // Vietcombank
                                 var accountNumber = "1028292996"; // Số tài khoản của bạn
                                 var accountName = "NGUYEN LE HOANG DUY"; // Tên chủ tài khoản
@@ -103,23 +102,25 @@
                         </div>
                     </div>
                 </div>
-                 <span asp-validation-for="Order.PaymentMethod" class="text-danger mt-2 d-block"></span>
+                <span asp-validation-for="Order.PaymentMethod" class="text-danger mt-2 d-block"></span>
 
                 <hr class="my-4">
                 <button class="w-100 btn btn-primary btn-lg" type="submit">Hoàn tất Đặt hàng</button>
 
             </div>
 
-            <!-- Cột Tóm tắt đơn hàng -->
             <div class="col-lg-5">
                 <div class="order-summary">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body">
                             <h4 class="d-flex justify-content-between align-items-center mb-3">
                                 <span class="text-primary">Đơn hàng của bạn</span>
+                                @* BẮT ĐẦU SỬA ĐỔI: Model.CartItems đã là List<SessionCartItem>, không cần thay đổi gì *@
                                 <span class="badge bg-primary rounded-pill">@Model.CartItems.Sum(i => i.Quantity)</span>
+                                @* KẾT THÚC SỬA ĐỔI *@
                             </h4>
                             <ul class="list-group mb-3">
+                                @* BẮT ĐẦU SỬA ĐỔI: Model.CartItems đã là List<SessionCartItem>, không cần thay đổi gì *@
                                 @foreach (var item in Model.CartItems)
                                 {
                                     <li class="list-group-item d-flex justify-content-between lh-sm">
@@ -130,6 +131,7 @@
                                         <span class="text-muted">@item.Total.ToString("N0") VNĐ</span>
                                     </li>
                                 }
+                                @* KẾT THÚC SỬA ĐỔI *@
                                 <li class="list-group-item d-flex justify-content-between bg-light">
                                     <div class="text-success">
                                         <h6 class="my-0">Mã giảm giá</h6>

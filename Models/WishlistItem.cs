@@ -1,6 +1,6 @@
-using DCBStore.Data; // <-- Dòng này cần thiết để tham chiếu ApplicationUser
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using DCBStore.Data; // Vẫn cần để nhận diện ApplicationUser nếu các model khác cần
 
 namespace DCBStore.Models
 {
@@ -9,12 +9,12 @@ namespace DCBStore.Models
         [Key]
         public int Id { get; set; }
 
-        // Khóa ngoại đến người dùng
+        // BẮT ĐẦU THÊM MỚI: Khóa ngoại đến Wishlist (entity cha)
         [Required]
-        public string UserId { get; set; }
-
-        [ForeignKey("UserId")]
-        public ApplicationUser User { get; set; } = null!;
+        public int WishlistId { get; set; }
+        [ForeignKey("WishlistId")]
+        public Wishlist Wishlist { get; set; } = null!; // Navigation property
+        // KẾT THÚC THÊM MỚI
 
         // Khóa ngoại đến sản phẩm
         [Required]

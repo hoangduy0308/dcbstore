@@ -9,31 +9,137 @@
 }
 
 <style>
+    /* CSS CƠ BẢN VÀ MỚI CHO GIAO DIỆN HIỆN ĐẠI HƠN */
     .main-product-image {
         height: 500px;
         width: 100%;
         object-fit: contain;
-        border: 1px solid #dee2e6;
-        border-radius: 0.5rem;
+        border: 1px solid #e0e0e0; /* Viền nhẹ nhàng hơn */
+        border-radius: 0.75rem; /* Bo tròn nhiều hơn */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Thêm đổ bóng nhẹ */
     }
     .thumbnail-list {
         display: flex;
-        gap: 10px;
-        margin-top: 15px;
+        gap: 12px; /* Khoảng cách lớn hơn */
+        margin-top: 20px; /* Khoảng cách lớn hơn */
         flex-wrap: wrap;
+        justify-content: center; /* Căn giữa các ảnh thumbnail */
     }
     .thumbnail-item {
-        width: 80px;
-        height: 80px;
-        object-fit: contain;
-        border: 2px solid #dee2e6;
-        border-radius: 0.25rem;
+        width: 90px; /* Lớn hơn một chút */
+        height: 90px;
+        object-fit: cover; /* Dùng cover thay vì contain để lấp đầy */
+        border: 2px solid #e9ecef;
+        border-radius: 0.5rem; /* Bo tròn nhiều hơn */
         cursor: pointer;
-        transition: border-color 0.2s;
+        transition: border-color 0.2s, transform 0.2s; /* Thêm hiệu ứng transform */
     }
     .thumbnail-item.active,
     .thumbnail-item:hover {
         border-color: var(--bs-primary);
+        transform: translateY(-3px); /* Hiệu ứng nhấc lên nhẹ */
+    }
+
+    /* CSS ĐỒNG BỘ CHO HIỂN THỊ TỒN KHO VÀ ĐÃ BÁN */
+    .product-status-badge {
+        display: inline-block;
+        padding: 6px 12px; /* Lớn hơn một chút */
+        border-radius: 20px; /* Bo tròn hoàn toàn */
+        font-size: 0.95rem; /* Kích thước chữ lớn hơn */
+        font-weight: 600;
+        margin-right: 10px; /* Khoảng cách giữa các badge */
+        margin-top: 10px; /* Khoảng cách với dòng trên */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Đổ bóng nhẹ */
+    }
+    .status-in-stock {
+        background-color: #28a745; /* Bootstrap Green */
+        color: white;
+    }
+    .status-out-of-stock {
+        background-color: #dc3545; /* Bootstrap Red */
+        color: white;
+    }
+    .status-sold {
+        background-color: #ffc107; /* Bootstrap Warning Yellow */
+        color: #343a40; /* Chữ đen để tương phản */
+    }
+
+    /* BẮT ĐẦU PHẦN SỬA ĐỔI: KÍCH THƯỚC NÚT ĐỒNG BỘ */
+    /* Nút Mua ngay: Lớn và ưu tiên */
+    .buy-now-btn-custom {
+        height: 58px; /* Chiều cao cố định đồng bộ */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 0.5rem;
+        font-size: 1.15rem; /* Kích thước font */
+        padding: 0 30px; /* Padding ngang */
+        font-weight: 700;
+        min-width: 180px; /* Đảm bảo chiều rộng tối thiểu */
+    }
+
+    /* Nút Thêm vào giỏ hàng: Chỉ icon, kích thước vuông đồng bộ */
+    .add-to-cart-icon-btn-v2 {
+        height: 58px; /* Chiều cao cố định đồng bộ */
+        width: 58px; /* Vuông */
+        padding: 0; /* Bỏ padding cũ để chỉ có icon */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 0.5rem;
+        font-size: 1.5rem; /* Kích thước icon */
+    }
+
+    /* Nút Yêu thích (Trái tim): Icon, kích thước vuông đồng bộ */
+    .toggle-wishlist-btn.btn-lg { /* Giữ btn-lg nhưng thêm tùy chỉnh */
+        height: 58px; /* Chiều cao cố định đồng bộ */
+        width: 58px; /* Vuông */
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 0.5rem;
+        font-size: 1.5rem; /* Kích thước icon */
+    }
+    /* KẾT THÚC PHẦN SỬA ĐỔI */
+
+    /* Bộ chọn số lượng */
+    .quantity-selector {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ced4da;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        width: 120px;
+        height: 58px; /* Đồng bộ chiều cao với các nút lớn */
+    }
+    .quantity-selector button {
+        background-color: #f8f9fa;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        font-size: 1.5rem;
+        width: 40px;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .quantity-selector button:hover {
+        background-color: #e2e6ea;
+    }
+    .quantity-selector input {
+        border: none;
+        text-align: center;
+        flex-grow: 1;
+        font-size: 1.15rem;
+        padding: 0;
+        -moz-appearance: textfield;
+    }
+    .quantity-selector input::-webkit-outer-spin-button,
+    .quantity-selector input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
     }
 </style>
 
@@ -54,34 +160,60 @@
         </div>
 
         <div class="col-lg-6">
-            <h1 class="display-5">@Model.Name</h1>
-            <p class="text-muted">Danh mục: <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@Model.CategoryId">@Model.Category.Name</a></p>
-            <hr>
-            <p class="lead">@Html.Raw(Model.Description)</p>
-            <h3 class="my-3" style="color: #d9534f;">@Model.Price.ToString("N0") VNĐ</h3>
+            <h1 class="display-5 fw-bold mb-3">@Model.Name</h1>
+            <p class="text-muted fs-6 mb-4">Danh mục: <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@Model.CategoryId" class="text-decoration-none">@Model.Category.Name</a></p>
+            <hr class="mb-4">
+            <p class="lead" style="line-height: 1.7;">@Html.Raw(Model.Description)</p>
+            <h3 class="my-3 display-6" style="color: #d9534f; font-weight: 700;">@Model.Price.ToString("N0") VNĐ</h3>
             
-            @if(Model.Stock > 0)
-            {
-                <p class="text-success fw-bold">Còn hàng (còn lại @Model.Stock sản phẩm)</p>
-            }
-            else
-            {
-                <p class="text-danger fw-bold">Hết hàng</p>
-            }
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                @if(Model.Stock > 0)
+                {
+                    <span class="product-status-badge status-in-stock">Còn hàng (@Model.Stock sản phẩm)</span>
+                }
+                else
+                {
+                    <span class="product-status-badge status-out-of-stock">Hết hàng</span>
+                }
+                
+                @if (Model.SoldQuantity > 0)
+                {
+                    <span class="product-status-badge status-sold">Đã bán: @Model.SoldQuantity sản phẩm</span>
+                }
+            </div>
 
-            <div class="d-flex align-items-center gap-2 mt-4">
-                <form id="add-to-cart-form" class="flex-grow-1">
+            <div class="d-flex align-items-center gap-3 mt-4">
+                @* Bộ chọn số lượng đặt riêng biệt *@
+                <div class="quantity-selector">
+                    <button type="button" id="decrease-quantity">-</button>
+                    <input type="number" id="product-quantity" value="1" min="1" max="@Model.Stock" readonly>
+                    <button type="button" id="increase-quantity">+</button>
+                </div>
+
+                <form id="buy-now-form" class="d-grid">
                     <input type="hidden" name="productId" value="@Model.Id" />
-                    <div class="d-grid">
-                         <button type="submit" id="add-to-cart-btn" class="btn btn-primary btn-lg" @(Model.Stock > 0 ? "" : "disabled")>
-                            <i class="fas fa-cart-plus me-2"></i> 
-                            @(Model.Stock > 0 ? "Thêm vào giỏ hàng" : "Hết hàng")
-                        </button>
-                    </div>
+                    <button type="submit" id="buy-now-btn" class="btn btn-success buy-now-btn-custom" @(Model.Stock > 0 ? "" : "disabled")>
+                        <i class="fas fa-money-check-alt me-2"></i> Mua ngay
+                    </button>
                 </form>
+                
+                @* BẮT ĐẦU PHẦN SỬA ĐỔI: Nút Thêm vào giỏ hàng chỉ icon, đồng bộ kích thước *@
+                <form id="add-to-cart-form" class="d-grid"> 
+                    <input type="hidden" name="productId" value="@Model.Id" />
+                    <button type="submit" id="add-to-cart-btn" class="btn btn-primary add-to-cart-icon-btn-v2" @* Đã đổi class *@
+                            @(Model.Stock > 0 ? "" : "disabled")>
+                        <i class="fas fa-cart-plus"></i> @* Chỉ giữ icon *@
+                        @if (Model.Stock <= 0)
+                        {
+                            <span class="visually-hidden">Hết hàng</span> 
+                        }
+                    </button>
+                </form>
+                @* KẾT THÚC PHẦN SỬA ĐỔI *@
+
                 @if (SignInManager.IsSignedIn(User))
                 {
-                    <button class="btn btn-outline-danger btn-lg toggle-wishlist-btn" data-product-id="@Model.Id" title="Thêm vào yêu thích">
+                    <button class="btn btn-outline-danger toggle-wishlist-btn btn-lg" data-product-id="@Model.Id" title="Thêm vào yêu thích">
                         <i class="far fa-heart"></i>
                     </button>
                 }
@@ -92,6 +224,8 @@
 
 @section Scripts {
     <script>
+        // Hàm showNotification đã được định nghĩa ở _Layout.cshtml
+
         document.addEventListener('DOMContentLoaded', function () {
             const mainImage = document.getElementById('main-product-image');
             const thumbnailContainer = document.getElementById('thumbnail-container');
@@ -107,19 +241,52 @@
                 });
             }
             
-            const form = document.getElementById('add-to-cart-form');
-            if(form) {
-                form.addEventListener('submit', function(e) {
+            // Logic bộ chọn số lượng
+            const quantityInput = document.getElementById('product-quantity');
+            const decreaseButton = document.getElementById('decrease-quantity');
+            const increaseButton = document.getElementById('increase-quantity');
+            const maxStock = parseInt(quantityInput.max);
+
+            if (quantityInput && decreaseButton && increaseButton) {
+                decreaseButton.addEventListener('click', () => {
+                    let currentValue = parseInt(quantityInput.value);
+                    if (currentValue > 1) {
+                        quantityInput.value = currentValue - 1;
+                    }
+                });
+
+                increaseButton.addEventListener('click', () => {
+                    let currentValue = parseInt(quantityInput.value);
+                    if (currentValue < maxStock) {
+                        quantityInput.value = currentValue + 1;
+                    } else {
+                        showNotification('Số lượng đạt tối đa tồn kho.', 'error');
+                    }
+                });
+            }
+
+            const addToCartForm = document.getElementById('add-to-cart-form');
+            if(addToCartForm) {
+                addToCartForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
                     const productId = this.querySelector('input[name="productId"]').value;
+                    const quantity = parseInt(document.getElementById('product-quantity').value); 
                     const btn = this.querySelector('#add-to-cart-btn');
-                    const originalText = btn.innerHTML;
+                    const originalText = btn.innerHTML; 
                     
-                    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang thêm...';
+                    // Logic spinner cho nút chỉ có icon
+                    const icon = btn.querySelector('.fas.fa-cart-plus');
+                    if (icon) icon.classList.add('d-none'); 
+                    const spinner = document.createElement('span');
+                    spinner.className = 'spinner-border spinner-border-sm';
+                    spinner.setAttribute('role', 'status');
+                    spinner.setAttribute('aria-hidden', 'true');
+                    btn.prepend(spinner); 
+
                     btn.disabled = true;
 
-                    fetch(`/Cart/AddToCart?productId=${productId}`, {
+                    fetch(`/Cart/AddToCart?productId=${productId}&quantity=${quantity}`, { 
                         method: 'POST',
                         headers: {
                            "RequestVerificationToken": document.getElementsByName('__RequestVerificationToken')[0]?.value
@@ -128,18 +295,64 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert(data.message);
+                            showNotification(data.message, 'success'); 
                             const cartCountSpan = document.getElementById('cart-item-count');
                             if (cartCountSpan) {
                                 cartCountSpan.innerText = data.newCartCount;
                             }
                         } else {
-                            alert(`Lỗi: ${data.message}`);
+                            showNotification(`Lỗi: ${data.message}`, 'error'); 
                         }
                     })
                     .catch(error => {
                         console.error('Lỗi khi thêm vào giỏ hàng:', error);
-                        alert('Đã có lỗi xảy ra.');
+                        showNotification('Đã có lỗi xảy ra.', 'error'); 
+                    })
+                    .finally(() => {
+                        // Khôi phục trạng thái nút icon
+                        const spinner = btn.querySelector('.spinner-border');
+                        if (spinner) spinner.remove();
+                        const icon = btn.querySelector('.fas.fa-cart-plus');
+                        if (icon) icon.classList.remove('d-none');
+
+                        btn.disabled = @(Model.Stock > 0 ? "false" : "true");
+                    });
+                });
+            }
+
+            const buyNowForm = document.getElementById('buy-now-form');
+            if (buyNowForm) {
+                buyNowForm.addEventListener('submit', function(e) {
+                    e.preventDefault(); 
+
+                    const productId = this.querySelector('input[name="productId"]').value;
+                    const quantity = parseInt(document.getElementById('product-quantity').value); 
+                    const btn = this.querySelector('#buy-now-btn');
+                    const originalText = btn.innerHTML;
+
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
+                    btn.disabled = true;
+
+                    fetch(`/Checkout/BuyNow?productId=${productId}&quantity=${quantity}`, {
+                        method: 'POST',
+                        headers: {
+                            "RequestVerificationToken": document.getElementsByName('__RequestVerificationToken')[0]?.value
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.href = `/Checkout`; 
+                        } else {
+                            return response.json().then(errorData => {
+                                showNotification(`Lỗi: ${errorData.message || 'Không thể mua sản phẩm ngay lập tức.'}`, 'error'); 
+                            }).catch(() => {
+                                showNotification('Đã có lỗi xảy ra khi mua ngay.', 'error'); 
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Lỗi khi mua ngay:', error);
+                        showNotification('Đã có lỗi xảy ra khi mua ngay.', 'error'); 
                     })
                     .finally(() => {
                         btn.innerHTML = originalText;

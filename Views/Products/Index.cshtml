@@ -12,6 +12,38 @@
     var categories = ViewData["Categories"] as List<Category>;
 }
 
+<style>
+    /* CSS cho badge "Đã bán" */
+    .sold-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: rgba(0, 0, 0, 0.6); /* Nền tối mờ */
+        color: white;
+        padding: 5px 8px;
+        border-radius: 5px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        z-index: 10; /* Đảm bảo nó nằm trên ảnh */
+    }
+    .product-card-img-container {
+        position: relative; /* Quan trọng để .sold-badge định vị đúng */
+        overflow: hidden; /* Đảm bảo không có gì tràn ra ngoài */
+    }
+    .card-img-top {
+        transition: transform 0.3s ease; /* Hiệu ứng hover cho ảnh */
+    }
+    .product-card:hover .card-img-top {
+        transform: scale(1.05); /* Phóng to ảnh khi hover */
+    }
+    .product-card {
+        transition: box-shadow 0.3s ease; /* Hiệu ứng hover cho card */
+    }
+    .product-card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .15) !important;
+    }
+</style>
+
 <div class="container py-5">
     <div class="row">
         <div class="col-lg-3">
@@ -22,7 +54,7 @@
                        asp-route-searchString="@currentFilter"
                        asp-route-categoryId="" 
                        class="list-group-item list-group-item-action @(currentCategory == null ? "active" : "")">
-                        Tất cả sản phẩm
+                       Tất cả sản phẩm
                     </a>
                     @if (categories != null)
                     {
@@ -71,6 +103,12 @@
                                     <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id">
                                         <img src="@imageUrl" class="card-img-top" alt="@product.Name">
                                     </a>
+                                    @* BẮT ĐẦU PHẦN THÊM MỚI: HIỂN THỊ SỐ LƯỢNG ĐÃ BÁN *@
+                                    @if (product.SoldQuantity > 0)
+                                    {
+                                        <span class="sold-badge">Đã bán: @product.SoldQuantity</span>
+                                    }
+                                    @* KẾT THÚC PHẦN THÊM MỚI *@
                                     @if (SignInManager.IsSignedIn(User))
                                     {
                                         <button class="btn toggle-wishlist-btn position-absolute top-0 end-0 m-2" data-product-id="@product.Id" title="Thêm vào yêu thích">
@@ -108,7 +146,7 @@
                             </li>
                         }
                         <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                             <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)" asp-route-searchString="@currentFilter" asp-route-categoryId="@currentCategory">
+                            <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)" asp-route-searchString="@currentFilter" asp-route-categoryId="@currentCategory">
                                 <span>»</span>
                             </a>
                         </li>

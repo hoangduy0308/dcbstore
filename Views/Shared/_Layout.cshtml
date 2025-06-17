@@ -15,8 +15,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-          integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
-          crossorigin="anonymous" referrerpolicy="no-referrer" />
+             integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+             crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <style>
         body {
@@ -173,6 +173,46 @@
         .toggle-wishlist-btn.liked {
             color: #dc3545;
         }
+
+        /* CSS cho thông báo hiện đại */
+        .notification-container {
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 1050; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-end; 
+        }
+
+        .notification {
+            color: white;
+            padding: 15px 20px;
+            margin-top: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            opacity: 0; 
+            transform: translateY(-20px); 
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; 
+            max-width: 300px; 
+            word-wrap: break-word; 
+        }
+
+        .notification.show {
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+
+        .notification.hide {
+            opacity: 0; 
+            transform: translateY(-20px); 
+        }
+        .notification.success {
+            background-color: #28a745; 
+        }
+        .notification.error {
+            background-color: #dc3545; 
+        }
     </style>
 </head>
 
@@ -206,7 +246,7 @@
                         </button>
                     </form>
                     <div class="d-flex align-items-center gap-4">
-                        <a asp-controller="Cart" asp-action="Index" class="position-relative text-decoration-none"
+                        <a asp-area="" asp-controller="Cart" asp-action="Index" class="position-relative text-decoration-none" 
                            title="Giỏ hàng">
                             <i class="fas fa-shopping-cart fs-5 text-dark"></i>
                             <span class="badge bg-danger rounded-circle position-absolute" id="cart-item-count"
@@ -355,5 +395,37 @@
             });
         </script>
     }
+
+    @* BẮT ĐẦU PHẦN THÊM MỚI: Script cho thông báo hiện đại *@
+    <script>
+        function showNotification(message, type = 'success') {
+            const notificationContainer = document.getElementById('notification-container');
+            if (!notificationContainer) return;
+
+            const notificationDiv = document.createElement('div');
+            notificationDiv.classList.add('notification');
+            notificationDiv.classList.add(type); 
+            notificationDiv.innerText = message;
+
+            notificationContainer.appendChild(notificationDiv);
+
+            setTimeout(() => {
+                notificationDiv.classList.add('show');
+            }, 100);
+
+            setTimeout(() => {
+                notificationDiv.classList.remove('show');
+                notificationDiv.classList.add('hide');
+                setTimeout(() => {
+                    notificationContainer.removeChild(notificationDiv);
+                }, 300); 
+            }, 3000); 
+        }
+    </script>
+    @* KẾT THÚC PHẦN THÊM MỚI *@
+
+    @* BẮT ĐẦU PHẦN THÊM MỚI: Vùng chứa thông báo hiện đại *@
+    <div id="notification-container" class="notification-container"></div>
+    @* KẾT THÚC PHẦN THÊM MỚI *@
 </body>
 </html>

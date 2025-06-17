@@ -4,6 +4,7 @@ using DCBStore.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DCBStore.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250617153422_AddSoldQuantityToProduct")]
+    partial class AddSoldQuantityToProduct
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,58 +96,6 @@ namespace DCBStore.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("DCBStore.Models.Cart", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("LastModifiedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique()
-                        .HasFilter("[UserId] IS NOT NULL");
-
-                    b.ToTable("Carts");
-                });
-
-            modelBuilder.Entity("DCBStore.Models.CartItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CartId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CartId");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("CartItems");
-                });
-
             modelBuilder.Entity("DCBStore.Models.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -161,6 +112,23 @@ namespace DCBStore.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Thiết bị điện tử"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Sách"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Mỹ phẩm & Nước hoa"
+                        });
                 });
 
             modelBuilder.Entity("DCBStore.Models.Order", b =>
@@ -270,6 +238,48 @@ namespace DCBStore.Migrations
                     b.HasIndex("CategoryId");
 
                     b.ToTable("Products");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CategoryId = 1,
+                            Description = "Laptop doanh nhân mạnh mẽ, bền bỉ.",
+                            Name = "Laptop ThinkPad T14",
+                            Price = 25000000m,
+                            SoldQuantity = 0,
+                            Stock = 10
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CategoryId = 2,
+                            Description = "Cuốn sách bán chạy nhất mọi thời đại của Paulo Coelho.",
+                            Name = "Tiểu thuyết 'Nhà Giả Kim'",
+                            Price = 69000m,
+                            SoldQuantity = 0,
+                            Stock = 100
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CategoryId = 3,
+                            Description = "Hương thơm cổ điển và quyến rũ cho phái nữ.",
+                            Name = "Nước hoa Chanel No. 5",
+                            Price = 3500000m,
+                            SoldQuantity = 0,
+                            Stock = 20
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CategoryId = 1,
+                            Description = "Tai nghe chống ồn chủ động hàng đầu thế giới.",
+                            Name = "Tai nghe Sony WH-1000XM5",
+                            Price = 8500000m,
+                            SoldQuantity = 0,
+                            Stock = 30
+                        });
                 });
 
             modelBuilder.Entity("DCBStore.Models.ProductImage", b =>
@@ -292,29 +302,32 @@ namespace DCBStore.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductImages");
-                });
 
-            modelBuilder.Entity("DCBStore.Models.Wishlist", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("Wishlists");
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ProductId = 1,
+                            Url = "/images/products/laptop-thinkpad.jpg"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ProductId = 2,
+                            Url = "/images/products/nha-gia-kim.jpg"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ProductId = 3,
+                            Url = "/images/products/chanel-no5.jpg"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            ProductId = 4,
+                            Url = "/images/products/sony-headphone.jpg"
+                        });
                 });
 
             modelBuilder.Entity("DCBStore.Models.WishlistItem", b =>
@@ -328,14 +341,15 @@ namespace DCBStore.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    b.Property<int>("WishlistId")
-                        .HasColumnType("int");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
 
-                    b.HasIndex("WishlistId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("WishlistItems");
                 });
@@ -477,39 +491,10 @@ namespace DCBStore.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("DCBStore.Models.Cart", b =>
-                {
-                    b.HasOne("DCBStore.Data.ApplicationUser", "User")
-                        .WithOne("Cart")
-                        .HasForeignKey("DCBStore.Models.Cart", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("DCBStore.Models.CartItem", b =>
-                {
-                    b.HasOne("DCBStore.Models.Cart", "Cart")
-                        .WithMany("CartItems")
-                        .HasForeignKey("CartId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DCBStore.Models.Product", "Product")
-                        .WithMany("CartItems")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Cart");
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("DCBStore.Models.Order", b =>
                 {
                     b.HasOne("DCBStore.Data.ApplicationUser", "User")
-                        .WithMany("Orders")
+                        .WithMany()
                         .HasForeignKey("UserId");
 
                     b.Navigation("User");
@@ -524,9 +509,9 @@ namespace DCBStore.Migrations
                         .IsRequired();
 
                     b.HasOne("DCBStore.Models.Product", "Product")
-                        .WithMany("OrderDetails")
+                        .WithMany()
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Order");
@@ -539,7 +524,7 @@ namespace DCBStore.Migrations
                     b.HasOne("DCBStore.Models.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Category");
@@ -556,34 +541,23 @@ namespace DCBStore.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("DCBStore.Models.Wishlist", b =>
-                {
-                    b.HasOne("DCBStore.Data.ApplicationUser", "User")
-                        .WithOne("Wishlist")
-                        .HasForeignKey("DCBStore.Models.Wishlist", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("DCBStore.Models.WishlistItem", b =>
                 {
                     b.HasOne("DCBStore.Models.Product", "Product")
-                        .WithMany("WishlistItems")
+                        .WithMany()
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DCBStore.Models.Wishlist", "Wishlist")
-                        .WithMany("WishlistItems")
-                        .HasForeignKey("WishlistId")
+                    b.HasOne("DCBStore.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Product");
 
-                    b.Navigation("Wishlist");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -637,20 +611,6 @@ namespace DCBStore.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DCBStore.Data.ApplicationUser", b =>
-                {
-                    b.Navigation("Cart");
-
-                    b.Navigation("Orders");
-
-                    b.Navigation("Wishlist");
-                });
-
-            modelBuilder.Entity("DCBStore.Models.Cart", b =>
-                {
-                    b.Navigation("CartItems");
-                });
-
             modelBuilder.Entity("DCBStore.Models.Category", b =>
                 {
                     b.Navigation("Products");
@@ -663,18 +623,7 @@ namespace DCBStore.Migrations
 
             modelBuilder.Entity("DCBStore.Models.Product", b =>
                 {
-                    b.Navigation("CartItems");
-
                     b.Navigation("Images");
-
-                    b.Navigation("OrderDetails");
-
-                    b.Navigation("WishlistItems");
-                });
-
-            modelBuilder.Entity("DCBStore.Models.Wishlist", b =>
-                {
-                    b.Navigation("WishlistItems");
                 });
 #pragma warning restore 612, 618
         }

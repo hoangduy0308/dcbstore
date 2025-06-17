@@ -17,6 +17,10 @@
       "PackagePath": "staticwebassets\\images\\avatars\\0aa48152-b283-40af-97c1-b7c0f53c6e21_481712981_1183858823098434_6008174039502110759_n.jpg"
     },
     {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\avatars\\5447ac19-bf04-43b9-927d-1506cb9666c2_489450130_18498252388009800_7301714368554833605_n.jpg",
+      "PackagePath": "staticwebassets\\images\\avatars\\5447ac19-bf04-43b9-927d-1506cb9666c2_489450130_18498252388009800_7301714368554833605_n.jpg"
+    },
+    {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\avatars\\7e3f8ccd-1e95-4504-a8c8-98678eea357d_481712981_1183858823098434_6008174039502110759_n.jpg",
       "PackagePath": "staticwebassets\\images\\avatars\\7e3f8ccd-1e95-4504-a8c8-98678eea357d_481712981_1183858823098434_6008174039502110759_n.jpg"
     },
@@ -53,12 +57,20 @@
       "PackagePath": "staticwebassets\\images\\products\\621dc3f1-6ee8-4966-a2f2-349b042c8611_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp"
     },
     {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\8076a483-1469-4fb9-9a62-460830879c37_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp",
+      "PackagePath": "staticwebassets\\images\\products\\8076a483-1469-4fb9-9a62-460830879c37_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp"
+    },
+    {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\99dcdfef-45f2-436d-ae9d-e0ae3752f1f6_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp",
       "PackagePath": "staticwebassets\\images\\products\\99dcdfef-45f2-436d-ae9d-e0ae3752f1f6_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp"
     },
     {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\aa4cdc46-d33d-4a75-b5f5-f509f8a60779_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg",
       "PackagePath": "staticwebassets\\images\\products\\aa4cdc46-d33d-4a75-b5f5-f509f8a60779_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\d57dbcb1-6e5e-4303-b911-0766ddea6249_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg",
+      "PackagePath": "staticwebassets\\images\\products\\d57dbcb1-6e5e-4303-b911-0766ddea6249_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg"
     },
     {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\de848b7f-fcd7-43fa-9ab0-88adf7965531_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg",
