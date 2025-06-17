@@ -1,0 +1,44 @@
+@model DCBStore.Data.ApplicationUser
+
+@{
+    ViewData["Title"] = "Xác nhận xóa Người dùng";
+}
+
+<h1 class="mb-4">Xác nhận xóa Người dùng</h1>
+
+<h3 class="text-danger">Bạn có chắc chắn muốn xóa người dùng này không?</h3>
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">
+            Email
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.Email)
+        </dd>
+        <dt class="col-sm-3">
+            Tên đầy đủ
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.FullName)
+        </dd>
+        <dt class="col-sm-3">
+            Số điện thoại
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.PhoneNumber)
+        </dd>
+        <dt class="col-sm-3">
+            Vai trò
+        </dt>
+        <dd class="col-sm-9">
+            @(ViewData["UserRoles"] ?? "Chưa có")
+        </dd>
+    </dl>
+    
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-danger">Xóa</button>
+        <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+    </form>
+</div>

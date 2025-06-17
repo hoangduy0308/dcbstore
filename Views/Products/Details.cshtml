@@ -2,108 +2,105 @@
 @using Microsoft.AspNetCore.Identity
 @using DCBStore.Data
 @inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 
 @{
     ViewData["Title"] = Model.Name;
     var firstImage = Model.Images?.FirstOrDefault()?.Url ?? "/images/placeholder.png";
+
+    var averageRating = Model.Reviews != null && Model.Reviews.Any() ? Model.Reviews.Average(r => r.Rating) : 0;
+    var reviewCount = Model.Reviews != null ? Model.Reviews.Count : 0;
+    var currentUserReview = SignInManager.IsSignedIn(User) ? Model.Reviews?.FirstOrDefault(r => r.UserId == UserManager.GetUserId(User)) : null;
 }
 
 <style>
-    /* CSS CƠ BẢN VÀ MỚI CHO GIAO DIỆN HIỆN ĐẠI HƠN */
     .main-product-image {
         height: 500px;
         width: 100%;
         object-fit: contain;
-        border: 1px solid #e0e0e0; /* Viền nhẹ nhàng hơn */
-        border-radius: 0.75rem; /* Bo tròn nhiều hơn */
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Thêm đổ bóng nhẹ */
+        border: 1px solid #e0e0e0;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
     .thumbnail-list {
         display: flex;
-        gap: 12px; /* Khoảng cách lớn hơn */
-        margin-top: 20px; /* Khoảng cách lớn hơn */
+        gap: 12px;
+        margin-top: 20px;
         flex-wrap: wrap;
-        justify-content: center; /* Căn giữa các ảnh thumbnail */
+        justify-content: center;
     }
     .thumbnail-item {
-        width: 90px; /* Lớn hơn một chút */
+        width: 90px;
         height: 90px;
-        object-fit: cover; /* Dùng cover thay vì contain để lấp đầy */
+        object-fit: cover;
         border: 2px solid #e9ecef;
-        border-radius: 0.5rem; /* Bo tròn nhiều hơn */
+        border-radius: 0.5rem;
         cursor: pointer;
-        transition: border-color 0.2s, transform 0.2s; /* Thêm hiệu ứng transform */
+        transition: border-color 0.2s, transform 0.2s;
     }
     .thumbnail-item.active,
     .thumbnail-item:hover {
         border-color: var(--bs-primary);
-        transform: translateY(-3px); /* Hiệu ứng nhấc lên nhẹ */
+        transform: translateY(-3px);
     }
 
-    /* CSS ĐỒNG BỘ CHO HIỂN THỊ TỒN KHO VÀ ĐÃ BÁN */
     .product-status-badge {
         display: inline-block;
-        padding: 6px 12px; /* Lớn hơn một chút */
-        border-radius: 20px; /* Bo tròn hoàn toàn */
-        font-size: 0.95rem; /* Kích thước chữ lớn hơn */
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.95rem;
         font-weight: 600;
-        margin-right: 10px; /* Khoảng cách giữa các badge */
-        margin-top: 10px; /* Khoảng cách với dòng trên */
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Đổ bóng nhẹ */
+        margin-right: 10px;
+        margin-top: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .status-in-stock {
-        background-color: #28a745; /* Bootstrap Green */
+        background-color: #28a745;
         color: white;
     }
     .status-out-of-stock {
-        background-color: #dc3545; /* Bootstrap Red */
+        background-color: #dc3545;
         color: white;
     }
     .status-sold {
-        background-color: #ffc107; /* Bootstrap Warning Yellow */
-        color: #343a40; /* Chữ đen để tương phản */
+        background-color: #ffc107;
+        color: #343a40;
     }
 
-    /* BẮT ĐẦU PHẦN SỬA ĐỔI: KÍCH THƯỚC NÚT ĐỒNG BỘ */
-    /* Nút Mua ngay: Lớn và ưu tiên */
     .buy-now-btn-custom {
-        height: 58px; /* Chiều cao cố định đồng bộ */
+        height: 58px;
         display: flex;
         justify-content: center;
         align-items: center;
         border-radius: 0.5rem;
-        font-size: 1.15rem; /* Kích thước font */
-        padding: 0 30px; /* Padding ngang */
+        font-size: 1.15rem;
+        padding: 0 30px;
         font-weight: 700;
-        min-width: 180px; /* Đảm bảo chiều rộng tối thiểu */
+        min-width: 180px;
     }
 
-    /* Nút Thêm vào giỏ hàng: Chỉ icon, kích thước vuông đồng bộ */
     .add-to-cart-icon-btn-v2 {
-        height: 58px; /* Chiều cao cố định đồng bộ */
-        width: 58px; /* Vuông */
-        padding: 0; /* Bỏ padding cũ để chỉ có icon */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 0.5rem;
-        font-size: 1.5rem; /* Kích thước icon */
-    }
-
-    /* Nút Yêu thích (Trái tim): Icon, kích thước vuông đồng bộ */
-    .toggle-wishlist-btn.btn-lg { /* Giữ btn-lg nhưng thêm tùy chỉnh */
-        height: 58px; /* Chiều cao cố định đồng bộ */
-        width: 58px; /* Vuông */
+        height: 58px;
+        width: 58px;
         padding: 0;
         display: flex;
         justify-content: center;
         align-items: center;
         border-radius: 0.5rem;
-        font-size: 1.5rem; /* Kích thước icon */
+        font-size: 1.5rem;
     }
-    /* KẾT THÚC PHẦN SỬA ĐỔI */
 
-    /* Bộ chọn số lượng */
+    .toggle-wishlist-btn.btn-lg {
+        height: 58px;
+        width: 58px;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 0.5rem;
+        font-size: 1.5rem;
+    }
+
     .quantity-selector {
         display: flex;
         align-items: center;
@@ -111,7 +108,7 @@
         border-radius: 0.5rem;
         overflow: hidden;
         width: 120px;
-        height: 58px; /* Đồng bộ chiều cao với các nút lớn */
+        height: 58px;
     }
     .quantity-selector button {
         background-color: #f8f9fa;
@@ -141,6 +138,37 @@
         -webkit-appearance: none;
         margin: 0;
     }
+
+    .rating-stars {
+        color: #ffc107;
+        font-size: 1.25rem;
+    }
+    .rating-stars .far {
+        color: #e0e0e0;
+    }
+    .star-rating input {
+        display: none;
+    }
+    .star-rating label {
+        font-size: 1.5rem;
+        color: #e0e0e0;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    .star-rating label:hover,
+    .star-rating label:hover ~ label,
+    .star-rating input:checked ~ label {
+        color: #ffc107;
+    }
+    .star-rating {
+        direction: rtl;
+        display: inline-block;
+        padding: 0;
+    }
+    .star-rating label:before {
+        content: '\2605';
+        padding: 0 2px;
+    }
 </style>
 
 <div class="container mt-5">
@@ -163,6 +191,22 @@
             <h1 class="display-5 fw-bold mb-3">@Model.Name</h1>
             <p class="text-muted fs-6 mb-4">Danh mục: <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@Model.CategoryId" class="text-decoration-none">@Model.Category.Name</a></p>
             <hr class="mb-4">
+            <div class="d-flex align-items-center mb-3">
+                @if (reviewCount > 0)
+                {
+                    <span class="rating-stars me-2">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <i class="@(i <= averageRating ? "fas" : "far") fa-star"></i>
+                        }
+                    </span>
+                    <span class="text-muted">(@reviewCount đánh giá)</span>
+                }
+                else
+                {
+                    <span class="text-muted">Chưa có đánh giá nào.</span>
+                }
+            </div>
             <p class="lead" style="line-height: 1.7;">@Html.Raw(Model.Description)</p>
             <h3 class="my-3 display-6" style="color: #d9534f; font-weight: 700;">@Model.Price.ToString("N0") VNĐ</h3>
             
@@ -183,7 +227,6 @@
             </div>
 
             <div class="d-flex align-items-center gap-3 mt-4">
-                @* Bộ chọn số lượng đặt riêng biệt *@
                 <div class="quantity-selector">
                     <button type="button" id="decrease-quantity">-</button>
                     <input type="number" id="product-quantity" value="1" min="1" max="@Model.Stock" readonly>
@@ -197,19 +240,17 @@
                     </button>
                 </form>
                 
-                @* BẮT ĐẦU PHẦN SỬA ĐỔI: Nút Thêm vào giỏ hàng chỉ icon, đồng bộ kích thước *@
                 <form id="add-to-cart-form" class="d-grid"> 
                     <input type="hidden" name="productId" value="@Model.Id" />
-                    <button type="submit" id="add-to-cart-btn" class="btn btn-primary add-to-cart-icon-btn-v2" @* Đã đổi class *@
+                    <button type="submit" id="add-to-cart-btn" class="btn btn-primary add-to-cart-icon-btn-v2" 
                             @(Model.Stock > 0 ? "" : "disabled")>
-                        <i class="fas fa-cart-plus"></i> @* Chỉ giữ icon *@
+                        <i class="fas fa-cart-plus"></i> 
                         @if (Model.Stock <= 0)
                         {
                             <span class="visually-hidden">Hết hàng</span> 
                         }
                     </button>
                 </form>
-                @* KẾT THÚC PHẦN SỬA ĐỔI *@
 
                 @if (SignInManager.IsSignedIn(User))
                 {
@@ -220,12 +261,88 @@
             </div>
         </div>
     </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2 class="mb-4">Đánh giá sản phẩm</h2>
+            <hr />
+
+            @if (SignInManager.IsSignedIn(User))
+            {
+                @if (currentUserReview == null)
+                {
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header">Gửi đánh giá của bạn</div>
+                        <div class="card-body">
+                            <form asp-controller="Reviews" asp-action="Create" method="post">
+                                <input type="hidden" name="productId" value="@Model.Id" />
+                                <div class="mb-3">
+                                    <label for="rating" class="form-label">Xếp hạng:</label>
+                                    <div class="star-rating">
+                                        <input type="radio" id="star5" name="rating" value="5" /><label for="star5" title="Tuyệt vời"></label>
+                                        <input type="radio" id="star4" name="rating" value="4" /><label for="star4" title="Rất tốt"></label>
+                                        <input type="radio" id="star3" name="rating" value="3" /><label for="star3" title="Bình thường"></label>
+                                        <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="Không tốt"></label>
+                                        <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="Tệ"></label>
+                                    </div>
+                                    
+                                </div>
+                                <div class="mb-3">
+                                    <label for="comment" class="form-label">Bình luận:</label>
+                                    <textarea name="comment" class="form-control" rows="3" placeholder="Viết đánh giá của bạn tại đây..."></textarea>
+                                    
+                                </div>
+                                <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info" role="alert">
+                        Bạn đã đánh giá sản phẩm này.
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info" role="alert">
+                    Vui lòng <a asp-area="Identity" asp-page="/Account/Login">đăng nhập</a> để gửi đánh giá.
+                </div>
+            }
+
+            @if (Model.Reviews != null && Model.Reviews.Any())
+            {
+                <h3 class="mb-3">Tất cả đánh giá (@reviewCount)</h3>
+                <div class="list-group">
+                    @foreach (var review in Model.Reviews)
+                    {
+                        <div class="list-group-item list-group-item-action mb-3 shadow-sm rounded-lg">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1 fw-bold">@review.User.FullName</h5>
+                                <small class="text-muted">@review.ReviewDate.ToShortDateString()</small>
+                            </div>
+                            <div class="rating-stars mb-2">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="@(i <= review.Rating ? "fas" : "far") fa-star"></i>
+                                }
+                            </div>
+                            <p class="mb-1">@review.Comment</p>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">Chưa có đánh giá nào cho sản phẩm này.</p>
+            }
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <script>
-        // Hàm showNotification đã được định nghĩa ở _Layout.cshtml
-
         document.addEventListener('DOMContentLoaded', function () {
             const mainImage = document.getElementById('main-product-image');
             const thumbnailContainer = document.getElementById('thumbnail-container');
@@ -241,7 +358,6 @@
                 });
             }
             
-            // Logic bộ chọn số lượng
             const quantityInput = document.getElementById('product-quantity');
             const decreaseButton = document.getElementById('decrease-quantity');
             const increaseButton = document.getElementById('increase-quantity');
@@ -275,7 +391,6 @@
                     const btn = this.querySelector('#add-to-cart-btn');
                     const originalText = btn.innerHTML; 
                     
-                    // Logic spinner cho nút chỉ có icon
                     const icon = btn.querySelector('.fas.fa-cart-plus');
                     if (icon) icon.classList.add('d-none'); 
                     const spinner = document.createElement('span');
@@ -309,7 +424,6 @@
                         showNotification('Đã có lỗi xảy ra.', 'error'); 
                     })
                     .finally(() => {
-                        // Khôi phục trạng thái nút icon
                         const spinner = btn.querySelector('.spinner-border');
                         if (spinner) spinner.remove();
                         const icon = btn.querySelector('.fas.fa-cart-plus');

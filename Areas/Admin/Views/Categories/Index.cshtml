@@ -4,27 +4,49 @@
     ViewData["Title"] = "Quản lý Danh mục";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">@ViewData["Title"]</h1>
+    <a asp-action="Create" class="btn btn-primary d-flex align-items-center">
+        <i class="fas fa-plus me-2"></i> Tạo danh mục mới
+    </a>
+</div>
 
-<p>
-    <a asp-action="Create" class="btn btn-success">Tạo danh mục mới</a>
-</p>
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Tên Danh mục</th>
-            <th style="width: 150px;"></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>@Html.DisplayFor(modelItem => item.Name)</td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Sửa</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Xóa</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                <p class="lead text-muted">Chưa có danh mục nào được tạo.</p>
+                <p class="text-muted">Hãy tạo danh mục đầu tiên của bạn!</p>
+            </div>
+        }
+        else
+        {
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="py-3 px-4">Tên Danh mục</th>
+                        <th style="width: 180px;" class="py-3 px-4 text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="py-3 px-4">@Html.DisplayFor(modelItem => item.Name)</td>
+                            <td class="py-3 px-4 text-center">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning me-1" title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

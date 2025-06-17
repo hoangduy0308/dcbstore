@@ -2,35 +2,43 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using DCBStore.Data;
+using DCBStore.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using System;
+using System.Linq;
 
 namespace DCBStore.Hubs
 {
-    // Yêu cầu người dùng phải đăng nhập để kết nối vào Hub
     [Authorize]
     public class ChatHub : Hub
     {
-        // Dùng một Dictionary tĩnh để lưu trữ ánh xạ giữa UserId và ConnectionId
-        // Key: UserId (string), Value: ConnectionId (string)
-        // ConcurrentDictionary an toàn hơn cho việc truy cập từ nhiều luồng
         private static readonly ConcurrentDictionary<string, string> UserConnections = new ConcurrentDictionary<string, string>();
         
-        // Ghi đè phương thức OnConnectedAsync: Được gọi khi một client kết nối thành công
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public ChatHub(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        {
+            _context = context;
+            _userManager = userManager;
+        }
+
         public override async Task OnConnectedAsync()
         {
-            // Lấy UserId của người dùng vừa kết nối (nhờ [Authorize])
             var userId = Context.UserIdentifier; 
+            var userName = Context.User.Identity.Name;
 
             if (!string.IsNullOrEmpty(userId))
             {
-                // Lưu lại ConnectionId của người dùng này
                 UserConnections[userId] = Context.ConnectionId;
                 
-                // Gửi thông báo đến các Admin rằng có người dùng mới kết nối
-                // Chúng ta sẽ gửi đến một "Group" tên là "Admins"
-                await Clients.Group("Admins").SendAsync("UserConnected", userId, Context.User.Identity.Name);
+                await Clients.Group("Admins").SendAsync("UserConnected", userId, userName);
+
+                await LoadChatHistoryForCurrentUser(userId);
             }
 
-            // Nếu người dùng là Admin, thêm họ vào Group "Admins"
             if (Context.User.IsInRole("Admin"))
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, "Admins");
@@ -39,16 +47,13 @@ namespace DCBStore.Hubs
             await base.OnConnectedAsync();
         }
 
-        // Ghi đè phương thức OnDisconnectedAsync: Được gọi khi một client ngắt kết nối
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             var userId = Context.UserIdentifier;
 
             if (!string.IsNullOrEmpty(userId))
             {
-                // Xóa ConnectionId khỏi danh sách khi người dùng thoát
                 UserConnections.TryRemove(userId, out _);
-                 // Gửi thông báo đến các Admin rằng người dùng đã ngắt kết nối
                 await Clients.Group("Admins").SendAsync("UserDisconnected", userId);
             }
             
@@ -60,30 +65,117 @@ namespace DCBStore.Hubs
             await base.OnDisconnectedAsync(exception);
         }
 
-        // Phương thức mới cho người dùng gửi tin nhắn ĐẾN ADMIN
         public async Task SendMessageToAdmin(string message)
         {
             var senderUserId = Context.UserIdentifier;
             var senderName = Context.User.Identity.Name;
+            var isAdminSender = Context.User.IsInRole("Admin");
 
-            if (!string.IsNullOrEmpty(senderUserId))
+            if (!string.IsNullOrEmpty(senderUserId) && senderName != null)
             {
-                // Gửi tin nhắn này đến tất cả các client trong group "Admins"
-                await Clients.Group("Admins").SendAsync("ReceiveMessageFromUser", senderUserId, senderName, message);
+                var chatMessage = new ChatMessage
+                {
+                    SenderId = senderUserId,
+                    Message = message,
+                    Timestamp = DateTime.UtcNow,
+                    IsAdminMessage = isAdminSender,
+                    ReceiverId = null
+                };
+
+                await _context.ChatMessages.AddAsync(chatMessage);
+                await _context.SaveChangesAsync();
+
+                await Clients.Group("Admins").SendAsync("ReceiveMessageFromUser", senderUserId, senderName, message, chatMessage.Timestamp, chatMessage.IsAdminMessage);
+                await Clients.Caller.SendAsync("ReceiveMessage", senderName, message, chatMessage.Timestamp, senderUserId, isAdminSender);
             }
         }
 
-        // Phương thức mới cho ADMIN gửi tin nhắn trả lời ĐẾN MỘT NGƯỜI DÙNG CỤ THỂ
         public async Task SendMessageToUser(string targetUserId, string message)
         {
-            // Chỉ Admin mới được phép gọi hàm này
             if (Context.User.IsInRole("Admin"))
             {
-                // Tìm ConnectionId của người dùng mục tiêu
+                var adminUserId = Context.UserIdentifier;
+                var adminUserName = Context.User.Identity.Name;
+
+                var chatMessage = new ChatMessage
+                {
+                    SenderId = adminUserId,
+                    Message = message,
+                    Timestamp = DateTime.UtcNow,
+                    IsAdminMessage = true,
+                    ReceiverId = targetUserId
+                };
+
+                await _context.ChatMessages.AddAsync(chatMessage);
+                await _context.SaveChangesAsync();
+
                 if (UserConnections.TryGetValue(targetUserId, out string? connectionId))
                 {
-                    // Gửi tin nhắn chỉ đến cho client có ConnectionId đó
-                    await Clients.Client(connectionId).SendAsync("ReceiveMessage", "Admin", message);
+                    await Clients.Client(connectionId).SendAsync("ReceiveMessage", adminUserName, message, chatMessage.Timestamp, adminUserId, chatMessage.IsAdminMessage);
+                }
+                
+                await Clients.Group("Admins").SendAsync("ReceiveMessageFromUser", adminUserId, adminUserName, message, chatMessage.Timestamp, chatMessage.IsAdminMessage);
+            }
+        }
+
+        private async Task LoadChatHistoryForCurrentUser(string userId)
+        {
+            var messagesQuery = _context.ChatMessages
+                                         .Include(m => m.Sender)
+                                         .AsQueryable();
+
+            if (!Context.User.IsInRole("Admin"))
+            {
+                messagesQuery = messagesQuery.Where(m => m.SenderId == userId || (m.IsAdminMessage && m.ReceiverId == userId));
+            }
+
+            var messages = await messagesQuery
+                                         .OrderByDescending(m => m.Timestamp)
+                                         .Take(50)
+                                         .OrderBy(m => m.Timestamp)
+                                         .ToListAsync();
+
+            foreach (var msg in messages)
+            {
+                if (msg.IsAdminMessage)
+                {
+                    await Clients.Caller.SendAsync("ReceiveMessage", msg.Sender.UserName, msg.Message, msg.Timestamp, msg.SenderId, msg.IsAdminMessage);
+                }
+                else
+                {
+                    await Clients.Caller.SendAsync("ReceiveMessageFromUser", msg.SenderId, msg.Sender.UserName, msg.Message, msg.Timestamp, msg.IsAdminMessage);
+                }
+            }
+        }
+
+        public async Task LoadSpecificUserChatHistory(string targetUserId)
+        {
+            if (!Context.User.IsInRole("Admin"))
+            {
+                return; 
+            }
+
+            var messages = await _context.ChatMessages
+                                 .Include(m => m.Sender)
+                                 // Lọc tin nhắn để hiển thị cuộc trò chuyện giữa người dùng mục tiêu và admin:
+                                 // 1. Tin nhắn từ người dùng mục tiêu gửi cho admin (ReceiverId == null)
+                                 // HOẶC
+                                 // 2. Tin nhắn admin gửi ĐẾN người dùng mục tiêu (ReceiverId == targetUserId)
+                                 .Where(m => (m.SenderId == targetUserId && m.ReceiverId == null)
+                                          || (m.IsAdminMessage && m.ReceiverId == targetUserId))
+                                 .OrderBy(m => m.Timestamp)
+                                 .Take(100)
+                                 .ToListAsync();
+
+            foreach (var msg in messages)
+            {
+                if (msg.IsAdminMessage)
+                {
+                    await Clients.Caller.SendAsync("ReceiveMessage", msg.Sender.UserName, msg.Message, msg.Timestamp, msg.SenderId, msg.IsAdminMessage);
+                }
+                else
+                {
+                    await Clients.Caller.SendAsync("ReceiveMessageFromUser", msg.SenderId, msg.Sender.UserName, msg.Message, msg.Timestamp, msg.IsAdminMessage);
                 }
             }
         }

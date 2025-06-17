@@ -1,78 +1,91 @@
 @model DCBStore.Areas.Admin.Models.DashboardViewModel
+@using Microsoft.AspNetCore.Identity
+@using DCBStore.Data
+@inject SignInManager<ApplicationUser> SignInManager
+@* UserManager is also needed if you plan to use UserManager.GetUserId(User) later in this view *@
+@inject UserManager<ApplicationUser> UserManager
+
+
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Tổng quan Quản trị";
 }
 
+<h1 class="mb-4">@ViewData["Title"]</h1>
+
 <div class="row">
-    <!-- Thẻ Thống kê Doanh thu (Tháng) -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-start-primary shadow h-100 py-2">
+    <div class="col-md-3 mb-4">
+        <div class="card bg-primary text-white h-100">
             <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs fw-bold text-primary text-uppercase mb-1">
-                            Doanh thu (Tháng)</div>
-                        <div class="h5 mb-0 fw-bold text-gray-800">@Model.MonthlyRevenue.ToString("N0") VNĐ</div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-0">Doanh thu tháng này</h6>
+                        <h4 class="display-5">@Model.MonthlyRevenue.ToString("N0") VNĐ</h4>
                     </div>
-                    <div class="col-auto">
-                        <i class="fas fa-dollar-sign fa-2x text-secondary"></i>
-                    </div>
+                    <i class="fas fa-dollar-sign fa-3x"></i>
                 </div>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a class="small text-white stretched-link" href="#">Xem chi tiết</a>
+                <div class="small text-white"><i class="fas fa-angle-right"></i></div>
             </div>
         </div>
     </div>
-
-    <!-- Thẻ Thống kê Đơn hàng mới (Hôm nay) -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-start-success shadow h-100 py-2">
+    <div class="col-md-3 mb-4">
+        <div class="card bg-warning text-white h-100">
             <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs fw-bold text-success text-uppercase mb-1">
-                            Đơn hàng mới (Hôm nay)</div>
-                        <div class="h5 mb-0 fw-bold text-gray-800">@Model.NewOrdersToday</div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-0">Đơn hàng mới hôm nay</h6>
+                        <h4 class="display-5">@Model.NewOrdersToday</h4>
                     </div>
-                    <div class="col-auto">
-                        <i class="fas fa-clipboard-list fa-2x text-secondary"></i>
-                    </div>
+                    <i class="fas fa-receipt fa-3x"></i>
                 </div>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a class="small text-white stretched-link" href="#">Xem chi tiết</a>
+                <div class="small text-white"><i class="fas fa-angle-right"></i></div>
             </div>
         </div>
     </div>
-
-    <!-- Thẻ Thống kê Đơn hàng chờ xử lý -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-start-warning shadow h-100 py-2">
+    <div class="col-md-3 mb-4">
+        <div class="card bg-danger text-white h-100">
             <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs fw-bold text-warning text-uppercase mb-1">
-                            Đơn hàng chờ xử lý</div>
-                        <div class="h5 mb-0 fw-bold text-gray-800">@Model.PendingOrders</div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-0">Đơn hàng đang chờ</h6>
+                        <h4 class="display-5">@Model.PendingOrders</h4>
                     </div>
-                    <div class="col-auto">
-                        <i class="fas fa-comments fa-2x text-secondary"></i>
-                    </div>
+                    <i class="fas fa-hourglass-half fa-3x"></i>
                 </div>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a class="small text-white stretched-link" href="#">Xem chi tiết</a>
+                <div class="small text-white"><i class="fas fa-angle-right"></i></div>
             </div>
         </div>
     </div>
-
-    <!-- Thẻ Thống kê Tổng số người dùng -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-start-info shadow h-100 py-2">
+    <div class="col-md-3 mb-4">
+        <div class="card bg-success text-white h-100">
             <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs fw-bold text-info text-uppercase mb-1">
-                            Tổng số người dùng</div>
-                        <div class="h5 mb-0 fw-bold text-gray-800">@Model.NewUsersThisMonth</div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-0">Tổng số người dùng</h6>
+                        <h4 class="display-5">@Model.NewUsersThisMonth</h4>
                     </div>
-                    <div class="col-auto">
-                        <i class="fas fa-users fa-2x text-secondary"></i>
-                    </div>
+                    <i class="fas fa-users fa-3x"></i>
                 </div>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a class="small text-white stretched-link" href="#">Xem chi tiết</a>
+                <div class="small text-white"><i class="fas fa-angle-right"></i></div>
             </div>
         </div>
     </div>
 </div>
+
+@* Phần sản phẩm bán chạy nhất đã được di chuyển về Views/Home/Index.cshtml cho trang công cộng *@
+@* Trang Dashboard Admin này sẽ tập trung hiển thị các thống kê tổng quan *@
+
+@section Scripts {
+    @* Có thể thêm các script riêng cho dashboard nếu cần *@
+}

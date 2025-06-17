@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using DCBStore.Data
 @inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -174,7 +175,6 @@
             color: #dc3545;
         }
 
-        /* CSS cho thông báo hiện đại */
         .notification-container {
             position: fixed; 
             top: 20px; 
@@ -272,8 +272,8 @@
     </header>
 
     @if (ViewContext.RouteData.Values["controller"]?.ToString() == "Home" &&
-         ViewContext.RouteData.Values["action"]?.ToString() == "Index" &&
-         string.IsNullOrEmpty(ViewData["CurrentFilter"] as string))
+          ViewContext.RouteData.Values["action"]?.ToString() == "Index" &&
+          string.IsNullOrEmpty(ViewData["CurrentFilter"] as string))
     {
         <section class="hero-section">
             <div class="container py-5">
@@ -301,6 +301,7 @@
 
     @if (SignInManager.IsSignedIn(User))
     {
+        <input type="hidden" id="current-user-id" value="@UserManager.GetUserId(User)" />
         <div id="chat-toggle-button" class="chat-widget-button">
             <i class="fas fa-comment-dots"></i>
         </div>
@@ -373,59 +374,26 @@
 
     @await RenderSectionAsync("Scripts", required: false)
 
-    @if (SignInManager.IsSignedIn(User))
-    {
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const chatWindow = document.getElementById('chat-window');
-                const toggleButton = document.getElementById('chat-toggle-button');
-                const closeButton = document.getElementById('chat-close-button');
-
-                if (toggleButton) {
-                    toggleButton.addEventListener('click', function () {
-                        chatWindow.classList.toggle('show');
-                    });
-                }
-                
-                if (closeButton) {
-                    closeButton.addEventListener('click', function () {
-                        chatWindow.classList.remove('show');
-                    });
-                }
-            });
-        </script>
-    }
-
-    @* BẮT ĐẦU PHẦN THÊM MỚI: Script cho thông báo hiện đại *@
     <script>
-        function showNotification(message, type = 'success') {
-            const notificationContainer = document.getElementById('notification-container');
-            if (!notificationContainer) return;
+        document.addEventListener('DOMContentLoaded', function () {
+            const chatWindow = document.getElementById('chat-window');
+            const toggleButton = document.getElementById('chat-toggle-button');
+            const closeButton = document.getElementById('chat-close-button');
 
-            const notificationDiv = document.createElement('div');
-            notificationDiv.classList.add('notification');
-            notificationDiv.classList.add(type); 
-            notificationDiv.innerText = message;
-
-            notificationContainer.appendChild(notificationDiv);
-
-            setTimeout(() => {
-                notificationDiv.classList.add('show');
-            }, 100);
-
-            setTimeout(() => {
-                notificationDiv.classList.remove('show');
-                notificationDiv.classList.add('hide');
-                setTimeout(() => {
-                    notificationContainer.removeChild(notificationDiv);
-                }, 300); 
-            }, 3000); 
-        }
+            if (toggleButton) {
+                toggleButton.addEventListener('click', function () {
+                    chatWindow.classList.toggle('show');
+                });
+            }
+            
+            if (closeButton) {
+                closeButton.addEventListener('click', function () {
+                    chatWindow.classList.remove('show');
+                });
+            }
+        });
     </script>
-    @* KẾT THÚC PHẦN THÊM MỚI *@
 
-    @* BẮT ĐẦU PHẦN THÊM MỚI: Vùng chứa thông báo hiện đại *@
     <div id="notification-container" class="notification-container"></div>
-    @* KẾT THÚC PHẦN THÊM MỚI *@
 </body>
 </html>

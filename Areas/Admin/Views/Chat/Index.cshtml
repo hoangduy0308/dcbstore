@@ -1,3 +1,7 @@
+@using Microsoft.AspNetCore.Identity
+@using DCBStore.Data
+@inject UserManager<ApplicationUser> UserManager
+
 @{
     ViewData["Title"] = "Trung tâm Hỗ trợ Trực tuyến";
 }
@@ -26,6 +30,9 @@
             <div class="card-footer">
                 <form id="admin-chat-form" class="d-flex">
                     <input type="hidden" id="target-user-id" />
+                    @* BẮT ĐẦU THÊM MỚI: Thêm input ẩn để lưu User ID của Admin hiện tại *@
+                    <input type="hidden" id="current-admin-id" value="@UserManager.GetUserId(User)" />
+                    @* KẾT THÚC THÊM MỚI *@
                     <input type="text" id="admin-message-input" class="form-control" placeholder="Nhập tin nhắn trả lời..." autocomplete="off" />
                     <button type="submit" class="btn btn-primary ms-2"><i class="fas fa-paper-plane"></i> Gửi</button>
                 </form>

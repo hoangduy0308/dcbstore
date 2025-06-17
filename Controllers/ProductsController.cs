@@ -21,11 +21,10 @@ namespace DCBStore.Controllers
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentCategory"] = categoryId;
 
-            // THAY ĐỔI: Include Images thay vì Variants
             var productsQuery = _context.Products
-                                        .Include(p => p.Category)
-                                        .Include(p => p.Images) 
-                                        .AsQueryable();
+                                         .Include(p => p.Category)
+                                         .Include(p => p.Images) 
+                                         .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -42,9 +41,9 @@ namespace DCBStore.Controllers
             int pageSize = 8;
             var count = await productsQuery.CountAsync();
             var products = await productsQuery
-                                 .Skip(((pageNumber ?? 1) - 1) * pageSize)
-                                 .Take(pageSize)
-                                 .ToListAsync();
+                                     .Skip(((pageNumber ?? 1) - 1) * pageSize)
+                                     .Take(pageSize)
+                                     .ToListAsync();
 
             ViewData["TotalPages"] = (int)Math.Ceiling(count / (double)pageSize);
             ViewData["CurrentPage"] = pageNumber ?? 1;
@@ -59,13 +58,15 @@ namespace DCBStore.Controllers
                 return NotFound();
             }
             
-            // THAY ĐỔI: Include Images thay vì Variants
             var product = await _context.Products
-                                        .Include(p => p.Category)
-                                        .Include(p => p.Images)
-                                        .FirstOrDefaultAsync(p => p.Id == id);
+                                         .Include(p => p.Category)
+                                         .Include(p => p.Images)
+                                         // BẮT ĐẦU THÊM MỚI: Bao gồm các đánh giá và thông tin người dùng đánh giá
+                                         .Include(p => p.Reviews.OrderByDescending(r => r.ReviewDate))
+                                            .ThenInclude(r => r.User)
+                                         // KẾT THÚC THÊM MỚI
+                                         .FirstOrDefaultAsync(p => p.Id == id);
 
-            // THAY ĐỔI: Đơn giản hóa điều kiện kiểm tra
             if (product == null)
             {
                 return NotFound();

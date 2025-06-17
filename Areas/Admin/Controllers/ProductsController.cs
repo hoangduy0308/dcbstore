@@ -108,29 +108,29 @@ namespace DCBStore.Areas.Admin.Controllers
         // POST: Admin/Products/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,Stock,CategoryId,SoldQuantity")] Product productFromForm, List<IFormFile> newImageFiles, string[] existingImageUrls) // BẮT ĐẦU SỬA ĐỔI: Thêm SoldQuantity vào Bind
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,Stock,CategoryId,SoldQuantity")] Product productFromForm, List<IFormFile> newImageFiles, string[] existingImageUrls)
         {
-            Console.WriteLine($"Admin.ProductsController Edit POST: Bắt đầu cho ID {id}."); // LOG 1
+            Console.WriteLine($"Admin.ProductsController Edit POST: Bắt đầu cho ID {id}.");
             if (id != productFromForm.Id)
             {
-                Console.WriteLine($"Admin.ProductsController Edit POST: ID không khớp ({id} != {productFromForm.Id})."); // LOG 2
+                Console.WriteLine($"Admin.ProductsController Edit POST: ID không khớp ({id} != {productFromForm.Id}).");
                 return NotFound();
             }
 
-            // BẮT ĐẦU SỬA ĐỔI: Loại bỏ "Images" khỏi ModelState để tránh lỗi khi cập nhật collection
+            // THÊM MỚI DÒNG NÀY ĐỂ LOẠI BỎ XÁC THỰC CHO THUỘC TÍNH ĐIỀU HƯỚNG Category
+            ModelState.Remove("Category");
             ModelState.Remove("Images");
-            // KẾT THÚC SỬA ĐỔI
 
             if (ModelState.IsValid)
             {
-                Console.WriteLine("Admin.ProductsController Edit POST: ModelState.IsValid là TRUE."); // LOG 3
-                Console.WriteLine($"Admin.ProductsController Edit POST: Stock từ form: {productFromForm.Stock}"); // LOG 4
-                Console.WriteLine($"Admin.ProductsController Edit POST: SoldQuantity từ form: {productFromForm.SoldQuantity}"); // LOG 5
+                Console.WriteLine("Admin.ProductsController Edit POST: ModelState.IsValid là TRUE.");
+                Console.WriteLine($"Admin.ProductsController Edit POST: Stock từ form: {productFromForm.Stock}");
+                Console.WriteLine($"Admin.ProductsController Edit POST: SoldQuantity từ form: {productFromForm.SoldQuantity}");
 
-                var productToUpdate = await _context.Products.Include(p => p.Images).FirstOrDefaultAsync(p => p.Id == id); // BẮT ĐẦU SỬA ĐỔI: Include Images để quản lý ảnh cũ
+                var productToUpdate = await _context.Products.Include(p => p.Images).FirstOrDefaultAsync(p => p.Id == id);
                 if (productToUpdate == null)
                 {
-                    Console.WriteLine("Admin.ProductsController Edit POST: Không tìm thấy sản phẩm trong DB."); // LOG 6
+                    Console.WriteLine("Admin.ProductsController Edit POST: Không tìm thấy sản phẩm trong DB.");
                     return NotFound();
                 }
 
@@ -140,14 +140,14 @@ namespace DCBStore.Areas.Admin.Controllers
                 productToUpdate.Price = productFromForm.Price;
                 productToUpdate.Stock = productFromForm.Stock;
                 productToUpdate.CategoryId = productFromForm.CategoryId;
-                productToUpdate.SoldQuantity = productFromForm.SoldQuantity; // BẮT ĐẦU THÊM MỚI: Cập nhật SoldQuantity
+                productToUpdate.SoldQuantity = productFromForm.SoldQuantity;
 
                 try
                 {
                     // Xử lý ảnh mới
                     if (newImageFiles != null && newImageFiles.Count > 0)
                     {
-                        Console.WriteLine($"Admin.ProductsController Edit POST: Đang xử lý {newImageFiles.Count} ảnh mới."); // LOG 7
+                        Console.WriteLine($"Admin.ProductsController Edit POST: Đang xử lý {newImageFiles.Count} ảnh mới.");
                         string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
                         foreach (var imageFile in newImageFiles)
                         {
@@ -161,11 +161,11 @@ namespace DCBStore.Areas.Admin.Controllers
                         }
                     }
 
-                    // BẮT ĐẦU SỬA ĐỔI: Xóa ảnh cũ không còn tồn tại trong existingImageUrls
+                    // Xóa ảnh cũ không còn tồn tại trong existingImageUrls
                     var imagesToDelete = productToUpdate.Images.Where(img => !existingImageUrls.Contains(img.Url)).ToList();
                     foreach (var imgToDelete in imagesToDelete)
                     {
-                        Console.WriteLine($"Admin.ProductsController Edit POST: Đang xóa ảnh cũ: {imgToDelete.Url}"); // LOG 8
+                        Console.WriteLine($"Admin.ProductsController Edit POST: Đang xóa ảnh cũ: {imgToDelete.Url}");
                         var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, imgToDelete.Url.TrimStart('/'));
                         if (System.IO.File.Exists(imagePath))
                         {
@@ -173,17 +173,16 @@ namespace DCBStore.Areas.Admin.Controllers
                         }
                         _context.ProductImages.Remove(imgToDelete);
                     }
-                    // KẾT THÚC SỬA ĐỔI
 
-                    Console.WriteLine("Admin.ProductsController Edit POST: Đang lưu thay đổi vào database..."); // LOG 9
+                    Console.WriteLine("Admin.ProductsController Edit POST: Đang lưu thay đổi vào database...");
                     await _context.SaveChangesAsync();
-                    Console.WriteLine("Admin.ProductsController Edit POST: Thay đổi đã được lưu thành công."); // LOG 10
+                    Console.WriteLine("Admin.ProductsController Edit POST: Thay đổi đã được lưu thành công.");
                     TempData["SuccessMessage"] = "Sản phẩm đã được cập nhật thành công.";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException ex)
                 {
-                    Console.WriteLine($"Admin.ProductsController Edit POST: Lỗi Concurrency: {ex.Message}"); // LOG 11
+                    Console.WriteLine($"Admin.ProductsController Edit POST: Lỗi Concurrency: {ex.Message}");
                     if (!_context.Products.Any(e => e.Id == productToUpdate.Id))
                     {
                         return NotFound();
@@ -193,27 +192,28 @@ namespace DCBStore.Areas.Admin.Controllers
                         throw;
                     }
                 }
-                // BẮT ĐẦU THÊM MỚI: Generic catch để bắt tất cả lỗi khác và log chi tiết
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine("Admin.ProductsController Edit POST: Lỗi không xác định khi lưu."); // LOG 12
-                    Console.Error.WriteLine($"Admin.ProductsController Edit POST: Chi tiết lỗi: {ex.ToString()}"); // LOG 13
+                    Console.Error.WriteLine("Admin.ProductsController Edit POST: Lỗi không xác định khi lưu.");
+                    Console.Error.WriteLine($"Admin.ProductsController Edit POST: Chi tiết lỗi: {ex.ToString()}");
                     TempData["ErrorMessage"] = "Đã có lỗi xảy ra khi cập nhật sản phẩm. Vui lòng thử lại.";
                     ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", productFromForm.CategoryId);
                     return View(productFromForm);
                 }
-                // KẾT THÚC THÊM MỚI
             }
-            Console.WriteLine("Admin.ProductsController Edit POST: ModelState.IsValid là FALSE."); // LOG 14
-            foreach (var modelStateEntry in ModelState.Values)
+            else
             {
-                foreach (var error in modelStateEntry.Errors)
+                Console.WriteLine("Admin.ProductsController Edit POST: ModelState.IsValid là FALSE. Chi tiết lỗi:");
+                foreach (var modelStateEntry in ModelState.Values)
                 {
-                    Console.WriteLine($"Admin.ProductsController Edit POST: Lỗi ModelState: {error.ErrorMessage}"); // LOG 15
+                    foreach (var error in modelStateEntry.Errors)
+                    {
+                        Console.WriteLine($" - Lỗi: {error.ErrorMessage}");
+                    }
                 }
+                ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", productFromForm.CategoryId);
+                return View(productFromForm);
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", productFromForm.CategoryId);
-            return View(productFromForm);
         }
 
         // --- CÁC PHƯƠNG THỨC DELETE, DELETEIMAGE GIỮ NGUYÊN ---

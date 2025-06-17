@@ -1,0 +1,77 @@
+@model DCBStore.Data.ApplicationUser
+
+@{
+    ViewData["Title"] = "Chi tiết Người dùng";
+}
+
+<h1 class="mb-4">Chi tiết Người dùng</h1>
+
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">
+            ID Người dùng
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.Id)
+        </dd>
+        <dt class="col-sm-3">
+            Email
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.Email)
+        </dd>
+        <dt class="col-sm-3">
+            Tên đăng nhập
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.UserName)
+        </dd>
+        <dt class="col-sm-3">
+            Tên đầy đủ
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.FullName)
+        </dd>
+        <dt class="col-sm-3">
+            Số điện thoại
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.PhoneNumber)
+        </dd>
+        <dt class="col-sm-3">
+            Email đã xác nhận
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.EmailConfirmed)
+        </dd>
+        <dt class="col-sm-3">
+            Hai yếu tố xác thực
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.TwoFactorEnabled)
+        </dd>
+        <dt class="col-sm-3">
+            Khoá tài khoản
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.LockoutEnabled)
+        </dd>
+        <dt class="col-sm-3">
+            Thời gian khoá
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.LockoutEnd)
+        </dd>
+        <dt class="col-sm-3">
+            Vai trò
+        </dt>
+        <dd class="col-sm-9">
+            @(ViewData["UserRoles"] ?? "Chưa có")
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">Sửa</a>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại danh sách</a>
+</div>

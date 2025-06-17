@@ -1,27 +1,24 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using DCBStore.Models;
-using DCBStore.Data; // Thêm dòng này để sử dụng DbContext
-using Microsoft.EntityFrameworkCore; // Thêm dòng này để sử dụng ToListAsync
-using System.Linq; // Thêm dòng này để sử dụng Where, Skip, Take
-using System.Threading.Tasks; // Thêm dòng này để sử dụng Task
+using DCBStore.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DCBStore.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ApplicationDbContext _context; // Thay thế ILogger bằng DbContext
+        private readonly ApplicationDbContext _context;
         private readonly ILogger<HomeController> _logger;
 
-
-        // Cập nhật constructor để nhận ApplicationDbContext
         public HomeController(ApplicationDbContext context, ILogger<HomeController> logger)
         {
             _context = context;
             _logger = logger;
         }
 
-        // Cập nhật action Index để hỗ trợ tìm kiếm và phân trang
         public async Task<IActionResult> Index(string searchString, int? pageNumber)
         {
             ViewData["CurrentFilter"] = searchString;
@@ -33,6 +30,13 @@ namespace DCBStore.Controllers
             {
                 productsQuery = productsQuery.Where(s => s.Name.Contains(searchString));
             }
+
+            // Đảm bảo tải cả hình ảnh
+            productsQuery = productsQuery.Include(p => p.Images);
+
+            // BẮT ĐẦU SỬA ĐỔI: Sắp xếp sản phẩm theo SoldQuantity giảm dần để lấy sản phẩm bán chạy nhất
+            productsQuery = productsQuery.OrderByDescending(p => p.SoldQuantity);
+            // KẾT THÚC SỬA ĐỔI
 
             int pageSize = 8; // Hiển thị 8 sản phẩm mỗi trang
             int currentPage = pageNumber ?? 1;

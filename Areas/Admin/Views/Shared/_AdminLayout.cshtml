@@ -120,40 +120,40 @@
                 <ul class="nav flex-column flex-grow-1">
                     <li class="sidebar-heading"><span>Menu</span></li>
                     <li class="nav-item">
-                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Home" ? "active" : "")" asp-area="Admin" asp-controller="Home" asp-action="Index">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")" asp-area="Admin" asp-controller="Home" asp-action="Index">
                             <i class="fas fa-tachometer-alt fa-fw"></i>
                             Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Products" ? "active" : "")" asp-area="Admin" asp-controller="Products" asp-action="Index">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Products" ? "active" : "")" asp-area="Admin" asp-controller="Products" asp-action="Index">
                             <i class="fas fa-box-open fa-fw"></i>
                             Sản phẩm
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Categories" ? "active" : "")" asp-area="Admin" asp-controller="Categories" asp-action="Index">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Categories" ? "active" : "")" asp-area="Admin" asp-controller="Categories" asp-action="Index">
                             <i class="fas fa-tags fa-fw"></i>
                             Danh mục
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Orders" ? "active" : "")" asp-area="Admin" asp-controller="Orders" asp-action="Index">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Orders" ? "active" : "")" asp-area="Admin" asp-controller="Orders" asp-action="Index">
                             <i class="fas fa-file-invoice-dollar fa-fw"></i>
                             Đơn hàng
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Chat" ? "active" : "")" asp-area="Admin" asp-controller="Chat" asp-action="Index">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Chat" ? "active" : "")" asp-area="Admin" asp-controller="Chat" asp-action="Index">
                             <i class="fas fa-comments fa-fw"></i>
                             Hỗ trợ Trực tuyến
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" ? "active" : "")" asp-area="Admin" asp-controller="Users" asp-action="Index">
                             <i class="fas fa-users fa-fw"></i>
-                            Khách hàng
+                            Quản lý Người dùng
                         </a>
                     </li>
 

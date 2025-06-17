@@ -1,0 +1,69 @@
+@model DCBStore.Areas.Admin.Models.EditUserViewModel
+
+@{
+    ViewData["Title"] = "Chỉnh sửa Người dùng";
+}
+
+<h1 class="mb-4">@ViewData["Title"]</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="FullName" class="form-label"></label>
+                <input asp-for="FullName" class="form-control" />
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="PhoneNumber" class="form-label"></label>
+                <input asp-for="PhoneNumber" class="form-control" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="NewPassword" class="form-label"></label>
+                <input asp-for="NewPassword" class="form-control" placeholder="Để trống nếu không đổi mật khẩu" />
+                <span asp-validation-for="NewPassword" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="ConfirmNewPassword" class="form-label"></label>
+                <input asp-for="ConfirmNewPassword" class="form-control" />
+                <span asp-validation-for="ConfirmNewPassword" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Vai trò hiện tại:</label>
+                @if (Model.CurrentRoles != null && Model.CurrentRoles.Any())
+                {
+                    <p class="form-control-static">@string.Join(", ", Model.CurrentRoles)</p>
+                }
+                else
+                {
+                    <p class="form-control-static">Chưa có vai trò nào</p>
+                }
+            </div>
+            <div class="mb-3">
+                <label asp-for="SelectedRole" class="form-label"></label>
+                <select asp-for="SelectedRole" asp-items="ViewBag.Roles" class="form-select">
+                    <option value="">-- Chọn vai trò mới --</option>
+                </select>
+                <span asp-validation-for="SelectedRole" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                <a asp-action="Index" class="btn btn-secondary">Quay lại danh sách</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+}

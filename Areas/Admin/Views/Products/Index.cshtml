@@ -4,48 +4,78 @@
     ViewData["Title"] = "Quản lý Sản phẩm";
 }
 
-<h1>@ViewData["Title"]</h1>
-
-<p>
-    <a asp-action="Create" class="btn btn-success">
-        <i class="fas fa-plus me-2"></i>Tạo sản phẩm mới
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">@ViewData["Title"]</h1>
+    <a asp-action="Create" class="btn btn-primary d-flex align-items-center">
+        <i class="fas fa-plus me-2"></i> Tạo sản phẩm mới
     </a>
-</p>
+</div>
 
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Tên sản phẩm</th>
-            <th>Danh mục</th>
-            <th class="text-end">Giá</th>
-            <th class="text-center">Tồn kho</th>
-            <th class="text-center">Đã bán</th> @* BẮT ĐẦU PHẦN THÊM MỚI *@
-            <th class="text-center">Số lượng ảnh</th>
-            <th style="width: 200px;"></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        @if (!Model.Any())
         {
-            <tr>
-                <td>@Html.DisplayFor(modelItem => item.Name)</td>
-                <td>@Html.DisplayFor(modelItem => item.Category.Name)</td>
-                <td class="text-end">@item.Price.ToString("N0") đ</td>
-                <td class="text-center">@item.Stock</td>
-                <td class="text-center">@item.SoldQuantity</td> @* BẮT ĐẦU PHẦN THÊM MỚI *@
-                <td class="text-center">@item.Images.Count()</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm" title="Sửa">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm" title="Chi tiết">
-                        <i class="fas fa-eye"></i>
-                    </a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" title="Xóa">
-                        <i class="fas fa-trash-alt"></i>
-                    </a>
-                </td>
-            </tr>
+            <div class="text-center py-5">
+                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                <p class="lead text-muted">Chưa có sản phẩm nào được tạo.</p>
+                <p class="text-muted">Hãy tạo sản phẩm đầu tiên của bạn!</p>
+            </div>
         }
-    </tbody>
-</table>
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="admin-products-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="py-3 px-4">Tên sản phẩm</th>
+                            <th class="py-3 px-4">Danh mục</th>
+                            <th class="text-end py-3 px-4" style="width: 120px;">Giá</th>
+                            <th class="text-center py-3 px-4" style="width: 80px;">Tồn kho</th>
+                            <th class="text-center py-3 px-4" style="width: 80px;">Đã bán</th>
+                            <th class="text-center py-3 px-4" style="width: 100px;">Số lượng ảnh</th>
+                            <th style="width: 180px;" class="text-center py-3 px-4">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="py-3 px-4">@Html.DisplayFor(modelItem => item.Name)</td>
+                                <td class="py-3 px-4">@Html.DisplayFor(modelItem => item.Category.Name)</td>
+                                <td class="text-end py-3 px-4">@item.Price.ToString("N0") đ</td>
+                                <td class="text-center py-3 px-4">@item.Stock</td>
+                                <td class="text-center py-3 px-4">@item.SoldQuantity</td>
+                                <td class="text-center py-3 px-4">@item.Images.Count()</td>
+                                <td class="py-3 px-4 text-center">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning me-1" title="Sửa">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info me-1" title="Chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        #admin-products-table tbody tr td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #admin-products-table tbody tr td:first-child {
+            max-width: 250px; /* Điều chỉnh độ rộng tối đa cho cột "Tên sản phẩm" */
+        }
+    </style>
+}
