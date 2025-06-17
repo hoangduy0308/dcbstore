@@ -1,4 +1,4 @@
-using DCBStore.Data; // <--- THÊM DÒNG NÀY ĐỂ SỬA LỖI
+using DCBStore.Data; // <-- Dòng này cần thiết để tham chiếu ApplicationUser
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 

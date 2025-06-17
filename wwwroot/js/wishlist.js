@@ -13,12 +13,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Gọi API để lấy trạng thái
         fetch(`/Wishlist/GetWishlistStatus?productIds=${productIds.join(',')}`)
-            .then(response => response.json())
-            .then(likedProductIds => {
-                // likedProductIds là một mảng các ID đã được yêu thích, ví dụ: [3, 10, 25]
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => { // Đổi tên biến từ 'likedProductIds' thành 'data' để rõ ràng hơn
+                let actualLikedProductIds;
+                // Kiểm tra nếu phản hồi có dạng {"$id":"1","$values":[...]}
+                if (data && data.$values && Array.isArray(data.$values)) {
+                    actualLikedProductIds = data.$values;
+                } else if (Array.isArray(data)) {
+                    // Nếu phản hồi trực tiếp là một mảng
+                    actualLikedProductIds = data;
+                } else {
+                    // Trường hợp không mong muốn, gán là mảng rỗng
+                    actualLikedProductIds = [];
+                    console.warn("Định dạng phản hồi API GetWishlistStatus không như mong đợi:", data);
+                }
+
                 wishlistButtons.forEach(btn => {
                     const productId = btn.dataset.productId;
-                    if (likedProductIds.includes(parseInt(productId))) {
+                    if (actualLikedProductIds.includes(parseInt(productId))) {
                         btn.classList.add('liked');
                         btn.innerHTML = '<i class="fas fa-heart"></i>'; // Icon trái tim đầy
                     } else {
@@ -34,28 +51,24 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- PHẦN 2: XỬ LÝ SỰ KIỆN CLICK VÀO NÚT YÊU THÍCH ---
 
     function handleWishlistToggle(event) {
-        // Dùng event delegation để chỉ cần 1 event listener
         const button = event.target.closest('.toggle-wishlist-btn');
         if (!button) return;
 
         event.preventDefault();
         const productId = button.dataset.productId;
 
-        // Lấy anti-forgery token
         const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
         fetch('/Wishlist/ToggleWishlist', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'RequestVerificationToken': token
             },
-            body: `productId=${productId}`
+            body: `productId=${productId}&__RequestVerificationToken=${token}`
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Cập nhật giao diện nút bấm
                 if (data.added) {
                     button.classList.add('liked');
                     button.innerHTML = '<i class="fas fa-heart"></i>';
@@ -63,10 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     button.classList.remove('liked');
                     button.innerHTML = '<i class="far fa-heart"></i>';
                 }
-                // (Tùy chọn) Hiển thị thông báo toast
-                // showToast(data.message);
             } else {
-                // Nếu lỗi do chưa đăng nhập, chuyển hướng đến trang đăng nhập
                 if (data.message.includes("đăng nhập")) {
                     window.location.href = '/Identity/Account/Login';
                 } else {
@@ -77,17 +87,14 @@ document.addEventListener('DOMContentLoaded', function () {
         .catch(error => console.error('Lỗi khi toggle wishlist:', error));
     }
     
-    // Gán event listener cho toàn bộ document
     document.addEventListener('click', handleWishlistToggle);
 
-    // Chạy hàm kiểm tra trạng thái khi trang được tải xong
     checkWishlistStatus();
 });
 
-// Thêm form chứa AntiForgeryToken vào cuối trang nếu nó chưa tồn tại
 if (!document.getElementById('anti-forgery-token-wishlist-form')) {
     const form = document.createElement('form');
     form.id = 'anti-forgery-token-wishlist-form';
-    form.innerHTML = '@Html.AntiForgeryToken()'; // Dòng này sẽ được Razor render đúng cách
+    form.style.display = 'none';
     document.body.appendChild(form);
 }
