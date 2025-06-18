@@ -18,9 +18,30 @@ namespace DCBStore.Controllers
             _context = context;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> SearchSuggestions(string term)
+        {
+            if (string.IsNullOrEmpty(term) || term.Length < 2)
+            {
+                return Json(new List<object>());
+            }
+
+            var products = await _context.Products
+                .Where(p => !p.IsDeleted && p.Name.ToLower().Contains(term.ToLower()))
+                .Select(p => new {
+                    id = p.Id,
+                    name = p.Name,
+                    imageUrl = p.Images.FirstOrDefault().Url ?? "/images/placeholder.png"
+                })
+                .Take(5)
+                .ToListAsync();
+
+            return Json(products);
+        }
+
         public async Task<IActionResult> Index(
-            string? searchString, 
-            int? categoryId, 
+            string? searchString,
+            int? categoryId,
             string? sortOrder,
             decimal? minPrice,
             decimal? maxPrice,
@@ -29,25 +50,22 @@ namespace DCBStore.Controllers
             int pageNumber = 1)
         {
             var productsQuery = _context.Products
-                                      .Where(p => !p.IsDeleted) // Chỉ hiển thị sản phẩm chưa bị xóa
+                                      .Where(p => !p.IsDeleted)
                                       .Include(p => p.Category)
                                       .Include(p => p.Images)
                                       .Include(p => p.Reviews)
                                       .AsQueryable();
 
-            // 1. Lọc theo chuỗi tìm kiếm
             if (!string.IsNullOrEmpty(searchString))
             {
-                productsQuery = productsQuery.Where(s => s.Name.Contains(searchString));
+                productsQuery = productsQuery.Where(s => s.Name.ToLower().Contains(searchString.ToLower()));
             }
 
-            // 2. Lọc theo danh mục
             if (categoryId.HasValue)
             {
                 productsQuery = productsQuery.Where(p => p.CategoryId == categoryId.Value);
             }
 
-            // 3. Lọc theo khoảng giá
             if (minPrice.HasValue)
             {
                 productsQuery = productsQuery.Where(p => p.Price >= minPrice.Value);
@@ -57,13 +75,11 @@ namespace DCBStore.Controllers
                 productsQuery = productsQuery.Where(p => p.Price <= maxPrice.Value);
             }
 
-            // 4. Lọc theo đánh giá tối thiểu
             if (minRating.HasValue)
             {
                 productsQuery = productsQuery.Where(p => p.Reviews.Any() && p.Reviews.Average(r => r.Rating) >= minRating.Value);
             }
 
-            // 5. Lọc theo trạng thái
             if (!string.IsNullOrEmpty(status))
             {
                 if (status == "in-stock")
@@ -76,7 +92,6 @@ namespace DCBStore.Controllers
                 }
             }
 
-            // 6. Sắp xếp
             ViewData["CurrentSort"] = sortOrder;
             switch (sortOrder)
             {
@@ -94,7 +109,6 @@ namespace DCBStore.Controllers
                     break;
             }
 
-            // 7. Phân trang
             int pageSize = 8;
             var count = await productsQuery.CountAsync();
             var pagedProducts = await productsQuery
@@ -102,14 +116,10 @@ namespace DCBStore.Controllers
                                       .Take(pageSize)
                                       .ToListAsync();
 
-            // 8. Chuẩn bị ViewModel để gửi tới View
             var viewModel = new ProductIndexViewModel
             {
                 Products = pagedProducts,
-                // === BẮT ĐẦU SỬA LỖI ===
-                // Chỉ lấy các danh mục chưa bị xóa để hiển thị trong bộ lọc
                 Categories = await _context.Categories.Where(c => !c.IsDeleted).OrderBy(c => c.Name).ToListAsync(),
-                // === KẾT THÚC SỬA LỖI ===
                 SearchString = searchString,
                 CategoryId = categoryId,
                 MinPrice = minPrice,
@@ -130,9 +140,9 @@ namespace DCBStore.Controllers
             {
                 return NotFound();
             }
-            
+
             var product = await _context.Products
-                                      .Where(p => !p.IsDeleted && p.Id == id) 
+                                      .Where(p => !p.IsDeleted && p.Id == id)
                                       .Include(p => p.Category)
                                       .Include(p => p.Images)
                                       .Include(p => p.Reviews.OrderByDescending(r => r.ReviewDate))

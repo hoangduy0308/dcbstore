@@ -5,9 +5,8 @@
 
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
-    <meta charset="utf-g" />
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - DCBStore</title>
 
@@ -58,7 +57,43 @@
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .15) !important;
         }
         .nav-search {
+            position: relative;
             min-width: 300px;
+        }
+        #search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 0.75rem 0.75rem;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: #212529;
+            text-decoration: none;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .suggestion-item:hover {
+            background-color: #f8f9fa;
+        }
+        .suggestion-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            margin-right: 1rem;
+            border-radius: 0.25rem;
         }
         .hero-section {
             background: linear-gradient(to right, #007bff, #00c6ff);
@@ -174,21 +209,17 @@
         .toggle-wishlist-btn.liked {
             color: #dc3545;
         }
-
-        /* === BẮT ĐẦU CSS CHO TOAST NOTIFICATION === */
         .toast-container {
             position: fixed;
             top: 20px;
             right: 20px;
-            z-index: 1090; /* Phải cao hơn các element khác */
+            z-index: 1090;
         }
-
         .toast {
             min-width: 300px;
             box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
             border: none;
         }
-        /* === KẾT THÚC CSS CHO TOAST NOTIFICATION === */
     </style>
 </head>
 
@@ -213,13 +244,13 @@
                             <a class="nav-link fw-semibold" asp-area="" asp-controller="Products" asp-action="Index">Sản Phẩm</a>
                         </li>
                     </ul>
-                    <form asp-controller="Products" asp-action="Index" method="get" class="d-flex me-3 nav-search"
-                          role="search">
-                        <input class="form-control me-2 rounded-pill shadow-sm px-3" type="search" name="SearchString"
-                               placeholder="Tìm kiếm sản phẩm..." aria-label="Search" value="@ViewData["CurrentFilter"]">
+                    <form asp-controller="Products" asp-action="Index" method="get" class="d-flex me-3 nav-search" role="search">
+                        <input id="main-search-input" class="form-control me-2 rounded-pill shadow-sm px-3" type="search" name="SearchString"
+                               placeholder="Tìm kiếm sản phẩm..." aria-label="Search" value="@ViewData["CurrentFilter"]" autocomplete="off">
                         <button class="btn btn-outline-primary rounded-pill px-3" type="submit">
                             <i class="fas fa-search"></i>
                         </button>
+                        <div id="search-suggestions" class="d-none"></div>
                     </form>
                     <div class="d-flex align-items-center gap-4">
                         <a asp-area="" asp-controller="Cart" asp-action="Index" class="position-relative text-decoration-none" 
@@ -337,10 +368,8 @@
         </div>
     </footer>
 
-    @* BẮT ĐẦU THÊM MỚI: Vùng chứa Toast Notification *@
     <div class="toast-container position-fixed top-0 end-0 p-3">
-        </div>
-    @* KẾT THÚC THÊM MỚI *@
+    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -352,8 +381,57 @@
     @await RenderSectionAsync("Scripts", required: false)
 
     <script>
-        // Đoạn script cho chat widget giữ nguyên
-        document.addEventListener('DOMContentLoaded', function () {
+        $(document).ready(function() {
+            let debounceTimer;
+            const searchInput = $('#main-search-input');
+            const suggestionsContainer = $('#search-suggestions');
+
+            searchInput.on('keyup', function() {
+                clearTimeout(debounceTimer);
+                const searchTerm = $(this).val();
+
+                if (searchTerm.length < 2) {
+                    suggestionsContainer.addClass('d-none').html('');
+                    return;
+                }
+
+                debounceTimer = setTimeout(function() {
+                    $.ajax({
+                        url: '@Url.Action("SearchSuggestions", "Products")',
+                        type: 'GET',
+                        data: { term: searchTerm },
+                        success: function(data) {
+                            suggestionsContainer.html('').removeClass('d-none');
+                            
+                            const suggestions = data.$values;
+
+                            if (suggestions && suggestions.length > 0) {
+                                $.each(suggestions, function(i, item) {
+                                    const suggestionHtml = `
+                                        <a href="/Products/Details/${item.id}" class="suggestion-item">
+                                            <img src="${item.imageUrl}" alt="${item.name}">
+                                            <span>${item.name}</span>
+                                        </a>
+                                    `;
+                                    suggestionsContainer.append(suggestionHtml);
+                                });
+                            } else {
+                                suggestionsContainer.html('<div class="p-3 text-muted">Không tìm thấy gợi ý nào.</div>');
+                            }
+                        },
+                        error: function() {
+                            suggestionsContainer.addClass('d-none').html('');
+                        }
+                    });
+                }, 1000); 
+            });
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.nav-search').length) {
+                    suggestionsContainer.addClass('d-none').html('');
+                }
+            });
+            
             const chatWindow = document.getElementById('chat-window');
             const toggleButton = document.getElementById('chat-toggle-button');
             const closeButton = document.getElementById('chat-close-button');
