@@ -19,35 +19,17 @@ namespace DCBStore.Controllers
             _logger = logger;
         }
 
-        public async Task<IActionResult> Index(string searchString, int? pageNumber)
+        public async Task<IActionResult> Index()
         {
-            ViewData["CurrentFilter"] = searchString;
-
-            var productsQuery = from p in _context.Products
-                                select p;
-
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                productsQuery = productsQuery.Where(s => s.Name.Contains(searchString));
-            }
-
-            // Đảm bảo tải cả hình ảnh
-            productsQuery = productsQuery.Include(p => p.Images);
-
-            // BẮT ĐẦU SỬA ĐỔI: Sắp xếp sản phẩm theo SoldQuantity giảm dần để lấy sản phẩm bán chạy nhất
-            productsQuery = productsQuery.OrderByDescending(p => p.SoldQuantity);
-            // KẾT THÚC SỬA ĐỔI
-
-            int pageSize = 8; // Hiển thị 8 sản phẩm mỗi trang
-            int currentPage = pageNumber ?? 1;
-
-            var count = await productsQuery.CountAsync();
-            var products = await productsQuery.Skip((currentPage - 1) * pageSize).Take(pageSize).ToListAsync();
-
-            ViewData["TotalPages"] = (int)Math.Ceiling(count / (double)pageSize);
-            ViewData["CurrentPage"] = currentPage;
-
-            return View(products);
+            // Lấy 4 sản phẩm nổi bật nhất (chưa bị xóa và bán chạy nhất)
+            var featuredProducts = await _context.Products
+                .Where(p => !p.IsDeleted) // Chỉ lấy sản phẩm chưa bị xóa
+                .OrderByDescending(p => p.SoldQuantity) // Sắp xếp theo bán chạy
+                .Include(p => p.Images) // Lấy kèm hình ảnh
+                .Take(4) // SỬA ĐỔI: Chỉ lấy 4 sản phẩm đầu tiên
+                .ToListAsync();
+                
+            return View(featuredProducts);
         }
 
         public IActionResult Privacy()

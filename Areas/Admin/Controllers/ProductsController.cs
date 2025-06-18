@@ -27,32 +27,35 @@ namespace DCBStore.Areas.Admin.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // --- CÁC PHƯƠNG THỨC INDEX, DETAILS, CREATE (GET) GIỮ NGUYÊN ---
+        // SỬA: Lọc bỏ các sản phẩm đã bị "xóa mềm" khỏi danh sách chính
         public async Task<IActionResult> Index()
         {
             var products = await _context.Products
-                                         .Include(p => p.Category)
-                                         .Include(p => p.Images)
-                                         .ToListAsync();
+                                       .Where(p => !p.IsDeleted) // CHỈ HIỂN THỊ SẢN PHẨM CHƯA BỊ XÓA
+                                       .Include(p => p.Category)
+                                       .Include(p => p.Images)
+                                       .OrderByDescending(p => p.Id)
+                                       .ToListAsync();
             return View(products);
         }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
             var product = await _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Images)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == id && !m.IsDeleted); // Ngăn xem chi tiết sản phẩm đã xóa
             if (product == null) return NotFound();
             return View(product);
         }
+        
         public IActionResult Create()
         {
             ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name");
             return View();
         }
-
-        // POST: Admin/Products/Create
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name,Description,Price,Stock,CategoryId")] Product product, List<IFormFile> imageFiles)
@@ -93,61 +96,49 @@ namespace DCBStore.Areas.Admin.Controllers
             return View(product);
         }
 
-        // GET: Admin/Products/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
             var product = await _context.Products
-                                         .Include(p => p.Images) // Bao gồm ảnh để hiển thị trong form edit
-                                         .FirstOrDefaultAsync(p => p.Id == id);
-            if (product == null) return NotFound();
+                                      .Include(p => p.Images)
+                                      .FirstOrDefaultAsync(p => p.Id == id);
+            if (product == null || product.IsDeleted) return NotFound(); // Không cho sửa sản phẩm đã xóa
             ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
             return View(product);
         }
 
-        // POST: Admin/Products/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,Stock,CategoryId,SoldQuantity")] Product productFromForm, List<IFormFile> newImageFiles, string[] existingImageUrls)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,Stock,CategoryId,SoldQuantity,IsDeleted")] Product productFromForm, List<IFormFile> newImageFiles, string[] existingImageUrls)
         {
-            Console.WriteLine($"Admin.ProductsController Edit POST: Bắt đầu cho ID {id}.");
             if (id != productFromForm.Id)
             {
-                Console.WriteLine($"Admin.ProductsController Edit POST: ID không khớp ({id} != {productFromForm.Id}).");
                 return NotFound();
             }
 
-            // THÊM MỚI DÒNG NÀY ĐỂ LOẠI BỎ XÁC THỰC CHO THUỘC TÍNH ĐIỀU HƯỚNG Category
             ModelState.Remove("Category");
             ModelState.Remove("Images");
 
             if (ModelState.IsValid)
             {
-                Console.WriteLine("Admin.ProductsController Edit POST: ModelState.IsValid là TRUE.");
-                Console.WriteLine($"Admin.ProductsController Edit POST: Stock từ form: {productFromForm.Stock}");
-                Console.WriteLine($"Admin.ProductsController Edit POST: SoldQuantity từ form: {productFromForm.SoldQuantity}");
-
                 var productToUpdate = await _context.Products.Include(p => p.Images).FirstOrDefaultAsync(p => p.Id == id);
                 if (productToUpdate == null)
                 {
-                    Console.WriteLine("Admin.ProductsController Edit POST: Không tìm thấy sản phẩm trong DB.");
                     return NotFound();
                 }
 
-                // Cập nhật các thuộc tính từ dữ liệu của form
                 productToUpdate.Name = productFromForm.Name;
                 productToUpdate.Description = productFromForm.Description;
                 productToUpdate.Price = productFromForm.Price;
                 productToUpdate.Stock = productFromForm.Stock;
                 productToUpdate.CategoryId = productFromForm.CategoryId;
                 productToUpdate.SoldQuantity = productFromForm.SoldQuantity;
+                productToUpdate.IsDeleted = productFromForm.IsDeleted; // Thêm dòng này để có thể khôi phục sản phẩm
 
                 try
                 {
-                    // Xử lý ảnh mới
                     if (newImageFiles != null && newImageFiles.Count > 0)
                     {
-                        Console.WriteLine($"Admin.ProductsController Edit POST: Đang xử lý {newImageFiles.Count} ảnh mới.");
                         string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
                         foreach (var imageFile in newImageFiles)
                         {
@@ -161,11 +152,9 @@ namespace DCBStore.Areas.Admin.Controllers
                         }
                     }
 
-                    // Xóa ảnh cũ không còn tồn tại trong existingImageUrls
                     var imagesToDelete = productToUpdate.Images.Where(img => !existingImageUrls.Contains(img.Url)).ToList();
                     foreach (var imgToDelete in imagesToDelete)
                     {
-                        Console.WriteLine($"Admin.ProductsController Edit POST: Đang xóa ảnh cũ: {imgToDelete.Url}");
                         var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, imgToDelete.Url.TrimStart('/'));
                         if (System.IO.File.Exists(imagePath))
                         {
@@ -173,50 +162,21 @@ namespace DCBStore.Areas.Admin.Controllers
                         }
                         _context.ProductImages.Remove(imgToDelete);
                     }
-
-                    Console.WriteLine("Admin.ProductsController Edit POST: Đang lưu thay đổi vào database...");
+                    
                     await _context.SaveChangesAsync();
-                    Console.WriteLine("Admin.ProductsController Edit POST: Thay đổi đã được lưu thành công.");
                     TempData["SuccessMessage"] = "Sản phẩm đã được cập nhật thành công.";
                     return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException ex)
-                {
-                    Console.WriteLine($"Admin.ProductsController Edit POST: Lỗi Concurrency: {ex.Message}");
-                    if (!_context.Products.Any(e => e.Id == productToUpdate.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine("Admin.ProductsController Edit POST: Lỗi không xác định khi lưu.");
-                    Console.Error.WriteLine($"Admin.ProductsController Edit POST: Chi tiết lỗi: {ex.ToString()}");
-                    TempData["ErrorMessage"] = "Đã có lỗi xảy ra khi cập nhật sản phẩm. Vui lòng thử lại.";
-                    ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", productFromForm.CategoryId);
-                    return View(productFromForm);
+                    TempData["ErrorMessage"] = "Đã có lỗi xảy ra khi cập nhật sản phẩm.";
+                    Console.WriteLine(ex.ToString()); // Ghi log lỗi
                 }
             }
-            else
-            {
-                Console.WriteLine("Admin.ProductsController Edit POST: ModelState.IsValid là FALSE. Chi tiết lỗi:");
-                foreach (var modelStateEntry in ModelState.Values)
-                {
-                    foreach (var error in modelStateEntry.Errors)
-                    {
-                        Console.WriteLine($" - Lỗi: {error.ErrorMessage}");
-                    }
-                }
-                ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", productFromForm.CategoryId);
-                return View(productFromForm);
-            }
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", productFromForm.CategoryId);
+            return View(productFromForm);
         }
 
-        // --- CÁC PHƯƠNG THỨC DELETE, DELETEIMAGE GIỮ NGUYÊN ---
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -226,33 +186,33 @@ namespace DCBStore.Areas.Admin.Controllers
             if (product == null) return NotFound();
             return View(product);
         }
+
+        // SỬA: Action này giờ sẽ thực hiện "Xóa mềm"
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = await _context.Products.Include(p => p.Images).FirstOrDefaultAsync(p => p.Id == id);
+            var product = await _context.Products.FindAsync(id);
             if (product != null)
             {
-                foreach (var image in product.Images)
-                {
-                    if (!string.IsNullOrEmpty(image.Url))
-                    {
-                        var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, image.Url.TrimStart('/'));
-                        if (System.IO.File.Exists(imagePath))
-                        {
-                            System.IO.File.Delete(imagePath);
-                        }
-                    }
-                }
-                _context.Products.Remove(product);
+                // THAY ĐỔI LOGIC TẠI ĐÂY
+                // Thay vì xóa, chúng ta chỉ đánh dấu là đã xóa
+                product.IsDeleted = true;
+                _context.Update(product); // Đánh dấu đối tượng là đã thay đổi
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Sản phẩm đã được xóa thành công.";
+                TempData["SuccessMessage"] = "Sản phẩm đã được xóa (ẩn đi) thành công.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy sản phẩm để xóa.";
             }
             return RedirectToAction(nameof(Index));
         }
+
         [HttpPost]
         public async Task<JsonResult> DeleteImage(int id)
         {
+            // ... Logic DeleteImage giữ nguyên ...
             var image = await _context.ProductImages.FindAsync(id);
             if (image == null)
             {

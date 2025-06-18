@@ -45,12 +45,32 @@
       "PackagePath": "staticwebassets\\images\\nha-gia-kim.jpg"
     },
     {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\01dcf8e4-4437-4392-8d9d-5ef6d5290409_12_37_1.webp",
+      "PackagePath": "staticwebassets\\images\\products\\01dcf8e4-4437-4392-8d9d-5ef6d5290409_12_37_1.webp"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\1280e923-08e5-4d01-bf9f-47107943029d_20240107_7xE6cNqlzc.jpeg",
+      "PackagePath": "staticwebassets\\images\\products\\1280e923-08e5-4d01-bf9f-47107943029d_20240107_7xE6cNqlzc.jpeg"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\1ae2c2b0-5bff-4cc7-b763-3e3524cfdd6a_ipad-pro-m4-11-inch_5_.webp",
+      "PackagePath": "staticwebassets\\images\\products\\1ae2c2b0-5bff-4cc7-b763-3e3524cfdd6a_ipad-pro-m4-11-inch_5_.webp"
+    },
+    {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\1ec9e873-6a6f-496e-b7cb-5c5d780f6f51_Figure_1.png",
       "PackagePath": "staticwebassets\\images\\products\\1ec9e873-6a6f-496e-b7cb-5c5d780f6f51_Figure_1.png"
     },
     {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\2b405fc0-119b-49a8-b74e-28be1b1963d4_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp",
       "PackagePath": "staticwebassets\\images\\products\\2b405fc0-119b-49a8-b74e-28be1b1963d4_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\517043ab-6ac1-4f51-a8fa-f8087eeca53c_s21sx162-21-oz-standard-flex-cap_63859231d53367679_638616455391199895.jpg",
+      "PackagePath": "staticwebassets\\images\\products\\517043ab-6ac1-4f51-a8fa-f8087eeca53c_s21sx162-21-oz-standard-flex-cap_63859231d53367679_638616455391199895.jpg"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\560a6032-4ab3-4bb7-8061-d74967ff9367_1_346.webp",
+      "PackagePath": "staticwebassets\\images\\products\\560a6032-4ab3-4bb7-8061-d74967ff9367_1_346.webp"
     },
     {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\5ed80bd6-04e0-429c-8cad-0ee8a8c8c839_Figure_1.png",
@@ -61,28 +81,60 @@
       "PackagePath": "staticwebassets\\images\\products\\621dc3f1-6ee8-4966-a2f2-349b042c8611_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp"
     },
     {
-      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\8076a483-1469-4fb9-9a62-460830879c37_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp",
-      "PackagePath": "staticwebassets\\images\\products\\8076a483-1469-4fb9-9a62-460830879c37_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp"
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\6a9e0d8e-97fa-41ae-82f6-48a792336ed0_8_ad00be7f7e.png",
+      "PackagePath": "staticwebassets\\images\\products\\6a9e0d8e-97fa-41ae-82f6-48a792336ed0_8_ad00be7f7e.png"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\86b1700a-6385-40be-8f6d-37ad3cb4002d_S21SX464-Indigo-1.jpg",
+      "PackagePath": "staticwebassets\\images\\products\\86b1700a-6385-40be-8f6d-37ad3cb4002d_S21SX464-Indigo-1.jpg"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\8d26500a-57bb-4e31-bf7b-27d9b18461af_inh-nuoc-giu-nhiet-hydro-flask-standard-flex-cap-21-oz-season-2024__4__59259234b92143af9ebafb94b2aa14b6.webp",
+      "PackagePath": "staticwebassets\\images\\products\\8d26500a-57bb-4e31-bf7b-27d9b18461af_inh-nuoc-giu-nhiet-hydro-flask-standard-flex-cap-21-oz-season-2024__4__59259234b92143af9ebafb94b2aa14b6.webp"
     },
     {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\99dcdfef-45f2-436d-ae9d-e0ae3752f1f6_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp",
       "PackagePath": "staticwebassets\\images\\products\\99dcdfef-45f2-436d-ae9d-e0ae3752f1f6_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp"
     },
     {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\9ca07256-778b-4267-b1b8-d62c64785241_kv_global_PC_vn.jpg",
+      "PackagePath": "staticwebassets\\images\\products\\9ca07256-778b-4267-b1b8-d62c64785241_kv_global_PC_vn.jpg"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\a40b959b-8388-4c7c-8f97-8c74ec8b6a8e_6f9d2931f4dc4a0b8ab8323af581af07_1fd29872e4fd4f2d9765c5a1ed865c0b_grande.webp",
+      "PackagePath": "staticwebassets\\images\\products\\a40b959b-8388-4c7c-8f97-8c74ec8b6a8e_6f9d2931f4dc4a0b8ab8323af581af07_1fd29872e4fd4f2d9765c5a1ed865c0b_grande.webp"
+    },
+    {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\aa4cdc46-d33d-4a75-b5f5-f509f8a60779_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg",
       "PackagePath": "staticwebassets\\images\\products\\aa4cdc46-d33d-4a75-b5f5-f509f8a60779_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg"
     },
     {
-      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\d57dbcb1-6e5e-4303-b911-0766ddea6249_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg",
-      "PackagePath": "staticwebassets\\images\\products\\d57dbcb1-6e5e-4303-b911-0766ddea6249_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg"
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\bd3dfa35-fb58-426b-a100-80efc5d7485d_hf-ono_8394-1600x1600_2.jpg",
+      "PackagePath": "staticwebassets\\images\\products\\bd3dfa35-fb58-426b-a100-80efc5d7485d_hf-ono_8394-1600x1600_2.jpg"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\bf0e8a35-7e5c-4974-9d7f-7953db77153d_sony-wh-1000xm6.webp",
+      "PackagePath": "staticwebassets\\images\\products\\bf0e8a35-7e5c-4974-9d7f-7953db77153d_sony-wh-1000xm6.webp"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\c5206632-d797-4f2c-8640-cb44c0a63e66_text_ng_n_9__4_113.webp",
+      "PackagePath": "staticwebassets\\images\\products\\c5206632-d797-4f2c-8640-cb44c0a63e66_text_ng_n_9__4_113.webp"
     },
     {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\de848b7f-fcd7-43fa-9ab0-88adf7965531_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg",
       "PackagePath": "staticwebassets\\images\\products\\de848b7f-fcd7-43fa-9ab0-88adf7965531_1731378304_3492_02da6fa065552f025bc7957c020515d1.jpg"
     },
     {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\ed2c4c2d-0d6b-4125-831e-20f53fe35d83_frame_100_1_2__2_2.webp",
+      "PackagePath": "staticwebassets\\images\\products\\ed2c4c2d-0d6b-4125-831e-20f53fe35d83_frame_100_1_2__2_2.webp"
+    },
+    {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\f3769503-41b8-4146-83a1-08de47c366a5_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp",
       "PackagePath": "staticwebassets\\images\\products\\f3769503-41b8-4146-83a1-08de47c366a5_laptop-lenovo-thinkpad-t14-gen-5-21ml0074va-05.webp"
+    },
+    {
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\fe300763-776c-4bfe-aa96-6bcb7bae2388_tải xuống.jpg",
+      "PackagePath": "staticwebassets\\images\\products\\fe300763-776c-4bfe-aa96-6bcb7bae2388_tải xuống.jpg"
     },
     {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\sony-headphone.jpg",

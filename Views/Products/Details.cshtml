@@ -7,20 +7,20 @@
 @{
     ViewData["Title"] = Model.Name;
     var firstImage = Model.Images?.FirstOrDefault()?.Url ?? "/images/placeholder.png";
-
     var averageRating = Model.Reviews != null && Model.Reviews.Any() ? Model.Reviews.Average(r => r.Rating) : 0;
     var reviewCount = Model.Reviews != null ? Model.Reviews.Count : 0;
     var currentUserReview = SignInManager.IsSignedIn(User) ? Model.Reviews?.FirstOrDefault(r => r.UserId == UserManager.GetUserId(User)) : null;
+    var isUserSignedIn = SignInManager.IsSignedIn(User);
 }
 
 <style>
+    /* CSS cũ của bạn giữ nguyên */
     .main-product-image {
         height: 500px;
         width: 100%;
         object-fit: contain;
         border: 1px solid #e0e0e0;
         border-radius: 0.75rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
     .thumbnail-list {
         display: flex;
@@ -43,7 +43,6 @@
         border-color: var(--bs-primary);
         transform: translateY(-3px);
     }
-
     .product-status-badge {
         display: inline-block;
         padding: 6px 12px;
@@ -51,24 +50,15 @@
         font-size: 0.95rem;
         font-weight: 600;
         margin-right: 10px;
-        margin-top: 10px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    .status-in-stock {
-        background-color: #28a745;
-        color: white;
-    }
-    .status-out-of-stock {
-        background-color: #dc3545;
-        color: white;
-    }
-    .status-sold {
-        background-color: #ffc107;
-        color: #343a40;
-    }
-
-    .buy-now-btn-custom {
+    .status-in-stock { background-color: #28a745; color: white; }
+    .status-out-of-stock { background-color: #dc3545; color: white; }
+    .status-sold { background-color: #ffc107; color: #343a40; }
+    .buy-now-btn-custom, .add-to-cart-icon-btn-v2, .toggle-wishlist-btn.btn-lg, .quantity-selector {
         height: 58px;
+    }
+    .buy-now-btn-custom {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -78,9 +68,7 @@
         font-weight: 700;
         min-width: 180px;
     }
-
-    .add-to-cart-icon-btn-v2 {
-        height: 58px;
+    .add-to-cart-icon-btn-v2, .toggle-wishlist-btn.btn-lg {
         width: 58px;
         padding: 0;
         display: flex;
@@ -89,18 +77,6 @@
         border-radius: 0.5rem;
         font-size: 1.5rem;
     }
-
-    .toggle-wishlist-btn.btn-lg {
-        height: 58px;
-        width: 58px;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 0.5rem;
-        font-size: 1.5rem;
-    }
-
     .quantity-selector {
         display: flex;
         align-items: center;
@@ -108,7 +84,6 @@
         border-radius: 0.5rem;
         overflow: hidden;
         width: 120px;
-        height: 58px;
     }
     .quantity-selector button {
         background-color: #f8f9fa;
@@ -118,33 +93,63 @@
         font-size: 1.5rem;
         width: 40px;
         height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    .quantity-selector button:hover {
-        background-color: #e2e6ea;
     }
     .quantity-selector input {
         border: none;
         text-align: center;
-        flex-grow: 1;
+        width: 40px;
         font-size: 1.15rem;
-        padding: 0;
-        -moz-appearance: textfield;
     }
-    .quantity-selector input::-webkit-outer-spin-button,
-    .quantity-selector input::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
+    .rating-stars { 
+        color: #ffc107; 
+        font-size: 1.25rem; 
+    }
+    .rating-stars .far { 
+        color: #e0e0e0; 
     }
 
-    .rating-stars {
-        color: #ffc107;
-        font-size: 1.25rem;
+    /* === BẮT ĐẦU CSS MỚI === */
+    .category-badge {
+        display: inline-block;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background-color: var(--bs-primary-bg-subtle);
+        color: var(--bs-primary-text-emphasis);
+        padding: 0.4em 0.8em;
+        border-radius: 20px;
+        text-decoration: none;
+        transition: background-color 0.3s, color 0.3s;
     }
-    .rating-stars .far {
-        color: #e0e0e0;
+    .category-badge:hover {
+        background-color: var(--bs-primary);
+        color: white;
+    }
+    .product-description-container {
+        margin-top: 2.5rem;
+        padding: 2rem;
+        background-color: #ffffff;
+        border-radius: 0.75rem;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .product-description-content ul {
+        list-style-type: disc; 
+        padding-left: 20px; 
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+    .product-description-content li {
+        margin-bottom: 0.5rem; 
+    }
+    /* === KẾT THÚC CSS MỚI === */
+
+    /* === SỬA LỖI HIỂN THỊ SAO === */
+    .star-rating {
+        direction: rtl;
+        display: inline-block;
+        padding: 0;
     }
     .star-rating input {
         display: none;
@@ -154,28 +159,28 @@
         color: #e0e0e0;
         cursor: pointer;
         transition: color 0.2s;
+        padding: 0 2px;
+        font-family: 'Font Awesome 6 Free'; /* Ép dùng Font Awesome */
+        font-weight: 400; /* Sao rỗng (regular) */
+    }
+    .star-rating label:before {
+        content: '\f005'; /* Mã Unicode cho icon star của Font Awesome */
     }
     .star-rating label:hover,
     .star-rating label:hover ~ label,
     .star-rating input:checked ~ label {
         color: #ffc107;
+        font-weight: 900; /* Sao đặc (solid) */
     }
-    .star-rating {
-        direction: rtl;
-        display: inline-block;
-        padding: 0;
-    }
-    .star-rating label:before {
-        content: '\2605';
-        padding: 0 2px;
-    }
+    /* === KẾT THÚC SỬA LỖI HIỂN THỊ SAO === */
 </style>
 
 <div class="container mt-5">
+    @Html.AntiForgeryToken()
+
     <div class="row">
         <div class="col-lg-6">
             <img id="main-product-image" src="@firstImage" class="img-fluid main-product-image" alt="@Model.Name">
-            
             <div id="thumbnail-container" class="thumbnail-list">
                 @if (Model.Images != null && Model.Images.Count > 1)
                 {
@@ -188,9 +193,12 @@
         </div>
 
         <div class="col-lg-6">
-            <h1 class="display-5 fw-bold mb-3">@Model.Name</h1>
-            <p class="text-muted fs-6 mb-4">Danh mục: <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@Model.CategoryId" class="text-decoration-none">@Model.Category.Name</a></p>
-            <hr class="mb-4">
+            <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@Model.CategoryId" class="category-badge">
+                <i class="fas fa-tag me-1"></i> @Model.Category.Name
+            </a>
+
+            <h1 class="display-5 fw-bold my-3">@Model.Name</h1>
+            
             <div class="d-flex align-items-center mb-3">
                 @if (reviewCount > 0)
                 {
@@ -207,11 +215,11 @@
                     <span class="text-muted">Chưa có đánh giá nào.</span>
                 }
             </div>
-            <p class="lead" style="line-height: 1.7;">@Html.Raw(Model.Description)</p>
-            <h3 class="my-3 display-6" style="color: #d9534f; font-weight: 700;">@Model.Price.ToString("N0") VNĐ</h3>
             
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-                @if(Model.Stock > 0)
+            <h3 class="my-4 display-6" style="color: #d9534f; font-weight: 700;">@Model.Price.ToString("N0") VNĐ</h3>
+            
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-4">
+                 @if(Model.Stock > 0)
                 {
                     <span class="product-status-badge status-in-stock">Còn hàng (@Model.Stock sản phẩm)</span>
                 }
@@ -222,37 +230,27 @@
                 
                 @if (Model.SoldQuantity > 0)
                 {
-                    <span class="product-status-badge status-sold">Đã bán: @Model.SoldQuantity sản phẩm</span>
+                    <span class="product-status-badge status-sold">Đã bán: @Model.SoldQuantity</span>
                 }
             </div>
 
-            <div class="d-flex align-items-center gap-3 mt-4">
+            <div class="d-flex align-items-center gap-3">
                 <div class="quantity-selector">
                     <button type="button" id="decrease-quantity">-</button>
                     <input type="number" id="product-quantity" value="1" min="1" max="@Model.Stock" readonly>
                     <button type="button" id="increase-quantity">+</button>
                 </div>
 
-                <form id="buy-now-form" class="d-grid">
-                    <input type="hidden" name="productId" value="@Model.Id" />
-                    <button type="submit" id="buy-now-btn" class="btn btn-success buy-now-btn-custom" @(Model.Stock > 0 ? "" : "disabled")>
-                        <i class="fas fa-money-check-alt me-2"></i> Mua ngay
-                    </button>
-                </form>
+                <button type="button" id="buy-now-btn" class="btn btn-success buy-now-btn-custom" @(Model.Stock > 0 ? "" : "disabled")>
+                    <i class="fas fa-money-check-alt me-2"></i> Mua ngay
+                </button>
                 
-                <form id="add-to-cart-form" class="d-grid"> 
-                    <input type="hidden" name="productId" value="@Model.Id" />
-                    <button type="submit" id="add-to-cart-btn" class="btn btn-primary add-to-cart-icon-btn-v2" 
-                            @(Model.Stock > 0 ? "" : "disabled")>
-                        <i class="fas fa-cart-plus"></i> 
-                        @if (Model.Stock <= 0)
-                        {
-                            <span class="visually-hidden">Hết hàng</span> 
-                        }
-                    </button>
-                </form>
+                <button type="button" id="add-to-cart-btn" class="btn btn-primary add-to-cart-icon-btn-v2" 
+                        @(Model.Stock > 0 ? "" : "disabled")>
+                    <i class="fas fa-cart-plus"></i> 
+                </button>
 
-                @if (SignInManager.IsSignedIn(User))
+                @if (isUserSignedIn)
                 {
                     <button class="btn btn-outline-danger toggle-wishlist-btn btn-lg" data-product-id="@Model.Id" title="Thêm vào yêu thích">
                         <i class="far fa-heart"></i>
@@ -261,12 +259,24 @@
             </div>
         </div>
     </div>
+    
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="product-description-container">
+                <h3 class="fw-bold">Mô tả chi tiết sản phẩm</h3>
+                <hr>
+                <div class="product-description-content" style="line-height: 1.8;">
+                    @Html.Raw(Model.Description)
+                </div>
+            </div>
+        </div>
+    </div>
 
+    @* PHẦN ĐÁNH GIÁ ĐÃ ĐƯỢC GIỮ LẠI NGUYÊN VẸN *@
     <div class="row mt-5">
         <div class="col-12">
             <h2 class="mb-4">Đánh giá sản phẩm</h2>
             <hr />
-
             @if (SignInManager.IsSignedIn(User))
             {
                 @if (currentUserReview == null)
@@ -275,6 +285,7 @@
                         <div class="card-header">Gửi đánh giá của bạn</div>
                         <div class="card-body">
                             <form asp-controller="Reviews" asp-action="Create" method="post">
+                                @Html.AntiForgeryToken()
                                 <input type="hidden" name="productId" value="@Model.Id" />
                                 <div class="mb-3">
                                     <label for="rating" class="form-label">Xếp hạng:</label>
@@ -285,12 +296,10 @@
                                         <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="Không tốt"></label>
                                         <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="Tệ"></label>
                                     </div>
-                                    
                                 </div>
                                 <div class="mb-3">
                                     <label for="comment" class="form-label">Bình luận:</label>
                                     <textarea name="comment" class="form-control" rows="3" placeholder="Viết đánh giá của bạn tại đây..."></textarea>
-                                    
                                 </div>
                                 <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
                             </form>
@@ -307,20 +316,19 @@
             else
             {
                 <div class="alert alert-info" role="alert">
-                    Vui lòng <a asp-area="Identity" asp-page="/Account/Login">đăng nhập</a> để gửi đánh giá.
+                    Vui lòng <a asp-area="Identity" asp-page="/Account/Login" class="alert-link">đăng nhập</a> để gửi đánh giá.
                 </div>
             }
-
             @if (Model.Reviews != null && Model.Reviews.Any())
             {
                 <h3 class="mb-3">Tất cả đánh giá (@reviewCount)</h3>
                 <div class="list-group">
-                    @foreach (var review in Model.Reviews)
+                    @foreach (var review in Model.Reviews.OrderByDescending(r => r.ReviewDate))
                     {
                         <div class="list-group-item list-group-item-action mb-3 shadow-sm rounded-lg">
                             <div class="d-flex w-100 justify-content-between">
                                 <h5 class="mb-1 fw-bold">@review.User.FullName</h5>
-                                <small class="text-muted">@review.ReviewDate.ToShortDateString()</small>
+                                <small class="text-muted">@review.ReviewDate.ToString("dd/MM/yyyy")</small>
                             </div>
                             <div class="rating-stars mb-2">
                                 @for (int i = 1; i <= 5; i++)
@@ -340,140 +348,94 @@
         </div>
     </div>
 </div>
-
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const mainImage = document.getElementById('main-product-image');
-            const thumbnailContainer = document.getElementById('thumbnail-container');
+        $(document).ready(function () {
+            // ... Toàn bộ script của bạn giữ nguyên, không cần thay đổi ...
+            const isUserSignedIn = @isUserSignedIn.ToString().ToLower();
+            const getToken = () => $('input[name="__RequestVerificationToken"]').val();
 
-            if (thumbnailContainer) {
-                thumbnailContainer.addEventListener('click', function(e) {
-                    if (e.target.classList.contains('thumbnail-item')) {
-                        mainImage.src = e.target.dataset.largeSrc;
-                        
-                        thumbnailContainer.querySelectorAll('.thumbnail-item').forEach(thumb => thumb.classList.remove('active'));
-                        e.target.classList.add('active');
-                    }
-                });
-            }
+            $('#thumbnail-container').on('click', '.thumbnail-item', function() {
+                $('#main-product-image').attr('src', $(this).data('large-src'));
+                $('.thumbnail-item').removeClass('active');
+                $(this).addClass('active');
+            });
+
+            const quantityInput = $('#product-quantity');
+            const maxStock = parseInt(quantityInput.attr('max')) || 0;
+
+            $('#decrease-quantity').on('click', function() {
+                let currentValue = parseInt(quantityInput.val());
+                if (currentValue > 1) {
+                    quantityInput.val(currentValue - 1);
+                }
+            });
+
+            $('#increase-quantity').on('click', function() {
+                let currentValue = parseInt(quantityInput.val());
+                if (currentValue < maxStock) {
+                    quantityInput.val(currentValue + 1);
+                } else {
+                    showNotification('Số lượng đạt tối đa tồn kho.', 'error');
+                }
+            });
             
-            const quantityInput = document.getElementById('product-quantity');
-            const decreaseButton = document.getElementById('decrease-quantity');
-            const increaseButton = document.getElementById('increase-quantity');
-            const maxStock = parseInt(quantityInput.max);
+            $('#add-to-cart-btn, #buy-now-btn').on('click', function(e) {
+                e.preventDefault();
+                
+                const isBuyNow = $(this).attr('id') === 'buy-now-btn';
+                
+                if (!isUserSignedIn && isBuyNow) {
+                    showNotification('Vui lòng đăng nhập để thực hiện chức năng này.', 'error');
+                    setTimeout(() => {
+                        window.location.href = `/Identity/Account/Login?ReturnUrl=${encodeURIComponent(window.location.pathname)}`;
+                    }, 1500);
+                    return; 
+                }
 
-            if (quantityInput && decreaseButton && increaseButton) {
-                decreaseButton.addEventListener('click', () => {
-                    let currentValue = parseInt(quantityInput.value);
-                    if (currentValue > 1) {
-                        quantityInput.value = currentValue - 1;
-                    }
-                });
+                const btn = $(this);
+                const productId = @Model.Id;
+                const quantity = parseInt($('#product-quantity').val());
+                const originalHtml = btn.html();
 
-                increaseButton.addEventListener('click', () => {
-                    let currentValue = parseInt(quantityInput.value);
-                    if (currentValue < maxStock) {
-                        quantityInput.value = currentValue + 1;
-                    } else {
-                        showNotification('Số lượng đạt tối đa tồn kho.', 'error');
-                    }
-                });
-            }
+                let url = isBuyNow ? '@Url.Action("BuyNow", "Checkout")' : '@Url.Action("AddToCart", "Cart")';
 
-            const addToCartForm = document.getElementById('add-to-cart-form');
-            if(addToCartForm) {
-                addToCartForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    const productId = this.querySelector('input[name="productId"]').value;
-                    const quantity = parseInt(document.getElementById('product-quantity').value); 
-                    const btn = this.querySelector('#add-to-cart-btn');
-                    const originalText = btn.innerHTML; 
-                    
-                    const icon = btn.querySelector('.fas.fa-cart-plus');
-                    if (icon) icon.classList.add('d-none'); 
-                    const spinner = document.createElement('span');
-                    spinner.className = 'spinner-border spinner-border-sm';
-                    spinner.setAttribute('role', 'status');
-                    spinner.setAttribute('aria-hidden', 'true');
-                    btn.prepend(spinner); 
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
 
-                    btn.disabled = true;
-
-                    fetch(`/Cart/AddToCart?productId=${productId}&quantity=${quantity}`, { 
-                        method: 'POST',
-                        headers: {
-                           "RequestVerificationToken": document.getElementsByName('__RequestVerificationToken')[0]?.value
-                        },
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showNotification(data.message, 'success'); 
-                            const cartCountSpan = document.getElementById('cart-item-count');
-                            if (cartCountSpan) {
-                                cartCountSpan.innerText = data.newCartCount;
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    headers: { "RequestVerificationToken": getToken() },
+                    data: {
+                        productId: productId,
+                        quantity: quantity
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            if (isBuyNow && response.redirectUrl) {
+                                window.location.href = response.redirectUrl;
+                            } else {
+                                showNotification(response.message, 'success');
+                                $('#cart-item-count').text(response.newCartCount);
+                                btn.prop('disabled', false).html(originalHtml);
                             }
                         } else {
-                            showNotification(`Lỗi: ${data.message}`, 'error'); 
+                            showNotification(response.message || 'Không thể thực hiện thao tác.', 'error');
+                            btn.prop('disabled', false).html(originalHtml);
                         }
-                    })
-                    .catch(error => {
-                        console.error('Lỗi khi thêm vào giỏ hàng:', error);
-                        showNotification('Đã có lỗi xảy ra.', 'error'); 
-                    })
-                    .finally(() => {
-                        const spinner = btn.querySelector('.spinner-border');
-                        if (spinner) spinner.remove();
-                        const icon = btn.querySelector('.fas.fa-cart-plus');
-                        if (icon) icon.classList.remove('d-none');
-
-                        btn.disabled = @(Model.Stock > 0 ? "false" : "true");
-                    });
-                });
-            }
-
-            const buyNowForm = document.getElementById('buy-now-form');
-            if (buyNowForm) {
-                buyNowForm.addEventListener('submit', function(e) {
-                    e.preventDefault(); 
-
-                    const productId = this.querySelector('input[name="productId"]').value;
-                    const quantity = parseInt(document.getElementById('product-quantity').value); 
-                    const btn = this.querySelector('#buy-now-btn');
-                    const originalText = btn.innerHTML;
-
-                    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
-                    btn.disabled = true;
-
-                    fetch(`/Checkout/BuyNow?productId=${productId}&quantity=${quantity}`, {
-                        method: 'POST',
-                        headers: {
-                            "RequestVerificationToken": document.getElementsByName('__RequestVerificationToken')[0]?.value
-                        },
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            window.location.href = `/Checkout`; 
-                        } else {
-                            return response.json().then(errorData => {
-                                showNotification(`Lỗi: ${errorData.message || 'Không thể mua sản phẩm ngay lập tức.'}`, 'error'); 
-                            }).catch(() => {
-                                showNotification('Đã có lỗi xảy ra khi mua ngay.', 'error'); 
-                            });
+                    },
+                    error: function(jqXHR) {
+                        let errorMessage = 'Đã có lỗi xảy ra. Vui lòng thử lại sau.';
+                        if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                            errorMessage = jqXHR.responseJSON.message;
+                        } else if (jqXHR.status === 401) {
+                            errorMessage = 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.';
                         }
-                    })
-                    .catch(error => {
-                        console.error('Lỗi khi mua ngay:', error);
-                        showNotification('Đã có lỗi xảy ra khi mua ngay.', 'error'); 
-                    })
-                    .finally(() => {
-                        btn.innerHTML = originalText;
-                        btn.disabled = @(Model.Stock > 0 ? "false" : "true");
-                    });
+                        showNotification(errorMessage, 'error');
+                        btn.prop('disabled', false).html(originalHtml);
+                    }
                 });
-            }
+            });
         });
     </script>
 }

@@ -1,8 +1,7 @@
 @model DCBStore.Models.CheckoutViewModel
 @{
     ViewData["Title"] = "Thanh toán";
-    // Đảm bảo Model.CartItems là List<SessionCartItem> như đã cấu hình trong CheckoutViewModel
-    // Các giá trị tổng tiền, giảm giá giờ được lấy từ Model.TotalAmount, Model.DiscountAmount
+    var subtotal = Model.CartItems.Sum(item => item.Quantity * item.Product.Price);
 }
 
 <style>
@@ -39,6 +38,13 @@
         border-top-left-radius: 0;
         border-bottom-left-radius: 0;
     }
+    /* Thêm style cho thông báo */
+    #coupon-message {
+        font-size: 0.9em;
+        font-weight: bold;
+    }
+    .text-success { color: #198754; }
+    .text-danger { color: #dc3545; }
 </style>
 
 <div class="container py-5">
@@ -46,7 +52,9 @@
         <h1 class="display-5 fw-bold">Hoàn tất Đơn hàng</h1>
     </div>
 
-    <form asp-action="PlaceOrder" method="post"> 
+    <form asp-action="PlaceOrder" method="post" id="checkout-form">
+        @* Thêm Anti-Forgery Token vào đây để JavaScript có thể sử dụng *@
+        @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
         <div class="row g-5">
             <div class="col-lg-7">
@@ -79,7 +87,7 @@
                 <div class="d-flex flex-column gap-3" id="payment-methods">
                     <div class="payment-method" data-value="COD">
                         <div class="form-check">
-                            <input asp-for="Order.PaymentMethod" type="radio" value="COD" class="form-check-input" id="cod">
+                            <input asp-for="Order.PaymentMethod" type="radio" value="COD" class="form-check-input" id="cod" checked>
                             <label class="form-check-label fw-bold w-100" for="cod">Thanh toán khi nhận hàng (COD)</label>
                         </div>
                     </div>
@@ -90,17 +98,17 @@
                         </div>
                         <div class="payment-details p-3 text-center">
                             <p>Quét mã VietQR dưới đây để thanh toán <strong><span id="qr-total-amount">@Model.TotalAmount.ToString("N0")</span> VNĐ</strong></p>
-                            
+
                             @{
                                 var bankId = "970436"; // Vietcombank
-                                var accountNumber = "1028292996"; // Số tài khoản của bạn
-                                var accountName = "NGUYEN LE HOANG DUY"; // Tên chủ tài khoản
-                                var description = $"Thanh toan don hang {Guid.NewGuid().ToString().Substring(0,8)}"; // Nội dung chuyển khoản duy nhất
+                                var accountNumber = "1028292996";
+                                var accountName = "NGUYEN LE HOANG DUY";
+                                var description = $"DH{DateTime.Now.Ticks}"; // Nội dung CK ngắn và duy nhất
                                 var vietQrUrl = $"https://img.vietqr.io/image/{bankId}-{accountNumber}-compact.png?amount={Model.TotalAmount}&addInfo={System.Net.WebUtility.UrlEncode(description)}&accountName={System.Net.WebUtility.UrlEncode(accountName)}";
                             }
 
                             <img id="qr-code-image" src="@vietQrUrl" alt="Mã QR thanh toán" class="img-fluid rounded border" style="max-width: 250px;">
-                            
+
                             <div class="mt-3 text-start small">
                                 <strong>Ngân hàng:</strong> Vietcombank<br>
                                 <strong>Chủ tài khoản:</strong> @accountName<br>
@@ -114,7 +122,6 @@
 
                 <hr class="my-4">
                 <button class="w-100 btn btn-primary btn-lg" type="submit">Hoàn tất Đặt hàng</button>
-
             </div>
 
             <div class="col-lg-5">
@@ -133,30 +140,22 @@
                                             <h6 class="my-0">@item.ProductName</h6>
                                             <small class="text-muted">Số lượng: @item.Quantity</small>
                                         </div>
-                                        <span class="text-muted">@((item.Quantity * item.Price).ToString("N0")) VNĐ</span>
+                                        <span class="text-muted">@((item.Quantity * item.Price).ToString("N0")) đ</span>
                                     </li>
                                 }
                             </ul>
 
                             <h4 class="card-title mb-4">Mã giảm giá</h4>
-                            <div class="input-group mb-3 coupon-section">
-                                <input type="text" class="form-control" placeholder="Nhập mã giảm giá" aria-label="Mã giảm giá" id="coupon-code-input" value="@Model.AppliedCouponCode">
+                            <div class="input-group mb-2 coupon-section">
+                                <input type="text" class="form-control" placeholder="Nhập mã giảm giá" id="coupon-code-input" value="@Model.AppliedCouponCode">
                                 <button class="btn btn-outline-primary" type="button" id="apply-coupon-btn">Áp dụng</button>
                             </div>
-                            @if (!string.IsNullOrEmpty(Model.AppliedCouponCode))
-                            {
-                                <div id="applied-coupon-info" class="alert alert-success d-flex justify-content-between align-items-center">
-                                    <span>Mã: <strong>@Model.AppliedCouponCode</strong> đã áp dụng!</span>
-                                    <button type="button" class="btn-close" aria-label="Gỡ bỏ" id="remove-coupon-btn"></button>
-                                </div>
-                            }
-                            else
-                            {
-                                <div id="applied-coupon-info" class="d-none alert alert-success d-flex justify-content-between align-items-center">
-                                    <span>Mã: <strong id="current-applied-code"></strong> đã áp dụng!</span>
-                                    <button type="button" class="btn-close" aria-label="Gỡ bỏ" id="remove-coupon-btn"></button>
-                                </div>
-                            }
+                            <div id="coupon-message" class="mb-3"></div>
+
+                            <div id="applied-coupon-info" class="alert alert-success d-flex justify-content-between align-items-center @(string.IsNullOrEmpty(Model.AppliedCouponCode) ? "d-none" : "")">
+                                <span>Mã: <strong id="current-applied-code">@Model.AppliedCouponCode</strong></span>
+                                <button type="button" class="btn-close" aria-label="Gỡ bỏ" id="remove-coupon-btn"></button>
+                            </div>
 
                         </div>
                     </div>
@@ -167,19 +166,19 @@
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-2">
                                     <span>Tạm tính</span>
-                                    <span id="summary-subtotal">@Model.CartItems.Sum(item => item.Quantity * item.Product.Price).ToString("N0") VNĐ</span>
+                                    <span id="summary-subtotal">@subtotal.ToString("N0") đ</span>
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-2">
-                                    <span>Giảm giá mã</span>
-                                    <span id="summary-discount">- @Model.DiscountAmount.ToString("N0") VNĐ</span>
+                                    <span>Giảm giá</span>
+                                    <span id="summary-discount" class="text-danger">- @Model.DiscountAmount.ToString("N0") đ</span>
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-2">
                                     <span>Phí vận chuyển</span>
-                                    <span>Miễn phí</span>
+                                    <span class="text-success">Miễn phí</span>
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between align-items-center border-top px-0 pt-3">
                                     <strong class="fs-5">Tổng cộng</strong>
-                                    <strong class="fs-5 text-primary" id="summary-total">@Model.TotalAmount.ToString("N0") VNĐ</strong>
+                                    <strong class="fs-5 text-primary" id="summary-total">@Model.TotalAmount.ToString("N0") đ</strong>
                                 </li>
                             </ul>
                         </div>
@@ -193,130 +192,112 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const paymentMethods = document.querySelectorAll('.payment-method');
-            const summarySubtotal = document.getElementById('summary-subtotal');
-            const summaryDiscount = document.getElementById('summary-discount');
-            const summaryTotal = document.getElementById('summary-total');
-            const qrTotalAmount = document.getElementById('qr-total-amount');
-            const qrCodeImage = document.getElementById('qr-code-image');
-            const qrDescription = document.getElementById('qr-description');
+        // Sử dụng jQuery vì dự án đã có sẵn
+        $(document).ready(function() {
+            // --- XỬ LÝ CHỌN PHƯƠNG THỨC THANH TOÁN ---
+            $('.payment-method').on('click', function() {
+                $('.payment-method').removeClass('active');
+                $('.payment-details').slideUp(200);
+                
+                $(this).addClass('active');
+                $(this).find('input[type="radio"]').prop('checked', true);
+                
+                const details = $(this).find('.payment-details');
+                if(details.length) {
+                    details.slideDown(200);
+                }
+                updateQrCode(); // Cập nhật QR khi chọn
+            });
 
-            const couponCodeInput = document.getElementById('coupon-code-input');
-            const applyCouponBtn = document.getElementById('apply-coupon-btn');
-            const removeCouponBtn = document.getElementById('remove-coupon-btn');
-            const appliedCouponInfo = document.getElementById('applied-coupon-info');
-            const currentAppliedCode = document.getElementById('current-applied-code');
+            // --- HÀM CẬP NHẬT GIAO DIỆN ---
+            function updateSummary(subtotal, discountAmount, newTotal) {
+                $('#summary-subtotal').text(subtotal + ' đ');
+                $('#summary-discount').text('- ' + discountAmount + ' đ');
+                $('#summary-total').text(newTotal + ' đ');
+                updateQrCode();
+            }
+
+            function updateQrCode(){
+                const totalText = $('#summary-total').text().replace(/[^0-9]/g, ''); // Lấy số từ tổng tiền
+                const totalAmount = parseInt(totalText, 10);
+
+                if (isNaN(totalAmount)) return;
+
+                const qrImage = $('#qr-code-image');
+                const qrTotalSpan = $('#qr-total-amount');
+
+                // Cập nhật số tiền trên text và trong QR code
+                qrTotalSpan.text(totalAmount.toLocaleString('vi-VN'));
+
+                const baseQrUrl = qrImage.attr('src').split('?')[0];
+                const urlParams = new URLSearchParams(qrImage.attr('src').split('?')[1]);
+                urlParams.set('amount', totalAmount);
+                
+                qrImage.attr('src', baseQrUrl + '?' + urlParams.toString());
+            }
+
+            function showCouponMessage(message, isSuccess) {
+                const messageDiv = $('#coupon-message');
+                messageDiv.text(message)
+                           .removeClass('text-success text-danger')
+                           .addClass(isSuccess ? 'text-success' : 'text-danger');
+            }
 
 
-            paymentMethods.forEach(method => {
-                method.addEventListener('click', function() {
-                    paymentMethods.forEach(m => m.classList.remove('active'));
-                    document.querySelectorAll('.payment-details').forEach(d => d.style.display = 'none');
-                    
-                    this.classList.add('active');
-                    this.querySelector('input[type="radio"]').checked = true;
-                    const details = this.querySelector('.payment-details');
-                    if(details) {
-                        details.style.display = 'block';
+            // --- XỬ LÝ SỰ KIỆN COUPON ---
+            $('#apply-coupon-btn').on('click', function() {
+                const couponCode = $('#coupon-code-input').val();
+                const token = $('input[name="__RequestVerificationToken"]').val();
+
+                $.ajax({
+                    url: '@Url.Action("ApplyCoupon", "Checkout")', // Gọi đến CheckoutController
+                    type: 'POST',
+                    headers: { "RequestVerificationToken": token },
+                    data: { couponCode: couponCode },
+                    success: function(response) {
+                        showCouponMessage(response.message, response.success);
+
+                        if (response.success) {
+                            updateSummary(response.subtotal, response.discountAmount, response.newTotal);
+                            
+                            // Hiển thị thông tin mã đã áp dụng
+                            $('#current-applied-code').text(response.appliedCouponCode);
+                            $('#applied-coupon-info').removeClass('d-none');
+                        }
+                    },
+                    error: function() {
+                        showCouponMessage('Đã có lỗi xảy ra. Vui lòng thử lại.', false);
                     }
                 });
             });
 
-            // Hàm cập nhật tổng tiền trên giao diện và QR code
-            const updateFinalTotal = (newTotal) => {
-                summaryTotal.textContent = newTotal.toLocaleString('vi-VN') + ' VNĐ';
-                qrTotalAmount.textContent = newTotal.toLocaleString('vi-VN');
-                // Cập nhật QR code nếu đang hiển thị
-                if (qrCodeImage && qrTotalAmount && qrDescription && document.getElementById('bank').checked) {
-                    const bankId = "970436"; // Vietcombank
-                    const accountNumber = "1028292996";
-                    const accountName = "NGUYEN LE HOANG DUY";
-                    const description = qrDescription.textContent; // Giữ nguyên nội dung đã tạo
-                    const newQrUrl = `https://img.vietqr.io/image/${bankId}-${accountNumber}-compact.png?amount=${newTotal}&addInfo=${encodeURIComponent(description)}&accountName=${encodeURIComponent(accountName)}`;
-                    qrCodeImage.src = newQrUrl;
-                }
-            };
+            $('#remove-coupon-btn').on('click', function() {
+                const token = $('input[name="__RequestVerificationToken"]').val();
 
-            const handleApplyCoupon = async () => {
-                const couponCode = couponCodeInput.value.trim();
-                if (!couponCode) {
-                    showNotification('Vui lòng nhập mã giảm giá.', 'error');
-                    return;
-                }
-
-                try {
-                    const response = await fetch(`/Cart/ApplyCoupon?couponCode=${couponCode}`, { // Vẫn gọi CartController
-                        method: 'POST',
-                        headers: {
-                            "RequestVerificationToken": document.getElementsByName('__RequestVerificationToken')[0]?.value
+                 $.ajax({
+                    url: '@Url.Action("RemoveCoupon", "Checkout")', // Gọi đến CheckoutController
+                    type: 'POST',
+                    headers: { "RequestVerificationToken": token },
+                    success: function(response) {
+                        if (response.success) {
+                             showCouponMessage(response.message, true);
+                             // Reset lại giao diện
+                             const subtotalText = $('#summary-subtotal').text();
+                             updateSummary(subtotalText.replace(' đ', ''), '0', response.newTotal);
+                             
+                             // Ẩn thông tin mã đã áp dụng và xóa input
+                             $('#applied-coupon-info').addClass('d-none');
+                             $('#coupon-code-input').val('');
                         }
-                    });
-                    const data = await response.json();
-
-                    if (data.success) {
-                        showNotification(data.message, 'success');
-                        summaryDiscount.textContent = '- ' + parseFloat(data.discountAmount).toLocaleString('vi-VN') + ' VNĐ';
-                        updateFinalTotal(parseFloat(data.newTotal));
-                        
-                        appliedCouponInfo.classList.remove('d-none');
-                        appliedCouponInfo.classList.add('alert-success');
-                        appliedCouponInfo.classList.remove('alert-danger');
-                        currentAppliedCode.textContent = data.appliedCode;
-                        couponCodeInput.value = data.appliedCode; // Giữ mã đã áp dụng trong input
-                    } else {
-                        showNotification(`Lỗi: ${data.message}`, 'error');
-                        appliedCouponInfo.classList.remove('d-none');
-                        appliedCouponInfo.classList.remove('alert-success');
-                        appliedCouponInfo.classList.add('alert-danger');
-                        currentAppliedCode.textContent = 'Lỗi'; 
+                    },
+                    error: function() {
+                        showCouponMessage('Đã có lỗi xảy ra khi gỡ bỏ mã.', false);
                     }
-                } catch (error) {
-                    console.error('Lỗi khi áp dụng mã giảm giá:', error);
-                    showNotification('Đã có lỗi xảy ra khi áp dụng mã giảm giá.', 'error');
-                }
-            };
-
-            const handleRemoveCoupon = async () => {
-                try {
-                    const response = await fetch('/Cart/RemoveCoupon', { // Vẫn gọi CartController
-                        method: 'POST',
-                        headers: {
-                            "RequestVerificationToken": document.getElementsByName('__RequestVerificationToken')[0]?.value
-                        }
-                    });
-                    const data = await response.json();
-
-                    if (data.success) {
-                        showNotification(data.message, 'success');
-                        summaryDiscount.textContent = '- ' + 0..toLocaleString('vi-VN') + ' VNĐ'; // Đặt giảm giá về 0
-                        // Recalculate subtotal manually or reload page for simplicity
-                        const initialSubtotalText = summarySubtotal.textContent.replace(' VNĐ', '').replace(/\./g, '');
-                        updateFinalTotal(parseFloat(initialSubtotalText)); // Đặt tổng tiền về tạm tính
-                        appliedCouponInfo.classList.add('d-none');
-                        couponCodeInput.value = ''; // Xóa mã khỏi input
-                    } else {
-                        showNotification(`Lỗi: ${data.message}`, 'error');
-                    }
-                } catch (error) {
-                    console.error('Lỗi khi gỡ bỏ mã giảm giá:', error);
-                    showNotification('Đã có lỗi xảy ra khi gỡ bỏ mã giảm giá.', 'error');
-                }
-            };
-
-            if (applyCouponBtn) {
-                applyCouponBtn.addEventListener('click', handleApplyCoupon);
-            }
-            if (removeCouponBtn) {
-                removeCouponBtn.addEventListener('click', handleRemoveCoupon);
-            }
-
-            // Gắn sự kiện cho radio button thanh toán để cập nhật QR code
-            document.querySelectorAll('input[name="Order.PaymentMethod"]').forEach(radio => {
-                radio.addEventListener('change', () => {
-                    updateFinalTotal(parseFloat(summaryTotal.textContent.replace(' VNĐ', '').replace(/\./g, '')));
                 });
             });
+
+             // Kích hoạt phương thức thanh toán mặc định
+            $('#cod').closest('.payment-method').addClass('active');
         });
     </script>
 }

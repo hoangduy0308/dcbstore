@@ -8,9 +8,14 @@ namespace DCBStore.Models
 
         public List<SessionCartItem> CartItems { get; set; } = new List<SessionCartItem>();
 
-        public decimal TotalAmount { get; set; } 
+        // === BẮT ĐẦU PHẦN THÊM MỚI ===
+        public decimal Subtotal { get; set; } // Thêm thuộc tính Tạm tính
+        // === KẾT THÚC PHẦN THÊM MỚI ===
 
-        public string? AppliedCouponCode { get; set; } // Thêm dòng này cho mã giảm giá đã áp dụng
-        public decimal DiscountAmount { get; set; } // Thêm dòng này cho số tiền giảm giá
+        public decimal TotalAmount { get; set; }
+
+        public string? AppliedCouponCode { get; set; }
+
+        public decimal DiscountAmount { get; set; }
     }
 }

@@ -17,7 +17,8 @@ namespace DCBStore.Models
         [Required(ErrorMessage = "Mã giảm giá là bắt buộc.")]
         [StringLength(50, ErrorMessage = "Mã giảm giá không được vượt quá 50 ký tự.")]
         [Display(Name = "Mã giảm giá")]
-        public string Code { get; set; }
+        // Khởi tạo để tránh warning CS8618
+        public string Code { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Loại giảm giá là bắt buộc.")]
         [Display(Name = "Loại giảm giá")]
@@ -27,39 +28,52 @@ namespace DCBStore.Models
         [Range(0.01, double.MaxValue, ErrorMessage = "Giá trị giảm giá phải lớn hơn 0.")]
         [Column(TypeName = "decimal(18, 2)")]
         [Display(Name = "Giá trị")]
-        public decimal Value { get; set; } // Giá trị giảm giá (ví dụ: 10.00 cho 10%, hoặc 50000 cho 50.000 VNĐ)
+        // Tên thuộc tính trong Controller sẽ dùng là "Value"
+        public decimal Value { get; set; }
 
         [Display(Name = "Ngày bắt đầu")]
         [DataType(DataType.Date)]
-        public DateTime? StartDate { get; set; } = DateTime.UtcNow; // Ngày bắt đầu có hiệu lực
+        public DateTime? StartDate { get; set; } = DateTime.UtcNow;
 
         [Display(Name = "Ngày hết hạn")]
         [DataType(DataType.Date)]
-        public DateTime? EndDate { get; set; } // Ngày hết hạn
+        public DateTime? EndDate { get; set; }
 
         [Display(Name = "Số lần sử dụng tối đa")]
         [Range(0, int.MaxValue, ErrorMessage = "Số lần sử dụng không thể âm.")]
-        public int MaxUses { get; set; } = 0; // Số lần sử dụng tối đa (0 = không giới hạn)
+        public int MaxUses { get; set; } = 0;
 
         [Display(Name = "Số lần đã sử dụng")]
-        public int TimesUsed { get; set; } = 0; // Số lần đã được sử dụng
+        public int TimesUsed { get; set; } = 0;
 
         [Display(Name = "Giá trị đơn hàng tối thiểu")]
         [Range(0, double.MaxValue, ErrorMessage = "Giá trị đơn hàng tối thiểu không thể âm.")]
         [Column(TypeName = "decimal(18, 2)")]
-        public decimal MinOrderAmount { get; set; } = 0; // Giá trị đơn hàng tối thiểu để áp dụng
+         // Tên thuộc tính trong Controller sẽ dùng là "MinOrderAmount"
+        public decimal MinOrderAmount { get; set; } = 0;
+
+        // === BẮT ĐẦU PHẦN THÊM MỚI ===
+        [Display(Name = "Kích hoạt")]
+        public bool IsActive { get; set; } = true; // Thêm thuộc tính để bật/tắt mã
+
+        [Display(Name = "Giảm giá tối đa")]
+        [Range(0, double.MaxValue, ErrorMessage = "Số tiền giảm tối đa không thể âm.")]
+        [Column(TypeName = "decimal(18, 2)")]
+        // Thêm thuộc tính giới hạn số tiền giảm (0 = không giới hạn)
+        public decimal MaxDiscountAmount { get; set; } = 0;
+        // === KẾT THÚC PHẦN THÊM MỚI ===
 
         [Display(Name = "Áp dụng cho sản phẩm")]
-        public int? ProductId { get; set; } // Áp dụng cho sản phẩm cụ thể (nullable)
+        public int? ProductId { get; set; }
         [ForeignKey("ProductId")]
         public Product? Product { get; set; }
 
         [Display(Name = "Áp dụng cho danh mục")]
-        public int? CategoryId { get; set; } // Áp dụng cho danh mục cụ thể (nullable)
+        public int? CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public Category? Category { get; set; }
 
         [Display(Name = "Chỉ áp dụng một lần mỗi người dùng")]
-        public bool OneTimePerUser { get; set; } = false; // Mã giảm giá chỉ dùng được 1 lần/người dùng
+        public bool OneTimePerUser { get; set; } = false;
     }
 }

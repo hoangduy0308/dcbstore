@@ -20,9 +20,10 @@ namespace DCBStore.Areas.Admin.Controllers
         }
 
         // GET: Admin/Categories
+        // SỬA: Lọc bỏ các danh mục đã bị "xóa mềm"
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Categories.ToListAsync());
+            return View(await _context.Categories.Where(c => !c.IsDeleted).ToListAsync());
         }
 
         // GET: Admin/Categories/Create
@@ -40,6 +41,7 @@ namespace DCBStore.Areas.Admin.Controllers
             {
                 _context.Add(category);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Danh mục đã được tạo thành công.";
                 return RedirectToAction(nameof(Index));
             }
             return View(category);
@@ -54,7 +56,7 @@ namespace DCBStore.Areas.Admin.Controllers
             }
 
             var category = await _context.Categories.FindAsync(id);
-            if (category == null)
+            if (category == null || category.IsDeleted) // Không cho sửa danh mục đã xóa
             {
                 return NotFound();
             }
@@ -64,7 +66,7 @@ namespace DCBStore.Areas.Admin.Controllers
         // POST: Admin/Categories/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Category category)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,IsDeleted")] Category category)
         {
             if (id != category.Id)
             {
@@ -77,6 +79,7 @@ namespace DCBStore.Areas.Admin.Controllers
                 {
                     _context.Update(category);
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Danh mục đã được cập nhật thành công.";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -113,6 +116,7 @@ namespace DCBStore.Areas.Admin.Controllers
         }
 
         // POST: Admin/Categories/Delete/5
+        // SỬA: Action này giờ sẽ thực hiện "Xóa mềm"
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -120,16 +124,33 @@ namespace DCBStore.Areas.Admin.Controllers
             var category = await _context.Categories.FindAsync(id);
             if (category != null)
             {
-                _context.Categories.Remove(category);
+                // THAY ĐỔI LOGIC TẠI ĐÂY
+                // Thay vì xóa, chúng ta chỉ đánh dấu là đã xóa
+                category.IsDeleted = true;
+                _context.Update(category);
+                
+                // Đồng thời, chúng ta cũng sẽ ẩn tất cả các sản phẩm thuộc danh mục này
+                var productsToHide = await _context.Products.Where(p => p.CategoryId == id).ToListAsync();
+                foreach (var product in productsToHide)
+                {
+                    product.IsDeleted = true;
+                    _context.Update(product);
+                }
+
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Danh mục và các sản phẩm liên quan đã được xóa (ẩn đi) thành công.";
+            }
+            else
+            {
+                 TempData["ErrorMessage"] = "Không tìm thấy danh mục để xóa.";
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool CategoryExists(int id)
         {
-            return _context.Categories.Any(e => e.Id == id);
+            return _context.Categories.Any(e => e.Id == id && !e.IsDeleted);
         }
     }
 }

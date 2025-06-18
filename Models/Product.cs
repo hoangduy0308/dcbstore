@@ -8,7 +8,7 @@ namespace DCBStore.Models
     {
         public int Id { get; set; }
         
-        [Required]
+        [Required(ErrorMessage = "Vui lòng nhập tên sản phẩm")]
         public string Name { get; set; } = string.Empty;
         
         public string? Description { get; set; }
@@ -25,6 +25,11 @@ namespace DCBStore.Models
         [Range(0, int.MaxValue, ErrorMessage = "Số lượng đã bán không thể là số âm")]
         public int SoldQuantity { get; set; } 
 
+        // === BẮT ĐẦU THÊM MỚI ===
+        [Display(Name = "Đã xóa")]
+        public bool IsDeleted { get; set; } = false; // Mặc định là chưa xóa
+        // === KẾT THÚC THÊM MỚI ===
+
         public int CategoryId { get; set; }
         public Category Category { get; set; } = null!;
 
@@ -33,7 +38,6 @@ namespace DCBStore.Models
         public ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>(); 
         public ICollection<WishlistItem> WishlistItems { get; set; } = new List<WishlistItem>(); 
         public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>(); 
-
-        public ICollection<Review> Reviews { get; set; } = new List<Review>(); // Thêm dòng này cho chức năng đánh giá
+        public ICollection<Review> Reviews { get; set; } = new List<Review>();
     }
 }
