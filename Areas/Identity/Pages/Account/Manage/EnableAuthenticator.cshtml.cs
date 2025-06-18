@@ -3,36 +3,37 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Text.Encodings.Web; // Thêm dòng này
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using DCBStore.Data; // THÊM DÒNG NÀY ĐỂ THAM CHIẾU ApplicationUser
 
 namespace DCBStore.Areas.Identity.Pages.Account.Manage
 {
     public class EnableAuthenticatorModel : PageModel
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager; // ĐÃ THAY ĐỔI TỪ IdentityUser SANG ApplicationUser
         private readonly ILogger<EnableAuthenticatorModel> _logger;
-        private readonly UrlEncoder _urlEncoder; // Thêm dòng này
+        private readonly UrlEncoder _urlEncoder;
 
         private const string AuthenticatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
 
         public EnableAuthenticatorModel(
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager, // ĐÃ THAY ĐỔI TỪ IdentityUser SANG ApplicationUser
             ILogger<EnableAuthenticatorModel> logger,
-            UrlEncoder urlEncoder) // Thêm tham số này
+            UrlEncoder urlEncoder)
         {
             _userManager = userManager;
             _logger = logger;
-            _urlEncoder = urlEncoder; // Thêm dòng này
+            _urlEncoder = urlEncoder;
         }
 
         public string SharedKey { get; set; }
 
-        public string AuthenticatorUri { get; set; } // Thêm thuộc tính này
+        public string AuthenticatorUri { get; set; }
 
         [TempData]
         public string[] RecoveryCodes { get; set; }
@@ -60,7 +61,7 @@ namespace DCBStore.Areas.Identity.Pages.Account.Manage
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            await LoadSharedKeyAndQrCodeUriAsync(user); // Gọi hàm helper mới
+            await LoadSharedKeyAndQrCodeUriAsync(user);
 
             return Page();
         }
@@ -76,7 +77,7 @@ namespace DCBStore.Areas.Identity.Pages.Account.Manage
             if (!ModelState.IsValid)
             {
                 await LoadSharedKeyAndQrCodeUriAsync(user);
-            return Page();
+                return Page();
             }
 
             var verificationCode = Input.Code.Replace(" ", string.Empty).Replace("-", string.Empty);
@@ -88,7 +89,7 @@ namespace DCBStore.Areas.Identity.Pages.Account.Manage
             {
                 ModelState.AddModelError("Input.Code", "Verification code is invalid.");
                 await LoadSharedKeyAndQrCodeUriAsync(user);
-            return Page();
+                return Page();
             }
 
             await _userManager.SetTwoFactorEnabledAsync(user, true);
@@ -109,8 +110,7 @@ namespace DCBStore.Areas.Identity.Pages.Account.Manage
             }
         }
 
-        // Hàm helper mới để tạo key và URI
-        private async Task LoadSharedKeyAndQrCodeUriAsync(IdentityUser user)
+        private async Task LoadSharedKeyAndQrCodeUriAsync(ApplicationUser user) // ĐÃ THAY ĐỔI TỪ IdentityUser SANG ApplicationUser
         {
             var unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
             if (string.IsNullOrEmpty(unformattedKey))
@@ -146,7 +146,7 @@ namespace DCBStore.Areas.Identity.Pages.Account.Manage
         {
             return string.Format(
                 AuthenticatorUriFormat,
-                _urlEncoder.Encode("DCBStore"), // Tên ứng dụng của bạn
+                _urlEncoder.Encode("DCBStore"),
                 _urlEncoder.Encode(email),
                 unformattedKey);
         }

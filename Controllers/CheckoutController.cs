@@ -9,6 +9,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization; // Cần thêm để sử dụng CultureInfo
 
 namespace DCBStore.Controllers
 {
@@ -18,7 +19,9 @@ namespace DCBStore.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private const string BuyNowSessionKey = "BuyNowCart"; 
-        private const string CartSessionKey = "Cart"; 
+        private const string CartSessionKey = "CartSession"; // Đảm bảo key này khớp với CartController
+        private const string SessionAppliedCouponCode = "AppliedCouponCode"; // Đảm bảo key này khớp với CartController
+        private const string SessionCouponDiscount = "CouponDiscount"; // Đảm bảo key này khớp với CartController
 
         public CheckoutController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
@@ -31,7 +34,6 @@ namespace DCBStore.Controllers
             var userId = _userManager.GetUserId(User);
             if (userId == null)
             {
-                // Người dùng chưa đăng nhập, chỉ có thể có giỏ hàng Session
                 var sessionCartItems = HttpContext.Session.GetObjectFromJson<List<SessionCartItem>>(CartSessionKey) ?? new List<SessionCartItem>();
                 
                 foreach (var item in sessionCartItems)
@@ -57,13 +59,15 @@ namespace DCBStore.Controllers
                 return View(anonCheckoutViewModel);
             }
 
-            // Người dùng đã đăng nhập
             List<SessionCartItem> cartItemsForViewModel; 
+            decimal subtotal = 0;
+            decimal discount = 0;
+            string appliedCouponCode = HttpContext.Session.GetString(SessionAppliedCouponCode);
 
-            // Ưu tiên luồng "Mua ngay" từ Session
+
             if (HttpContext.Session.GetObjectFromJson<List<SessionCartItem>>(BuyNowSessionKey) != null)
             {
-                cartItemsForViewModel = HttpContext.Session.GetObjectFromJson<List<SessionCartItem>>(BuyNowSessionKey)!;
+                cartItemsForViewModel = HttpContext.Session.GetObjectFromJson<List<SessionCartItem>>(BuyNowSessionKey);
                 foreach (var item in cartItemsForViewModel)
                 {
                     if (item.Product == null)
@@ -81,7 +85,6 @@ namespace DCBStore.Controllers
             }
             else
             {
-                // Lấy giỏ hàng từ DATABASE cho người dùng đã đăng nhập
                 var userCart = await _context.Carts
                                              .Include(c => c.CartItems) 
                                                  .ThenInclude(ci => ci.Product) 
@@ -96,17 +99,20 @@ namespace DCBStore.Controllers
                 }
 
                 cartItemsForViewModel = new List<SessionCartItem>();
-                foreach (var dbItem in userCart.CartItems)
+                if(userCart != null)
                 {
-                    cartItemsForViewModel.Add(new SessionCartItem
+                    foreach (var dbItem in userCart.CartItems)
                     {
-                        ProductId = dbItem.ProductId,
-                        ProductName = dbItem.Product.Name,
-                        Price = dbItem.Product.Price,
-                        Quantity = dbItem.Quantity,
-                        ImageUrl = dbItem.Product.Images?.FirstOrDefault()?.Url,
-                        Product = dbItem.Product 
-                    });
+                        cartItemsForViewModel.Add(new SessionCartItem
+                        {
+                            ProductId = dbItem.ProductId,
+                            ProductName = dbItem.Product.Name,
+                            Price = dbItem.Product.Price,
+                            Quantity = dbItem.Quantity,
+                            ImageUrl = dbItem.Product.Images?.FirstOrDefault()?.Url,
+                            Product = dbItem.Product 
+                        });
+                    }
                 }
             }
 
@@ -116,11 +122,25 @@ namespace DCBStore.Controllers
                 return RedirectToAction("Index", "Cart");
             }
 
+            // Tính toán Subtotal
+            subtotal = cartItemsForViewModel.Sum(item => item.Quantity * item.Product.Price);
+
+            // Lấy discount từ session nếu có
+            if (HttpContext.Session.TryGetValue(SessionCouponDiscount, out byte[] discountBytes))
+            {
+                discount = decimal.Parse(System.Text.Encoding.UTF8.GetString(discountBytes), CultureInfo.InvariantCulture);
+            }
+
+            // Đảm bảo discount không lớn hơn subtotal
+            discount = Math.Min(discount, subtotal);
+
             var checkoutViewModel = new CheckoutViewModel
             {
                 CartItems = cartItemsForViewModel, 
                 Order = new Order(), 
-                TotalAmount = cartItemsForViewModel.Sum(item => item.Quantity * item.Product.Price) 
+                TotalAmount = subtotal - discount, // Tổng tiền đã trừ giảm giá
+                AppliedCouponCode = appliedCouponCode, // Mã giảm giá đã áp dụng
+                DiscountAmount = discount // Số tiền giảm giá
             };
             
             return View(checkoutViewModel);
@@ -130,28 +150,27 @@ namespace DCBStore.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PlaceOrder(CheckoutViewModel checkoutViewModel)
         {
-            Console.WriteLine("PlaceOrder: Bắt đầu xử lý đơn hàng."); // LOG 1
+            // LOGGING CHO DEBUGGING
+            Console.WriteLine("PlaceOrder: Bắt đầu xử lý đơn hàng.");
 
             var userId = _userManager.GetUserId(User);
             if (userId == null)
             {
-                Console.WriteLine("PlaceOrder: Lỗi - Người dùng chưa đăng nhập."); // LOG 2
+                Console.WriteLine("PlaceOrder: Lỗi - Người dùng chưa đăng nhập.");
                 return Unauthorized();
             }
-            Console.WriteLine($"PlaceOrder: Người dùng ID: {userId}"); // LOG 3
+            Console.WriteLine($"PlaceOrder: Người dùng ID: {userId}");
 
-            // BẮT ĐẦU SỬA ĐỔI: Tải lại giỏ hàng từ database/session thay vì dùng từ ViewModel
-            List<SessionCartItem> currentOrderItems; // Sẽ chứa các item giỏ hàng
+            List<SessionCartItem> currentOrderItems;
             bool isBuyNowFlow = HttpContext.Session.GetObjectFromJson<List<SessionCartItem>>(BuyNowSessionKey) != null;
             
             if (isBuyNowFlow)
             {
-                currentOrderItems = HttpContext.Session.GetObjectFromJson<List<SessionCartItem>>(BuyNowSessionKey)!;
-                Console.WriteLine("PlaceOrder: Đang xử lý luồng 'Mua ngay'."); // LOG A
+                currentOrderItems = HttpContext.Session.GetObjectFromJson<List<SessionCartItem>>(BuyNowSessionKey);
+                Console.WriteLine("PlaceOrder: Đang xử lý luồng 'Mua ngay'.");
             }
             else
             {
-                // Tải giỏ hàng từ DATABASE cho người dùng đã đăng nhập (giỏ hàng thông thường)
                 var userCart = await _context.Carts
                                              .Include(c => c.CartItems)
                                                  .ThenInclude(ci => ci.Product)
@@ -160,13 +179,11 @@ namespace DCBStore.Controllers
                 
                 if (userCart == null)
                 {
-                    Console.WriteLine("PlaceOrder: Lỗi - Giỏ hàng DB của người dùng trống/không tồn tại cho luồng thông thường."); // LOG B
-                    // Nếu giỏ hàng DB trống, có thể có vấn đề, chuyển hướng về giỏ hàng
+                    Console.WriteLine("PlaceOrder: Lỗi - Giỏ hàng DB của người dùng trống/không tồn tại cho luồng thông thường.");
                     TempData["ErrorMessage"] = "Không tìm thấy giỏ hàng của bạn. Vui lòng thử lại.";
                     return RedirectToAction("Index", "Cart");
                 }
 
-                // Ánh xạ CartItem (entity DB) sang SessionCartItem (DTO)
                 currentOrderItems = new List<SessionCartItem>();
                 foreach (var dbItem in userCart.CartItems)
                 {
@@ -180,40 +197,39 @@ namespace DCBStore.Controllers
                         Product = dbItem.Product
                     });
                 }
-                Console.WriteLine("PlaceOrder: Đang xử lý giỏ hàng từ Database."); // LOG C
+                Console.WriteLine("PlaceOrder: Đang xử lý giỏ hàng từ Database.");
             }
-            // KẾT THÚC SỬA ĐỔI
 
-            Console.WriteLine($"PlaceOrder: Số lượng mặt hàng trong đơn hàng: {currentOrderItems.Count}"); // LOG 4 (đã di chuyển)
+            Console.WriteLine($"PlaceOrder: Số lượng mặt hàng trong đơn hàng: {currentOrderItems.Count}");
 
             if (!currentOrderItems.Any())
             {
-                Console.WriteLine("PlaceOrder: Lỗi - currentOrderItems trống sau khi tải lại."); // LOG 8 (đã cập nhật)
+                Console.WriteLine("PlaceOrder: Lỗi - currentOrderItems trống sau khi tải lại.");
                 TempData["ErrorMessage"] = "Không có sản phẩm nào để đặt hàng.";
                 return RedirectToAction("Index", "Cart"); 
             }
 
             var productIds = currentOrderItems.Select(c => c.ProductId).ToList();
-            Console.WriteLine($"PlaceOrder: Product IDs trong đơn hàng: {string.Join(",", productIds)}"); // LOG 9
+            Console.WriteLine($"PlaceOrder: Product IDs trong đơn hàng: {string.Join(",", productIds)}");
             var productsInDb = await _context.Products
                                              .Where(p => productIds.Contains(p.Id))
                                              .ToListAsync();
-            Console.WriteLine($"PlaceOrder: Đã tải {productsInDb.Count} sản phẩm từ DB cho kiểm tra tồn kho."); // LOG 10
+            Console.WriteLine($"PlaceOrder: Đã tải {productsInDb.Count} sản phẩm từ DB cho kiểm tra tồn kho.");
 
             foreach (var item in currentOrderItems)
             {
                 var product = productsInDb.FirstOrDefault(p => p.Id == item.ProductId);
                 if (product == null || product.Stock < item.Quantity)
                 {
-                    Console.WriteLine($"PlaceOrder: Lỗi tồn kho - Sản phẩm {item.ProductName} (ID: {item.ProductId}) không đủ ({item.Quantity} > {product?.Stock})."); // LOG 11
+                    Console.WriteLine($"PlaceOrder: Lỗi tồn kho - Sản phẩm {item.ProductName} (ID: {item.ProductId}) không đủ ({item.Quantity} > {product?.Stock}).");
                     TempData["ErrorMessage"] = $"Sản phẩm '{item.Product?.Name ?? "Không xác định"}' không đủ số lượng tồn kho hoặc không còn tồn tại.";
                     return RedirectToAction("Index", "Cart"); 
                 }
             }
-            Console.WriteLine("PlaceOrder: Kiểm tra tồn kho thành công."); // LOG 12
+            Console.WriteLine("PlaceOrder: Kiểm tra tồn kho thành công.");
 
             using var transaction = await _context.Database.BeginTransactionAsync();
-            Console.WriteLine("PlaceOrder: Bắt đầu transaction."); // LOG 13
+            Console.WriteLine("PlaceOrder: Bắt đầu transaction.");
             try
             {
                 var order = checkoutViewModel.Order;
@@ -221,13 +237,42 @@ namespace DCBStore.Controllers
 
                 order.UserId = user?.Id; 
                 order.OrderDate = DateTime.UtcNow; 
-                order.Total = currentOrderItems.Sum(item => item.Quantity * item.Product.Price); 
                 order.Status = OrderStatus.Pending; 
+                
+                // BẮT ĐẦU THÊM MỚI: Áp dụng discount từ session vào Total của Order
+                decimal finalOrderTotal = currentOrderItems.Sum(item => item.Quantity * item.Product.Price);
+                decimal discountAmount = 0;
+                string appliedCouponCode = HttpContext.Session.GetString(SessionAppliedCouponCode);
+
+                if (!string.IsNullOrEmpty(appliedCouponCode))
+                {
+                    if (decimal.TryParse(HttpContext.Session.GetString(SessionCouponDiscount), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal parsedDiscount))
+                    {
+                        discountAmount = parsedDiscount;
+                    }
+                }
+                finalOrderTotal = Math.Max(0, finalOrderTotal - discountAmount); // Đảm bảo tổng tiền không âm
+                order.Total = finalOrderTotal;
+
+                // Tăng TimesUsed của coupon nếu có và hợp lệ
+                if (!string.IsNullOrEmpty(appliedCouponCode))
+                {
+                    var coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Code == appliedCouponCode);
+                    if (coupon != null && (coupon.MaxUses == 0 || coupon.TimesUsed < coupon.MaxUses))
+                    {
+                        coupon.TimesUsed++;
+                        _context.Coupons.Update(coupon);
+                        await _context.SaveChangesAsync(); // Lưu thay đổi TimesUsed
+                        Console.WriteLine($"PlaceOrder: Mã giảm giá '{appliedCouponCode}' đã tăng lượt sử dụng lên {coupon.TimesUsed}.");
+                    }
+                }
+                // KẾT THÚC THÊM MỚI
+
 
                 _context.Orders.Add(order);
-                Console.WriteLine("PlaceOrder: Đã thêm Order vào context. Đang lưu Order..."); // LOG 14
+                Console.WriteLine("PlaceOrder: Đã thêm Order vào context. Đang lưu Order...");
                 await _context.SaveChangesAsync(); 
-                Console.WriteLine($"PlaceOrder: Order ID mới: {order.Id}"); // LOG 15
+                Console.WriteLine($"PlaceOrder: Order ID mới: {order.Id}");
 
                 foreach (var item in currentOrderItems)
                 {
@@ -235,7 +280,7 @@ namespace DCBStore.Controllers
                     if (product != null) 
                     {
                         product.Stock -= item.Quantity; 
-                        Console.WriteLine($"PlaceOrder: Cập nhật tồn kho cho {product.Name}: còn {product.Stock}"); // LOG 16
+                        Console.WriteLine($"PlaceOrder: Cập nhật tồn kho cho {product.Name}: còn {product.Stock}");
                     }
 
                     var orderDetail = new OrderDetail
@@ -246,22 +291,21 @@ namespace DCBStore.Controllers
                         Price = item.Product.Price 
                     };
                     _context.OrderDetails.Add(orderDetail);
-                    Console.WriteLine($"PlaceOrder: Đã thêm OrderDetail cho Product ID {item.ProductId}"); // LOG 17
+                    Console.WriteLine($"PlaceOrder: Đã thêm OrderDetail cho Product ID {item.ProductId}");
                 }
                 
-                Console.WriteLine("PlaceOrder: Đang lưu OrderDetails và cập nhật tồn kho..."); // LOG 18
+                Console.WriteLine("PlaceOrder: Đang lưu OrderDetails và cập nhật tồn kho...");
                 await _context.SaveChangesAsync();
-                Console.WriteLine("PlaceOrder: Đã lưu OrderDetails và cập nhật tồn kho. Đang commit transaction..."); // LOG 19
+                Console.WriteLine("PlaceOrder: Đã lưu OrderDetails và cập nhật tồn kho. Đang commit transaction...");
                 await transaction.CommitAsync();
-                Console.WriteLine("PlaceOrder: Transaction committed thành công."); // LOG 20
+                Console.WriteLine("PlaceOrder: Transaction committed thành công.");
 
-                // Xóa giỏ hàng sau khi đặt hàng thành công
                 if (isBuyNowFlow)
                 {
                     HttpContext.Session.Remove(BuyNowSessionKey);
-                    Console.WriteLine("PlaceOrder: Đã xóa BuyNowSessionKey."); // LOG 21
+                    Console.WriteLine("PlaceOrder: Đã xóa BuyNowSessionKey.");
                 }
-                else // Nếu là giỏ hàng thông thường, xóa nó khỏi database
+                else
                 {
                     var userCart = await _context.Carts
                                                  .Include(c => c.CartItems)
@@ -269,25 +313,31 @@ namespace DCBStore.Controllers
                     if (userCart != null)
                     {
                         _context.CartItems.RemoveRange(userCart.CartItems); 
-                        Console.WriteLine($"PlaceOrder: Đã xóa {userCart.CartItems.Count} mục khỏi giỏ hàng DB của user {userId}."); // LOG 22
+                        Console.WriteLine($"PlaceOrder: Đã xóa {userCart.CartItems.Count} mục khỏi giỏ hàng DB của user {userId}.");
                         await _context.SaveChangesAsync();
-                        Console.WriteLine("PlaceOrder: Đã lưu thay đổi sau khi xóa giỏ hàng DB."); // LOG 23
+                        Console.WriteLine("PlaceOrder: Đã lưu thay đổi sau khi xóa giỏ hàng DB.");
                     }
                     HttpContext.Session.Remove(CartSessionKey); 
-                    Console.WriteLine("PlaceOrder: Đã xóa CartSessionKey."); // LOG 24
+                    Console.WriteLine("PlaceOrder: Đã xóa CartSessionKey.");
                 }
-                Console.WriteLine("PlaceOrder: Đã hoàn tất xử lý giỏ hàng."); // LOG 25
+                Console.WriteLine("PlaceOrder: Đã hoàn tất xử lý giỏ hàng.");
 
                 TempData["SuccessMessage"] = "Đơn hàng của bạn đã được đặt thành công!";
-                Console.WriteLine("PlaceOrder: Chuyển hướng đến Confirmation."); // LOG 26
+                Console.WriteLine("PlaceOrder: Chuyển hướng đến Confirmation.");
+                
+                // BẮT ĐẦU THÊM MỚI: Xóa thông tin coupon khỏi session sau khi đặt hàng thành công
+                HttpContext.Session.Remove(SessionAppliedCouponCode);
+                HttpContext.Session.Remove(SessionCouponDiscount);
+                // KẾT THÚC THÊM MỚI
+
                 return RedirectToAction("Confirmation", new { orderId = order.Id });
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("PlaceOrder: Xảy ra lỗi trong transaction."); // LOG 27
-                Console.Error.WriteLine($"PlaceOrder: Chi tiết lỗi: {ex.ToString()}"); // LOG 28: Ghi toàn bộ Stack Trace
+                Console.Error.WriteLine("PlaceOrder: Xảy ra lỗi trong transaction.");
+                Console.Error.WriteLine($"PlaceOrder: Chi tiết lỗi: {ex.ToString()}");
                 await transaction.RollbackAsync();
-                Console.Error.WriteLine("PlaceOrder: Transaction rolled back."); // LOG 29
+                Console.Error.WriteLine("PlaceOrder: Transaction rolled back.");
                 TempData["ErrorMessage"] = "Đã có lỗi xảy ra trong quá trình xử lý đơn hàng. Vui lòng thử lại.";
                 return RedirectToAction("Index", "Cart"); 
             }
@@ -304,8 +354,8 @@ namespace DCBStore.Controllers
             }
 
             var product = await _context.Products
-                                        .Include(p => p.Images) 
-                                        .FirstOrDefaultAsync(p => p.Id == productId);
+                                         .Include(p => p.Images) 
+                                         .FirstOrDefaultAsync(p => p.Id == productId);
 
             if (product == null)
             {

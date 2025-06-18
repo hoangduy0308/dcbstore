@@ -2,14 +2,57 @@
     Layout = "/Views/Shared/_Layout.cshtml";
 }
 
+<style>
+    .dcb-account-page .container {
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+    .dcb-account-page .row {
+        margin-top: 20px;
+    }
+    .dcb-account-page .col-lg-3,
+    .dcb-account-page .col-lg-9 {
+        padding-bottom: 20px; /* Thêm padding dưới cho các cột */
+    }
+
+    .account-sidebar {
+        background-color: #fff;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        padding: 20px 0;
+    }
+
+    .account-content-area {
+        background-color: #fff;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        padding: 30px; /* Tăng padding */
+    }
+
+    /* Đảm bảo chiều cao tối thiểu cho nội dung để tránh footer bị "nhảy" */
+    .dcb-account-page .container {
+        min-height: calc(100vh - 200px); /* Tùy chỉnh 200px phù hợp với header/footer của bạn */
+    }
+
+    @@media (max-width: 767.98px) {
+        .account-sidebar {
+            margin-bottom: 20px;
+        }
+    }
+</style>
+
 <div class="dcb-account-page">
     <div class="container">
         <div class="row">
             <div class="col-lg-3 col-md-4">
-                <partial name="_ManageNav" />
+                <div class="account-sidebar">
+                    <partial name="_ManageNav" />
+                </div>
             </div>
             <div class="col-lg-9 col-md-8">
-                @RenderBody()
+                <div class="account-content-area">
+                    @RenderBody()
+                </div>
             </div>
         </div>
     </div>

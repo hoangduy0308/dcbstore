@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "fpo7T8SQd7EMWXliSMv+CPRkvDOze5rVlFhX4Rt+o1w=",
+  "Hash": "3hxx7nQUd6CS0N529QERxXGYDcrNO4jtzp3GHuUVspg=",
   "Source": "DCBStore",
   "BasePath": "_content/DCBStore",
   "Mode": "Default",
@@ -1269,6 +1269,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\avatars\\5447ac19-bf04-43b9-927d-1506cb9666c2_489450130_18498252388009800_7301714368554833605_n.jpg"
+    },
+    {
+      "Identity": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\avatars\\76f0293b-60e1-418d-972d-16c9b761e01a_481712981_1183858823098434_6008174039502110759_n.jpg",
+      "SourceId": "DCBStore",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\",
+      "BasePath": "_content/DCBStore",
+      "RelativePath": "images/avatars/76f0293b-60e1-418d-972d-16c9b761e01a_481712981_1183858823098434_6008174039502110759_n.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\avatars\\76f0293b-60e1-418d-972d-16c9b761e01a_481712981_1183858823098434_6008174039502110759_n.jpg"
     },
     {
       "Identity": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\avatars\\7e3f8ccd-1e95-4504-a8c8-98678eea357d_481712981_1183858823098434_6008174039502110759_n.jpg",

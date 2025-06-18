@@ -35,6 +35,11 @@ namespace DCBStore.Areas.Identity.Pages.Account.Manage
 
             Orders = await _context.Orders
                                    .Where(o => o.UserId == user.Id)
+                                   // BẮT ĐẦU THÊM MỚI: Tải chi tiết đơn hàng, sản phẩm và hình ảnh
+                                   .Include(o => o.OrderDetails)
+                                       .ThenInclude(od => od.Product)
+                                           .ThenInclude(p => p.Images)
+                                   // KẾT THÚC THÊM MỚI
                                    .OrderByDescending(o => o.OrderDate)
                                    .ToListAsync();
             

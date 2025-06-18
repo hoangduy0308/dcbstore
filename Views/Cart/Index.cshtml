@@ -1,9 +1,10 @@
-@* BẮT ĐẦU SỬA ĐỔI: Thay đổi kiểu model thành List<SessionCartItem> *@
 @model List<DCBStore.Models.SessionCartItem>
-@* KẾT THÚC SỬA ĐỔI *@
 @{
     ViewData["Title"] = "Giỏ hàng của bạn";
-    var total = Model.Sum(item => item.Total);
+    var subtotal = ViewBag.Subtotal ?? 0m;
+    var discount = ViewBag.Discount ?? 0m;
+    var total = ViewBag.Total ?? subtotal;
+    var appliedCouponCode = ViewBag.AppliedCouponCode as string;
 }
 
 <style>
@@ -28,6 +29,7 @@
     .remove-item-btn:hover {
         color: #dc3545 !important;
     }
+    /* Các style liên quan đến mã giảm giá đã được xóa khỏi đây */
 </style>
 
 <div class="container py-5">
@@ -45,9 +47,7 @@
                         <div class="card mb-3 border-0 shadow-sm" id="cart-item-@item.ProductId">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
-                                    @* BẮT ĐẦU SỬA ĐỔI: item.ImageUrl và item.ProductName đều là thuộc tính của SessionCartItem *@
                                     <img src="@(item.ImageUrl ?? "/images/placeholder.png")" alt="@item.ProductName" class="me-4 rounded" style="width: 100px; height: 100px; object-fit: contain;">
-                                    @* KẾT THÚC SỬA ĐỔI *@
                                     
                                     <div class="flex-grow-1">
                                         <h5 class="mb-1">@item.ProductName</h5>
@@ -61,7 +61,7 @@
                                     </div>
 
                                     <div class="mx-4">
-                                        <p class="fw-bold mb-0 item-total">@item.Total.ToString("N0") VNĐ</p>
+                                        <p class="fw-bold mb-0 item-total">@((item.Quantity * item.Price).ToString("N0")) VNĐ</p>
                                     </div>
                                     
                                     <div>
@@ -83,7 +83,11 @@
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-2">
                                 <span>Tạm tính</span>
-                                <span id="summary-subtotal">@total.ToString("N0") VNĐ</span>
+                                <span id="summary-subtotal">@subtotal.ToString("N0") VNĐ</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-2">
+                                <span>Giảm giá mã</span>
+                                <span id="summary-discount">- @discount.ToString("N0") VNĐ</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-2">
                                 <span>Phí vận chuyển</span>
@@ -113,78 +117,84 @@
 
 @section Scripts {
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const cartContainer = document.getElementById('cart-items-container');
+        document.addEventListener('DOMContentLoaded', function() {
+            const cartContainer = document.getElementById('cart-items-container');
+            const summarySubtotal = document.getElementById('summary-subtotal');
+            const summaryDiscount = document.getElementById('summary-discount');
+            const summaryTotal = document.getElementById('summary-total');
 
-        const updateSummary = (newTotal) => {
-            const formattedTotal = newTotal.toLocaleString('vi-VN') + ' VNĐ';
-            document.getElementById('summary-subtotal').textContent = formattedTotal;
-            document.getElementById('summary-total').textContent = formattedTotal;
-        };
-        
-        const updateCartCount = (newCount) => {
-            const cartCountSpan = document.getElementById('cart-item-count');
-            if (cartCountSpan) {
-                cartCountSpan.innerText = newCount;
-            }
-        }
-
-        if (cartContainer) {
-            cartContainer.addEventListener('click', function(e) {
-                const target = e.target.closest('.quantity-btn, .remove-item-btn');
-                if (!target) return;
-
-                const productId = target.dataset.productid;
-                let actionUrl = '';
-
-                if (target.matches('.increase-qty')) {
-                    actionUrl = '/Cart/IncreaseQuantity';
-                } else if (target.matches('.decrease-qty')) {
-                    actionUrl = '/Cart/DecreaseQuantity';
-                } else if (target.matches('.remove-item-btn')) {
-                    actionUrl = '/Cart/RemoveFromCart';
+            const updateSummary = (newSubtotal, newDiscount, newTotal) => {
+                summarySubtotal.textContent = newSubtotal.toLocaleString('vi-VN') + ' VNĐ';
+                summaryDiscount.textContent = '- ' + newDiscount.toLocaleString('vi-VN') + ' VNĐ';
+                summaryTotal.textContent = newTotal.toLocaleString('vi-VN') + ' VNĐ';
+            };
+            
+            const updateCartCount = (newCount) => {
+                const cartCountSpan = document.getElementById('cart-item-count');
+                if (cartCountSpan) {
+                    cartCountSpan.innerText = newCount;
                 }
+            };
 
-                if (!actionUrl) return;
+            // Phần xử lý mã giảm giá đã được xóa khỏi đây
 
-                fetch(`${actionUrl}?productId=${productId}`, {
-                    method: 'POST',
-                    headers: {
-                       "RequestVerificationToken": document.getElementsByName('__RequestVerificationToken')[0]?.value
-                    },
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
+            if (cartContainer) {
+                cartContainer.addEventListener('click', async function(e) {
+                    const target = e.target.closest('.quantity-btn, .remove-item-btn');
+                    if (!target) return;
+
+                    const productId = target.dataset.productid;
+                    let actionUrl = '';
+
+                    if (target.matches('.increase-qty')) {
+                        actionUrl = '/Cart/IncreaseQuantity';
+                    } else if (target.matches('.decrease-qty')) {
+                        actionUrl = '/Cart/DecreaseQuantity';
+                    } else if (target.matches('.remove-item-btn')) {
+                        actionUrl = '/Cart/RemoveFromCart';
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    if(data.success) {
-                        updateSummary(data.newTotal);
-                        updateCartCount(data.newCartCount);
 
-                        const itemRow = document.getElementById(`cart-item-${productId}`);
-                        if (!itemRow) return;
+                    if (!actionUrl) return;
 
-                        if(actionUrl.includes('RemoveFromCart') || data.itemRemoved) {
-                            itemRow.style.transition = 'opacity 0.5s ease';
-                            itemRow.style.opacity = '0';
-                            setTimeout(() => {
-                                itemRow.remove();
-                                if (document.querySelectorAll('[id^="cart-item-"]').length === 0) {
-                                    window.location.reload();
-                                }
-                            }, 500);
+                    try {
+                        const response = await fetch(`${actionUrl}?productId=${productId}`, {
+                            method: 'POST',
+                            headers: {
+                               "RequestVerificationToken": document.getElementsByName('__RequestVerificationToken')[0]?.value
+                            },
+                        });
+                        const data = await response.json();
+
+                        if(data.success) {
+                            const itemRow = document.getElementById(`cart-item-${productId}`);
+                            if (!itemRow) return;
+
+                            if(actionUrl.includes('RemoveFromCart') || data.itemRemoved) {
+                                itemRow.style.transition = 'opacity 0.5s ease';
+                                itemRow.style.opacity = '0';
+                                setTimeout(() => {
+                                    itemRow.remove();
+                                    if (document.querySelectorAll('[id^="cart-item-"]').length === 0) {
+                                        window.location.reload();
+                                    } else {
+                                        window.location.reload();
+                                    }
+                                }, 500);
+                            } else {
+                                itemRow.querySelector('.quantity-input').value = data.newQuantity;
+                                itemRow.querySelector('.item-total').textContent = data.newItemTotal.toLocaleString('vi-VN') + ' VNĐ';
+                                window.location.reload(); 
+                            }
+                            updateCartCount(data.newCartCount);
                         } else {
-                            itemRow.querySelector('.quantity-input').value = data.newQuantity;
-                            itemRow.querySelector('.item-total').textContent = data.newItemTotal.toLocaleString('vi-VN') + ' VNĐ';
+                            showNotification(`Lỗi: ${data.message}`, 'error');
                         }
+                    } catch (error) {
+                        console.error('Lỗi khi cập nhật giỏ hàng:', error);
+                        showNotification('Đã có lỗi xảy ra.', 'error');
                     }
-                })
-                .catch(error => console.error('Lỗi khi cập nhật giỏ hàng:', error));
-            });
-        }
-    });
+                });
+            }
+        });
     </script>
 }

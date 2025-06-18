@@ -1,3 +1,4 @@
+@using Microsoft.AspNetCore.Identity
 @using DCBStore.Data
 @inject UserManager<ApplicationUser> UserManager
 @{
@@ -5,11 +6,124 @@
     var displayName = user?.FullName ?? user?.UserName ?? "User";
 }
 
+<style>
+    .account-nav-container {
+        background-color: #fff;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        padding: 20px;
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .account-nav-user-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .account-nav-avatar-link {
+        flex-shrink: 0; /* Prevent avatar from shrinking */
+    }
+
+    .account-nav-avatar img {
+        width: 60px; /* Slightly larger avatar */
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #f0f0f0;
+    }
+
+    .account-nav-username {
+        margin-left: 15px;
+        font-size: 1.1rem;
+        flex-grow: 1;
+    }
+
+    .account-nav-username strong {
+        display: block;
+        color: #343a40;
+        margin-bottom: 3px;
+    }
+
+    .account-nav-username .edit-profile-link {
+        font-size: 0.85rem;
+        color: #6c757d;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .account-nav-username .edit-profile-link:hover {
+        color: var(--bs-primary);
+    }
+
+    .account-nav-divider {
+        border-top: 1px solid #e0e0e0;
+        margin-bottom: 20px;
+    }
+
+    .account-nav-menu {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+
+    .account-nav-menu .nav-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        border-radius: 0.5rem;
+        color: #495057;
+        text-decoration: none;
+        transition: background-color 0.2s, color 0.2s;
+        margin-bottom: 8px;
+    }
+
+    .account-nav-menu .nav-item:hover {
+        background-color: #f8f9fa;
+        color: #007bff; /* Primary color on hover */
+    }
+
+    .account-nav-menu .nav-item.active {
+        background-color: var(--bs-primary);
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .account-nav-menu .nav-item.active .fa-fw {
+        color: white; /* Icons in active state */
+    }
+
+    .account-nav-menu .nav-item .fa-fw {
+        width: 25px; /* Fixed width for icons */
+        font-size: 1.1rem;
+        text-align: center;
+        margin-right: 10px;
+        color: #6c757d; /* Default icon color */
+        transition: color 0.2s;
+    }
+
+    /* Custom colors for icons based on type, e.g., blue for profile, orange for orders */
+    .account-nav-menu .nav-item .icon-blue { color: #007bff; }
+    .account-nav-menu .nav-item .icon-orange { color: #fd7e14; }
+    .account-nav-menu .nav-item .icon-purple { color: #6f42c1; }
+    .account-nav-menu .nav-item .icon-green { color: #28a745; }
+
+    .account-nav-menu .nav-item.active .icon-blue,
+    .account-nav-menu .nav-item.active .icon-orange,
+    .account-nav-menu .nav-item.active .icon-purple,
+    .account-nav-menu .nav-item.active .icon-green {
+        color: white; /* Ensure icons are white in active state */
+    }
+</style>
+
 <div class="account-nav-container">
     <div class="account-nav-user-info">
         <a asp-page="./Index" class="account-nav-avatar-link">
             <div class="account-nav-avatar">
-                <img src="@(user?.AvatarUrl ?? "https://via.placeholder.com/48")" alt="User Avatar" />
+                <img src="@(user?.AvatarUrl ?? "/images/avatars/default-avatar.png")" alt="User Avatar" />
             </div>
         </a>
         <div class="account-nav-username">
@@ -34,7 +148,7 @@
             <span>Đơn Mua</span>
         </a>
         <a asp-page="./TwoFactorAuthentication" class="nav-item @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)">
-            <i class="fa-solid fa-shield-halved fa-fw me-2 icon-orange"></i>
+            <i class="fa-solid fa-shield-halved fa-fw me-2 icon-purple"></i>
             <span>Bảo Mật 2 Lớp</span>
         </a>
     </nav>

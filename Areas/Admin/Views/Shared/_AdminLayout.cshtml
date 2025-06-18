@@ -156,6 +156,12 @@
                             Quản lý Người dùng
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Coupons" ? "active" : "")" asp-area="Admin" asp-controller="Coupons" asp-action="Index">
+                            <i class="fas fa-ticket-alt fa-fw"></i>
+                            Mã giảm giá
+                        </a>
+                    </li>
 
                     <li class="sidebar-heading"><span>Khác</span></li>
                     <li class="nav-item">

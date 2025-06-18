@@ -24,7 +24,8 @@ namespace DCBStore.Data
         public DbSet<CartItem> CartItems { get; set; } 
 
         public DbSet<ChatMessage> ChatMessages { get; set; }
-        public DbSet<Review> Reviews { get; set; } // Thêm DbSet cho Review
+        public DbSet<Review> Reviews { get; set; }
+        public DbSet<Coupon> Coupons { get; set; } // Dòng này rất quan trọng
         
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -107,18 +108,39 @@ namespace DCBStore.Data
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict); 
 
-            // Cấu hình mối quan hệ cho Review
             builder.Entity<Review>()
                 .HasOne(r => r.User)
                 .WithMany()
                 .HasForeignKey(r => r.UserId)
-                .OnDelete(DeleteBehavior.Restrict); // Không xóa người dùng nếu họ có đánh giá
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Review>()
                 .HasOne(r => r.Product)
-                .WithMany(p => p.Reviews) // Đảm bảo Product có Navigation Property là Reviews
+                .WithMany(p => p.Reviews)
                 .HasForeignKey(r => r.ProductId)
-                .OnDelete(DeleteBehavior.Cascade); // Xóa đánh giá nếu sản phẩm bị xóa
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Cấu hình mối quan hệ cho Coupon
+            builder.Entity<Coupon>()
+                .Property(c => c.Value)
+                .HasColumnType("decimal(18, 2)");
+            builder.Entity<Coupon>()
+                .Property(c => c.MinOrderAmount)
+                .HasColumnType("decimal(18, 2)");
+
+            builder.Entity<Coupon>()
+                .HasOne(c => c.Product)
+                .WithMany()
+                .HasForeignKey(c => c.ProductId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Coupon>()
+                .HasOne(c => c.Category)
+                .WithMany()
+                .HasForeignKey(c => c.CategoryId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

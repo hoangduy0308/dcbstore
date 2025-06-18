@@ -1,0 +1,98 @@
+@model IEnumerable<DCBStore.Models.Coupon>
+
+@{
+    ViewData["Title"] = "Quản lý Mã giảm giá";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">@ViewData["Title"]</h1>
+    <a asp-action="Create" class="btn btn-primary d-flex align-items-center">
+        <i class="fas fa-plus me-2"></i> Tạo mã giảm giá mới
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                <p class="lead text-muted">Chưa có mã giảm giá nào được tạo.</p>
+                <p class="text-muted">Hãy tạo mã giảm giá đầu tiên của bạn!</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="py-3 px-4">Mã giảm giá</th>
+                            <th class="py-3 px-4">Loại</th>
+                            <th class="text-end py-3 px-4">Giá trị</th>
+                            <th class="text-center py-3 px-4">Ngày bắt đầu</th>
+                            <th class="text-center py-3 px-4">Ngày hết hạn</th>
+                            <th class="text-center py-3 px-4">Đã dùng / Tối đa</th>
+                            <th class="text-end py-3 px-4">Đơn tối thiểu</th>
+                            <th class="py-3 px-4">Áp dụng cho</th>
+                            <th style="width: 150px;" class="text-center py-3 px-4">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="py-3 px-4">@item.Code</td>
+                                <td class="py-3 px-4">
+                                    @(item.DiscountType == DCBStore.Models.DiscountType.Percentage ? "Phần trăm" : "Số tiền cố định")
+                                </td>
+                                <td class="text-end py-3 px-4">
+                                    @if (item.DiscountType == DCBStore.Models.DiscountType.Percentage)
+                                    {
+                                        @item.Value.ToString("N0")<span>%</span>
+                                    }
+                                    else
+                                    {
+                                        @item.Value.ToString("N0")<span>đ</span>
+                                    }
+                                </td>
+                                <td class="text-center py-3 px-4">@(item.StartDate?.ToShortDateString() ?? "N/A")</td>
+                                <td class="text-center py-3 px-4">@(item.EndDate?.ToShortDateString() ?? "N/A")</td>
+                                <td class="text-center py-3 px-4">
+                                    @item.TimesUsed / @(item.MaxUses == 0 ? "Vô hạn" : item.MaxUses.ToString())
+                                </td>
+                                <td class="text-end py-3 px-4">@item.MinOrderAmount.ToString("N0")<span>đ</span></td>
+                                <td class="py-3 px-4">
+                                    @if (item.Product != null)
+                                    {
+                                        <span>Sản phẩm: @item.Product.Name</span>
+                                    }
+                                    else if (item.Category != null)
+                                    {
+                                        <span>Danh mục: @item.Category.Name</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Toàn bộ</span>
+                                    }
+                                    @if (item.OneTimePerUser)
+                                    {
+                                        <span class="badge bg-info ms-2">1 lần/user</span>
+                                    }
+                                </td>
+                                <td class="py-3 px-4 text-center">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning me-1" title="Sửa">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

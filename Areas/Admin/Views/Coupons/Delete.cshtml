@@ -1,0 +1,93 @@
+@model DCBStore.Models.Coupon
+
+@{
+    ViewData["Title"] = "Xác nhận xóa Mã giảm giá";
+}
+
+<h1 class="mb-4">Xác nhận xóa Mã giảm giá</h1>
+
+<h3 class="text-danger">Bạn có chắc chắn muốn xóa mã giảm giá này không?</h3>
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">
+            Mã giảm giá
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.Code)
+        </dd>
+        <dt class="col-sm-3">
+            Loại giảm giá
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.DiscountType)
+        </dd>
+        <dt class="col-sm-3">
+            Giá trị
+        </dt>
+        <dd class="col-sm-9">
+            @if (Model.DiscountType == DCBStore.Models.DiscountType.Percentage)
+            {
+                @Model.Value.ToString("N0")<span>%</span>
+            }
+            else
+            {
+                @Model.Value.ToString("N0")<span>đ</span>
+            }
+        </dd>
+        <dt class="col-sm-3">
+            Ngày bắt đầu
+        </dt>
+        <dd class="col-sm-9">
+            @(Model.StartDate?.ToShortDateString() ?? "N/A")
+        </dd>
+        <dt class="col-sm-3">
+            Ngày hết hạn
+        </dt>
+        <dd class="col-sm-9">
+            @(Model.EndDate?.ToShortDateString() ?? "N/A")
+        </dd>
+        <dt class="col-sm-3">
+            Số lần sử dụng tối đa
+        </dt>
+        <dd class="col-sm-9">
+            @(Model.MaxUses == 0 ? "Vô hạn" : Model.MaxUses.ToString())
+        </dd>
+        <dt class="col-sm-3">
+            Số lần đã sử dụng
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.TimesUsed)
+        </dd>
+        <dt class="col-sm-3">
+            Giá trị đơn hàng tối thiểu
+        </dt>
+        <dd class="col-sm-9">
+            @Model.MinOrderAmount.ToString("N0")<span>đ</span>
+        </dd>
+        <dt class="col-sm-3">
+            Áp dụng cho sản phẩm
+        </dt>
+        <dd class="col-sm-9">
+            @(Model.Product?.Name ?? "Toàn bộ")
+        </dd>
+        <dt class="col-sm-3">
+            Áp dụng cho danh mục
+        </dt>
+        <dd class="col-sm-9">
+            @(Model.Category?.Name ?? "Toàn bộ")
+        </dd>
+        <dt class="col-sm-3">
+            Chỉ áp dụng một lần mỗi người dùng
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.OneTimePerUser)
+        </dd>
+    </dl>
+    
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-danger">Xóa</button>
+        <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+    </form>
+</div>
