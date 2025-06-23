@@ -171,7 +171,6 @@
 
 <div class="container mt-5">
     @Html.AntiForgeryToken()
-
     <div class="row">
         <div class="col-lg-6">
             <img id="main-product-image" src="@firstImage" class="img-fluid main-product-image" alt="@Model.Name">
@@ -239,8 +238,7 @@
                     <i class="fas fa-money-check-alt me-2"></i> Mua ngay
                 </button>
                 
-                <button type="button" id="add-to-cart-btn" class="btn btn-primary add-to-cart-icon-btn-v2" 
-                        @(Model.Stock > 0 ? "" : "disabled")>
+                <button type="button" id="add-to-cart-btn" class="btn btn-primary add-to-cart-icon-btn-v2" @(Model.Stock > 0 ? "" : "disabled")>
                     <i class="fas fa-cart-plus"></i> 
                 </button>
 
@@ -348,8 +346,7 @@
             const getToken = () => $('input[name="__RequestVerificationToken"]').val();
 
             function showNotification(message, type = 'info') {
-                 // Đây là hàm giả định, bạn có thể thay thế bằng hàm showToast của mình
-                const toastContainer = $('.toast-container');
+                 const toastContainer = $('.toast-container');
                  if (!toastContainer.length) {
                      $('body').append('<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1090"></div>');
                  }
@@ -359,13 +356,10 @@
                  const toastHtml = `
                      <div id="${toastId}" class="toast align-items-center text-white ${toastBg} border-0" role="alert" aria-live="assertive" aria-atomic="true">
                          <div class="d-flex">
-                             <div class="toast-body">
-                                 ${message}
-                             </div>
+                             <div class="toast-body">${message}</div>
                              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                          </div>
-                     </div>
-                 `;
+                     </div>`;
                  
                  $('.toast-container').append(toastHtml);
                  const toastElement = new bootstrap.Toast($(`#${toastId}`));
@@ -397,15 +391,18 @@
                 }
             });
             
-            // Xử lý nút "Thêm vào giỏ hàng"
+            // Sửa logic ở đây
             $('#add-to-cart-btn').on('click', function(e) {
                 e.preventDefault();
+
+                if (!isUserSignedIn) {
+                    showNotification('Vui lòng đăng nhập để thêm vào giỏ.', 'error');
+                    setTimeout(() => { window.location.href = `/Identity/Account/Login?ReturnUrl=${encodeURIComponent(window.location.pathname)}`; }, 1500);
+                    return;
+                }
                 
                 const btn = $(this);
-                const productId = @Model.Id;
-                const quantity = parseInt($('#product-quantity').val());
                 const originalHtml = btn.html();
-
                 btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
 
                 $.ajax({
@@ -413,23 +410,23 @@
                     type: 'POST',
                     headers: { "RequestVerificationToken": getToken() },
                     data: {
-                        productId: productId,
-                        quantity: quantity
+                        productId: @Model.Id,
+                        quantity: parseInt($('#product-quantity').val())
                     },
                     success: function(response) {
                         if (response.success) {
                             showNotification(response.message, 'success');
                             $('#cart-item-count').text(response.newCartCount);
                         } else {
-                            showNotification(response.message || 'Không thể thực hiện thao tác.', 'error');
+                            showNotification(response.message || 'Lỗi không xác định.', 'error');
                         }
                     },
-                    error: function(jqXHR) {
-                        let errorMessage = 'Đã có lỗi xảy ra. Vui lòng thử lại sau.';
-                        if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
-                            errorMessage = jqXHR.responseJSON.message;
+                    error: function(xhr) {
+                        if(xhr.status === 401) {
+                            showNotification('Vui lòng đăng nhập để thêm vào giỏ.', 'error');
+                        } else {
+                            showNotification('Đã có lỗi xảy ra.', 'error');
                         }
-                        showNotification(errorMessage, 'error');
                     },
                     complete: function() {
                         btn.prop('disabled', false).html(originalHtml);
@@ -437,22 +434,17 @@
                 });
             });
 
-            // SỬA LỖI: Xử lý riêng cho nút "Mua Ngay"
             $('#buy-now-btn').on('click', function(e) {
                 e.preventDefault();
                 
                 if (!isUserSignedIn) {
-                    showNotification('Vui lòng đăng nhập để thực hiện chức năng này.', 'error');
-                    setTimeout(() => {
-                        window.location.href = `/Identity/Account/Login?ReturnUrl=${encodeURIComponent(window.location.pathname)}`;
-                    }, 1500);
+                    showNotification('Vui lòng đăng nhập để mua hàng.', 'error');
+                    setTimeout(() => { window.location.href = `/Identity/Account/Login?ReturnUrl=${encodeURIComponent(window.location.pathname)}`; }, 1500);
                     return; 
                 }
 
                 const productId = @Model.Id;
                 const quantity = parseInt($('#product-quantity').val());
-
-                // Chuyển hướng trực tiếp với số lượng chính xác
                 window.location.href = `@Url.Action("BuyNow", "Cart")?productId=${productId}&quantity=${quantity}`;
             });
         });

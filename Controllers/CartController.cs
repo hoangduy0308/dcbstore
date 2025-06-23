@@ -21,7 +21,6 @@ namespace DCBStore.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        private const string SessionCartKey = "CartSession";
         private const string BuyNowSessionKey = "BuyNowItem";
         private const string SessionAppliedCouponCode = "AppliedCouponCode";
         private const string SessionCouponDiscount = "CouponDiscount";
@@ -32,7 +31,6 @@ namespace DCBStore.Controllers
             _userManager = userManager;
         }
         
-        // SỬA LỖI: Chỉ giữ lại MỘT phiên bản BuyNow duy nhất
         [Authorize] 
         [HttpGet]
         public async Task<IActionResult> BuyNow(int productId, int quantity = 1)
@@ -71,18 +69,13 @@ namespace DCBStore.Controllers
         public async Task<IActionResult> Index()
         {
             var userId = _userManager.GetUserId(User);
-            var cartItemsForView = new List<SessionCartItem>();
-
-            if (userId != null)
+            if (userId == null)
             {
-                await MergeSessionCartToDbCart(userId);
-                cartItemsForView = await GetDbCartItems(userId);
-            }
-            else
-            {
-                cartItemsForView = await GetSessionCartItemsAsync();
+                // Nếu người dùng chưa đăng nhập, hiển thị giỏ hàng rỗng
+                return View(new List<SessionCartItem>());
             }
 
+            var cartItemsForView = await GetDbCartItems(userId);
             var subtotal = cartItemsForView.Sum(item => item.Quantity * item.Price);
             var (discount, appliedCouponCode) = await RecalculateDiscount(subtotal, userId);
 
@@ -94,11 +87,13 @@ namespace DCBStore.Controllers
             return View(cartItemsForView);
         }
 
+        // SỬA LỖI LOGIC: Bắt buộc đăng nhập để thêm vào giỏ
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddToCart(int productId, int quantity = 1)
         {
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId && !p.IsDeleted);
+            var product = await _context.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == productId && !p.IsDeleted);
             if (product == null)
             {
                 return Json(new { success = false, message = "Sản phẩm không tồn tại." });
@@ -109,53 +104,29 @@ namespace DCBStore.Controllers
             }
 
             var userId = _userManager.GetUserId(User);
-            int newCartCount;
+            // Do đã có [Authorize] nên userId sẽ không bao giờ null ở đây
+            
+            var userCart = await GetOrCreateDbCart(userId);
+            var cartItem = userCart.CartItems.FirstOrDefault(item => item.ProductId == productId);
 
-            if (userId != null)
+            int quantityInCart = cartItem?.Quantity ?? 0;
+            if (product.Stock < quantityInCart + quantity)
             {
-                var userCart = await GetOrCreateDbCart(userId);
-                var cartItem = userCart.CartItems.FirstOrDefault(item => item.ProductId == productId);
+                return Json(new { success = false, message = "Số lượng tồn kho không đủ." });
+            }
 
-                int quantityInCart = cartItem?.Quantity ?? 0;
-                if (product.Stock < quantityInCart + quantity)
-                {
-                    return Json(new { success = false, message = "Số lượng tồn kho không đủ." });
-                }
-
-                if (cartItem != null)
-                {
-                    cartItem.Quantity += quantity;
-                }
-                else
-                {
-                    userCart.CartItems.Add(new Models.CartItem { ProductId = productId, Quantity = quantity });
-                }
-                userCart.LastModifiedDate = DateTime.Now;
-                await _context.SaveChangesAsync();
-                newCartCount = userCart.CartItems.Sum(ci => ci.Quantity);
+            if (cartItem != null)
+            {
+                cartItem.Quantity += quantity;
             }
             else
             {
-                var cart = await GetSessionCartItemsAsync();
-                var cartItem = cart.FirstOrDefault(item => item.ProductId == productId);
-
-                int quantityInCart = cartItem?.Quantity ?? 0;
-                if (product.Stock < quantityInCart + quantity)
-                {
-                    return Json(new { success = false, message = "Số lượng tồn kho không đủ." });
-                }
-
-                if (cartItem != null)
-                {
-                    cartItem.Quantity += quantity;
-                }
-                else
-                {
-                    cart.Add(new SessionCartItem { ProductId = productId, Quantity = quantity, Product = product });
-                }
-                HttpContext.Session.SetObjectAsJson(SessionCartKey, cart);
-                newCartCount = cart.Sum(ci => ci.Quantity);
+                userCart.CartItems.Add(new Models.CartItem { ProductId = productId, Quantity = quantity });
             }
+            userCart.LastModifiedDate = DateTime.Now;
+            await _context.SaveChangesAsync();
+            
+            int newCartCount = userCart.CartItems.Sum(ci => ci.Quantity);
 
             return Json(new { success = true, message = "Đã thêm sản phẩm vào giỏ hàng!", newCartCount });
         }
@@ -166,8 +137,6 @@ namespace DCBStore.Controllers
         public async Task<IActionResult> RemoveFromCart(int productId)
         {
             var userId = _userManager.GetUserId(User);
-            if(userId == null) return Unauthorized();
-
             var userCart = await GetDbCart(userId);
             if (userCart == null) return Json(new { success = false, message = "Giỏ hàng không tồn tại." });
 
@@ -187,8 +156,6 @@ namespace DCBStore.Controllers
         public async Task<IActionResult> IncreaseQuantity(int productId)
         {
             var userId = _userManager.GetUserId(User);
-            if(userId == null) return Unauthorized();
-
             var userCart = await GetDbCart(userId);
             if (userCart == null) return Json(new { success = false, message = "Giỏ hàng không tồn tại." });
 
@@ -215,8 +182,6 @@ namespace DCBStore.Controllers
         public async Task<IActionResult> DecreaseQuantity(int productId)
         {
             var userId = _userManager.GetUserId(User);
-            if(userId == null) return Unauthorized();
-
             var userCart = await GetDbCart(userId);
             if (userCart == null) return Json(new { success = false, message = "Giỏ hàng không tồn tại." });
 
@@ -252,19 +217,6 @@ namespace DCBStore.Controllers
             return userCart;
         }
 
-        private async Task<List<SessionCartItem>> GetSessionCartItemsAsync()
-        {
-            var sessionCart = HttpContext.Session.GetObjectFromJson<List<SessionCartItem>>(SessionCartKey) ?? new List<SessionCartItem>();
-            foreach (var item in sessionCart)
-            {
-                if (item.Product == null)
-                {
-                    item.Product = await _context.Products.Include(p => p.Images).AsNoTracking().FirstOrDefaultAsync(p => p.Id == item.ProductId);
-                }
-            }
-            return sessionCart;
-        }
-
         private async Task<List<SessionCartItem>> GetDbCartItems(string userId)
         {
             var userCart = await _context.Carts
@@ -287,38 +239,6 @@ namespace DCBStore.Controllers
                 }).ToList();
             }
             return new List<SessionCartItem>();
-        }
-
-        private async Task MergeSessionCartToDbCart(string userId)
-        {
-            var sessionCart = await GetSessionCartItemsAsync();
-            if (sessionCart.Any())
-            {
-                var userCart = await GetOrCreateDbCart(userId);
-                foreach (var sessionItem in sessionCart)
-                {
-                    var product = sessionItem.Product;
-                    if (product == null || product.IsDeleted) continue;
-                    
-                    var dbItem = userCart.CartItems.FirstOrDefault(i => i.ProductId == sessionItem.ProductId);
-
-                    int quantityInCart = dbItem?.Quantity ?? 0;
-                    int quantityToAdd = sessionItem.Quantity;
-
-                    if (product.Stock < quantityInCart + quantityToAdd) continue;
-
-                    if (dbItem != null)
-                    {
-                        dbItem.Quantity += quantityToAdd;
-                    }
-                    else
-                    {
-                        userCart.CartItems.Add(new Models.CartItem { ProductId = sessionItem.ProductId, Quantity = quantityToAdd });
-                    }
-                }
-                await _context.SaveChangesAsync();
-                HttpContext.Session.Remove(SessionCartKey);
-            }
         }
 
         private async Task<(decimal, string?)> RecalculateDiscount(decimal subtotal, string? userId, string? newCouponCode = null)
