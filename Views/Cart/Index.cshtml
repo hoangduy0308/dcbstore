@@ -69,8 +69,7 @@
                                 <strong class="fs-5 text-primary" id="summary-total">@total.ToString("N0") VNĐ</strong>
                             </li>
                         </ul>
-
-                        <a asp-controller="Checkout" asp-action="Index" class="btn btn-primary w-100 mt-4">Tiến hành Thanh toán</a>
+                        <a asp-controller="Checkout" asp-action="Index" asp-route-fromCart="true" class="btn btn-primary btn-lg w-100">Tiến hành Thanh toán</a>
                     </div>
                 </div>
             </div>

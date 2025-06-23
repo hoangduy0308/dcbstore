@@ -1,0 +1,14 @@
+@model IEnumerable<DCBStore.Models.Category>
+
+@foreach (var category in Model)
+{
+    <li>
+        <a class="dropdown-item" 
+           asp-area="" 
+           asp-controller="Products" 
+           asp-action="Index" 
+           asp-route-categoryId="@category.Id">
+           @category.Name
+        </a>
+    </li>
+}

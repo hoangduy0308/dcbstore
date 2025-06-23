@@ -5,9 +5,12 @@
 
 @{
     ViewData["Title"] = "Tất cả Sản phẩm";
+    // SỬA LỖI LOGIC: Thêm biến kiểm tra đăng nhập
+    var isUserSignedIn = SignInManager.IsSignedIn(User);
 }
 
 <style>
+    /* CSS của bạn giữ nguyên, không thay đổi */
     .sold-badge {
         position: absolute;
         top: 10px;
@@ -23,24 +26,13 @@
     .product-card-img-container {
         position: relative;
         overflow: hidden;
-        background-color: #f8f9fa; /* Thêm màu nền nhạt */
+        background-color: #f8f9fa;
     }
     .card-img-top {
         transition: transform 0.3s ease;
         height: 200px;
-        /* SỬA LỖI: Thay đổi 'cover' thành 'contain' */
         object-fit: contain; 
     }
-    .product-card:hover .card-img-top {
-        transform: scale(1.05);
-    }
-    .product-card {
-        transition: box-shadow 0.3s ease;
-    }
-    .product-card:hover {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .15) !important;
-    }
-    
     .filter-sidebar {
         position: sticky;
         top: 100px;
@@ -51,19 +43,44 @@
     .rating-filter label {
         color: #ffc107;
     }
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+    }
+    .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, .18) !important;
+    }
+    .product-actions {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 1rem;
+        background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0));
+        opacity: 0;
+        transform: translateY(100%);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        z-index: 11;
+    }
+    .product-card:hover .product-actions {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .product-actions .btn {
+        flex-grow: 1;
+    }
 </style>
 
 <div class="container py-5">
+    @Html.AntiForgeryToken()
     <div class="row">
         @* Sidebar bộ lọc *@
         <div class="col-lg-3">
             <div class="filter-sidebar">
                 <h4 class="mb-4">Bộ lọc & Sắp xếp</h4>
                 <form asp-action="Index" method="get">
-                    
                     <input type="hidden" name="searchString" value="@Model.SearchString" />
-
-                    @* Sắp xếp *@
                     <div class="filter-section">
                         <label for="sortOrder" class="form-label fw-bold">Sắp xếp theo</label>
                         <select name="sortOrder" id="sortOrder" class="form-select" onchange="this.form.submit()">
@@ -73,8 +90,6 @@
                             <option value="price_desc" selected="@(Model.SortOrder == "price_desc")">Giá giảm dần</option>
                         </select>
                     </div>
-
-                    @* Lọc theo danh mục *@
                     <div class="filter-section">
                         <label class="form-label fw-bold">Danh mục</label>
                         <div class="list-group">
@@ -85,8 +100,6 @@
                             }
                         </div>
                     </div>
-
-                    @* Lọc theo giá *@
                     <div class="filter-section">
                         <label class="form-label fw-bold">Khoảng giá</label>
                         <div class="d-flex align-items-center">
@@ -95,8 +108,6 @@
                             <input type="number" name="maxPrice" class="form-control" placeholder="Đến" value="@Model.MaxPrice">
                         </div>
                     </div>
-
-                    @* Lọc theo đánh giá *@
                     <div class="filter-section rating-filter">
                         <label class="form-label fw-bold">Đánh giá</label>
                         <div class="form-check">
@@ -112,20 +123,17 @@
                             </label>
                         </div>
                     </div>
-
-                    @* Lọc theo trạng thái *@
                     <div class="filter-section">
                          <label class="form-label fw-bold">Trạng thái</label>
                          <div class="form-check">
                             <input class="form-check-input" type="radio" name="status" value="in-stock" id="in-stock" onchange="this.form.submit()" checked="@(Model.Status == "in-stock")">
                             <label class="form-check-label" for="in-stock">Còn hàng</label>
-                        </div>
+                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="status" value="out-of-stock" id="out-of-stock" onchange="this.form.submit()" checked="@(Model.Status == "out-of-stock")">
                             <label class="form-check-label" for="out-of-stock">Hết hàng</label>
                         </div>
                     </div>
-
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary">Lọc sản phẩm</button>
                         <a asp-action="Index" class="btn btn-outline-secondary">Xóa bộ lọc</a>
@@ -138,12 +146,12 @@
             <div class="text-center mb-5">
                  @if (string.IsNullOrEmpty(Model.SearchString) && !Model.CategoryId.HasValue)
                  {
-                       <h1 class="display-5 fw-bold">Tất cả Sản phẩm</h1>
-                       <p class="text-muted">Khám phá toàn bộ danh mục sản phẩm đa dạng tại DCBStore.</p>
+                     <h1 class="display-5 fw-bold">Tất cả Sản phẩm</h1>
+                     <p class="text-muted">Khám phá toàn bộ danh mục sản phẩm đa dạng tại DCBStore.</p>
                  }
                  else
                  {
-                       <h1 class="display-5 fw-bold">Kết quả lọc</h1>
+                     <h1 class="display-5 fw-bold">Kết quả lọc</h1>
                  }
             </div>
             
@@ -162,31 +170,46 @@
                         var imageUrl = product.Images?.FirstOrDefault()?.Url ?? "/images/placeholder.png";
                         <div class="col">
                             <div class="card h-100 border-0 shadow-sm product-card">
+                                
                                 <div class="product-card-img-container position-relative">
                                     <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id">
                                         <img src="@imageUrl" class="card-img-top" alt="@product.Name">
                                     </a>
+
+                                    <div class="product-actions">
+                                        <div class="d-flex gap-2">
+                                            <form asp-controller="Cart" asp-action="AddToCart" method="post" class="w-100 add-to-cart-form">
+                                                <input type="hidden" name="productId" value="@product.Id" />
+                                                <input type="hidden" name="quantity" value="1" />
+                                                <button type="submit" class="btn btn-warning w-100 btn-sm">
+                                                    <i class="fas fa-shopping-cart me-1"></i> Thêm
+                                                </button>
+                                            </form>
+                                            <a asp-controller="Cart" asp-action="BuyNow" asp-route-productId="@product.Id" class="btn btn-danger w-100 btn-sm">
+                                                <i class="fas fa-bolt me-1"></i> Mua Ngay
+                                            </a>
+                                        </div>
+                                    </div>
+
                                     @if (product.SoldQuantity > 0)
                                     {
                                         <span class="sold-badge">Đã bán: @product.SoldQuantity</span>
                                     }
-                                    @if (SignInManager.IsSignedIn(User))
+                                    @if (isUserSignedIn)
                                     {
                                         <button class="btn toggle-wishlist-btn position-absolute top-0 end-0 m-2" data-product-id="@product.Id" title="Thêm vào yêu thích">
                                             <i class="far fa-heart"></i>
                                         </button>
                                     }
                                 </div>
-                                <div class="card-body d-flex flex-column">
+
+                                <div class="card-body d-flex flex-column text-center">
                                     <h5 class="card-title h6 flex-grow-1">
-                                        <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="text-dark text-decoration-none stretched-link">@product.Name</a>
+                                        <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="text-dark text-decoration-none">@product.Name</a>
                                     </h5>
-                                    <p class="card-text small text-muted flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">@Html.Raw(product.Description)</p>
-                                    <div class="d-flex justify-content-between align-items-center mt-3">
-                                        <p class="card-text fw-bold text-primary mb-0">
-                                            @product.Price.ToString("N0") VNĐ
-                                        </p>
-                                    </div>
+                                    <p class="card-text fw-bold text-primary mb-0 mt-2">
+                                        @product.Price.ToString("N0") VNĐ
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -202,7 +225,7 @@
                         }
                         else
                         {
-                            <li class="page-item disabled"><span class="page-link">«</span></li>
+                             <li class="page-item disabled"><span class="page-link">«</span></li>
                         }
                         
                         @for (int i = 1; i <= Model.TotalPages; i++)
@@ -226,3 +249,70 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    $(document).ready(function() {
+        const isUserSignedIn = @isUserSignedIn.ToString().ToLower();
+
+        function showToast(message, isSuccess) {
+            const toastContainer = $('.toast-container');
+            const toastId = 'toast-' + Date.now();
+            const toastBg = isSuccess ? 'bg-success' : 'bg-danger';
+
+            const toastHtml = `
+                <div id="${toastId}" class="toast align-items-center text-white ${toastBg} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.append(toastHtml);
+            const toastElement = new bootstrap.Toast($(`#${toastId}`));
+            toastElement.show();
+        }
+
+        $('.add-to-cart-form').on('submit', function(e) {
+            e.preventDefault();
+
+            // SỬA LỖI LOGIC: Kiểm tra đăng nhập trước khi gửi
+            if (!isUserSignedIn) {
+                showToast('Vui lòng đăng nhập để thêm sản phẩm.', false);
+                setTimeout(() => {
+                    window.location.href = `/Identity/Account/Login?ReturnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+                }, 1500);
+                return;
+            }
+
+            var form = $(this);
+            $.ajax({
+                type: 'POST',
+                url: form.attr('action'),
+                data: form.serialize(),
+                headers: { "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+                success: function(response) {
+                    if (response.success) {
+                        showToast(response.message, true);
+                        if (typeof response.newCartCount !== 'undefined') {
+                             $('#cart-item-count').text(response.newCartCount).removeClass('d-none');
+                        }
+                    } else {
+                        showToast(response.message, false);
+                    }
+                },
+                error: function(xhr) {
+                    if(xhr.status === 401) { // Lỗi chưa xác thực
+                         showToast('Vui lòng đăng nhập để thêm sản phẩm.', false);
+                    } else {
+                        showToast('Đã có lỗi xảy ra. Vui lòng thử lại.', false);
+                    }
+                }
+            });
+        });
+    });
+</script>
+}

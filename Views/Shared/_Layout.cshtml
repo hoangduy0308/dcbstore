@@ -220,6 +220,50 @@
             box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
             border: none;
         }
+
+        .navbar .dropdown .dropdown-menu {
+            display: block; 
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px); 
+            transition: all 0.3s ease;
+            pointer-events: none;
+            margin-top: 0;
+        }
+
+        .navbar .dropdown:hover > .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .category-dropdown-menu {
+            min-width: 450px;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.25rem 1rem;
+        }
+
+        .category-dropdown-menu .dropdown-item {
+            font-weight: 500;
+            color: #343a40;
+            padding: 0.6rem 1rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .category-dropdown-menu .dropdown-item:hover {
+            background-color: #eef5ff;
+            color: #0d6efd;
+        }
+
+        .category-dropdown-menu .dropdown-divider {
+            grid-column: 1 / -1;
+            margin: 0.75rem 0;
+        }
+
     </style>
 </head>
 
@@ -235,44 +279,56 @@
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link fw-semibold" asp-area="" asp-controller="Home" asp-action="Index">Trang Chủ</a>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle fw-semibold" asp-area="" asp-controller="Products" asp-action="Index" role="button" aria-expanded="false">
+                                Danh mục
+                            </a>
+                            <ul class="dropdown-menu category-dropdown-menu" aria-labelledby="navbarDropdownCategories">
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Products" asp-action="Index">Tất cả sản phẩm</a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                @await Component.InvokeAsync("Categories")
+                            </ul>
                         </li>
+
+                        <li class="nav-item mx-lg-3">
+                            <form asp-area="" asp-controller="Products" asp-action="Index" method="get" class="d-flex nav-search" role="search">
+                                <input id="main-search-input" class="form-control me-2 rounded-pill shadow-sm px-3" type="search" name="SearchString"
+                                       placeholder="Tìm kiếm sản phẩm..." aria-label="Search" value="@ViewData["CurrentFilter"]" autocomplete="off">
+                                <button class="btn btn-outline-primary rounded-pill px-3" type="submit" style="display: none;">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                <div id="search-suggestions" class="d-none"></div>
+                            </form>
+                        </li>
+                        
                         <li class="nav-item">
-                            <a class="nav-link fw-semibold" asp-area="" asp-controller="Products" asp-action="Index">Sản Phẩm</a>
+                            <div class="d-flex align-items-center gap-4">
+                                <a asp-area="" asp-controller="Cart" asp-action="Index" class="position-relative text-decoration-none"
+                                   title="Giỏ hàng">
+                                    <i class="fas fa-shopping-cart fs-5 text-dark"></i>
+                                    <span class="badge bg-danger rounded-circle position-absolute" id="cart-item-count"
+                                          style="top: -5px; right: -10px; font-size: 0.65rem; min-width: 18px; height: 18px; line-height: 1.3;">
+                                        0
+                                    </span>
+                                </a>
+                                <div class="dropdown">
+                                    <a href="#" class="d-flex align-items-center text-decoration-none text-dark dropdown-toggle"
+                                       id="accountDropdown" role="button" aria-expanded="false"
+                                       title="Tài khoản">
+                                        <i class="fas fa-user-circle fs-4"></i>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 p-2"
+                                        aria-labelledby="accountDropdown" style="min-width: 200px;">
+                                        <partial name="_LoginPartial" />
+                                    </ul>
+                                </div>
+                            </div>
                         </li>
                     </ul>
-                    <form asp-controller="Products" asp-action="Index" method="get" class="d-flex me-3 nav-search" role="search">
-                        <input id="main-search-input" class="form-control me-2 rounded-pill shadow-sm px-3" type="search" name="SearchString"
-                               placeholder="Tìm kiếm sản phẩm..." aria-label="Search" value="@ViewData["CurrentFilter"]" autocomplete="off">
-                        <button class="btn btn-outline-primary rounded-pill px-3" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                        <div id="search-suggestions" class="d-none"></div>
-                    </form>
-                    <div class="d-flex align-items-center gap-4">
-                        <a asp-area="" asp-controller="Cart" asp-action="Index" class="position-relative text-decoration-none" 
-                           title="Giỏ hàng">
-                            <i class="fas fa-shopping-cart fs-5 text-dark"></i>
-                            <span class="badge bg-danger rounded-circle position-absolute" id="cart-item-count"
-                                  style="top: -5px; right: -10px; font-size: 0.65rem; min-width: 18px; height: 18px; line-height: 1.3;">
-                                0
-                            </span>
-                        </a>
-                        <div class="dropdown">
-                            <a href="#" class="d-flex align-items-center text-decoration-none text-dark"
-                               id="accountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
-                               title="Tài khoản">
-                                <i class="fas fa-user-circle fs-4"></i>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 mt-2 p-2"
-                                aria-labelledby="accountDropdown" style="min-width: 200px;">
-                                <partial name="_LoginPartial" />
-                            </ul>
-                        </div>
-                    </div>
                 </div>
             </div>
         </nav>

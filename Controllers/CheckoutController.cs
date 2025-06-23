@@ -18,8 +18,7 @@ namespace DCBStore.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        private const string BuyNowSessionKey = "BuyNowCart";
-        private const string CartSessionKey = "CartSession";
+        private const string BuyNowSessionKey = "BuyNowItem";
         private const string SessionAppliedCouponCode = "AppliedCouponCode";
         private const string SessionCouponDiscount = "CouponDiscount";
 
@@ -29,10 +28,17 @@ namespace DCBStore.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index()
+        // SỬA LỖI: Chỉ giữ lại MỘT phiên bản Index duy nhất, chấp nhận tham số fromCart
+        public async Task<IActionResult> Index(bool fromCart = false)
         {
             var userId = _userManager.GetUserId(User);
             if (userId == null) return Unauthorized();
+
+            // Nếu người dùng đi từ giỏ hàng, hãy đảm bảo xóa mọi session "Mua Ngay" còn sót lại
+            if (fromCart)
+            {
+                HttpContext.Session.Remove(BuyNowSessionKey);
+            }
 
             var cartItems = await GetCurrentCartItemsAsync(userId);
 
@@ -242,7 +248,6 @@ namespace DCBStore.Controllers
                         _context.CartItems.RemoveRange(userCart.CartItems);
                         await _context.SaveChangesAsync();
                     }
-                    HttpContext.Session.Remove(CartSessionKey);
                 }
                 
                 HttpContext.Session.Remove(SessionAppliedCouponCode);
@@ -254,111 +259,52 @@ namespace DCBStore.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                Console.WriteLine(ex.ToString()); // Ghi log lỗi để debug
+                Console.WriteLine(ex.ToString()); 
                 TempData["ErrorMessage"] = "Đã có lỗi xảy ra trong quá trình xử lý đơn hàng.";
                 return RedirectToAction("Index", "Cart");
             }
         }
         
-        // === BẮT ĐẦU PHẦN THÊM LẠI ĐỂ SỬA LỖI 404 ===
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> BuyNow(int productId, int quantity = 1)
-        {
-            var userId = _userManager.GetUserId(User);
-            if (userId == null)
-            {
-                return Unauthorized(new { message = "Vui lòng đăng nhập để mua ngay." });
-            }
-
-            var product = await _context.Products
-                                      .Include(p => p.Images) 
-                                      .FirstOrDefaultAsync(p => p.Id == productId);
-
-            if (product == null)
-            {
-                return NotFound(new { message = "Sản phẩm không tồn tại." });
-            }
-
-            if (quantity <= 0)
-            {
-                return BadRequest(new { message = "Số lượng sản phẩm phải lớn hơn 0." });
-            }
-
-            if (product.Stock < quantity)
-            {
-                return BadRequest(new { message = "Sản phẩm không đủ số lượng trong kho." });
-            }
-
-            var buyNowItem = new SessionCartItem
-            {
-                ProductId = productId,
-                Quantity = quantity,
-                ProductName = product.Name, 
-                Price = product.Price,
-                ImageUrl = product.Images?.FirstOrDefault()?.Url,
-                Product = product, 
-                UserId = userId 
-            };
-
-            HttpContext.Session.SetObjectAsJson(BuyNowSessionKey, new List<SessionCartItem> { buyNowItem }); 
-
-            return Json(new { success = true, redirectUrl = Url.Action("Index", "Checkout") });
-        }
-        // === KẾT THÚC PHẦN THÊM LẠI ===
-
         public IActionResult Confirmation(int orderId)
         {
             ViewBag.OrderId = orderId;
             return View();
         }
         
-        private async Task<List<SessionCartItem>?> GetCurrentCartItemsAsync(string? userId)
+        private async Task<List<SessionCartItem>?> GetCurrentCartItemsAsync(string userId)
         {
-            if (userId == null) return null;
-            
-            var buyNowItems = HttpContext.Session.GetObjectFromJson<List<SessionCartItem>>(BuyNowSessionKey);
-            if (buyNowItems != null && buyNowItems.Any())
+            var buyNowItem = HttpContext.Session.GetObjectFromJson<SessionCartItem>(BuyNowSessionKey);
+            if (buyNowItem != null)
             {
-                foreach (var item in buyNowItems)
+                if (buyNowItem.Product == null)
                 {
-                    if (item.Product == null)
-                    {
-                        var product = await _context.Products.Include(p => p.Images).AsNoTracking().FirstOrDefaultAsync(p => p.Id == item.ProductId);
-                        if(product != null)
-                        {
-                            item.Product = product;
-                            item.Price = product.Price;
-                        }
-                    }
+                    buyNowItem.Product = await _context.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == buyNowItem.ProductId);
+                    if (buyNowItem.Product == null) return null;
                 }
-                return buyNowItems;
+                return new List<SessionCartItem> { buyNowItem };
             }
-            
-            var cartItemsToReturn = new List<SessionCartItem>();
+
             var userCart = await _context.Carts
                 .Include(c => c.CartItems)
-                    .ThenInclude(ci => ci.Product)
-                        .ThenInclude(p => p.Images)
+                .ThenInclude(ci => ci.Product)
+                .ThenInclude(p => p.Images)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.UserId == userId);
             
             if (userCart != null)
             {
-                foreach (var dbItem in userCart.CartItems)
+                return userCart.CartItems.Select(dbItem => new SessionCartItem
                 {
-                    cartItemsToReturn.Add(new SessionCartItem
-                    {
-                        ProductId = dbItem.ProductId,
-                        ProductName = dbItem.Product.Name,
-                        Price = dbItem.Product.Price,
-                        Quantity = dbItem.Quantity,
-                        ImageUrl = dbItem.Product.Images?.FirstOrDefault()?.Url,
-                        Product = dbItem.Product
-                    });
-                }
+                    ProductId = dbItem.ProductId,
+                    ProductName = dbItem.Product.Name,
+                    Price = dbItem.Product.Price,
+                    Quantity = dbItem.Quantity,
+                    ImageUrl = dbItem.Product.Images?.FirstOrDefault()?.Url,
+                    Product = dbItem.Product
+                }).ToList();
             }
-            return cartItemsToReturn;
+            
+            return new List<SessionCartItem>();
         }
     }
 }

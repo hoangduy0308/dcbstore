@@ -14,7 +14,7 @@
 }
 
 <style>
-    /* CSS cũ của bạn giữ nguyên */
+    /* CSS của bạn giữ nguyên, không thay đổi */
     .main-product-image {
         height: 500px;
         width: 100%;
@@ -107,8 +107,6 @@
     .rating-stars .far { 
         color: #e0e0e0; 
     }
-
-    /* === BẮT ĐẦU CSS MỚI === */
     .category-badge {
         display: inline-block;
         font-size: 0.9rem;
@@ -143,9 +141,6 @@
     .product-description-content li {
         margin-bottom: 0.5rem; 
     }
-    /* === KẾT THÚC CSS MỚI === */
-
-    /* === SỬA LỖI HIỂN THỊ SAO === */
     .star-rating {
         direction: rtl;
         display: inline-block;
@@ -160,19 +155,18 @@
         cursor: pointer;
         transition: color 0.2s;
         padding: 0 2px;
-        font-family: 'Font Awesome 6 Free'; /* Ép dùng Font Awesome */
-        font-weight: 400; /* Sao rỗng (regular) */
+        font-family: 'Font Awesome 6 Free'; 
+        font-weight: 400; 
     }
     .star-rating label:before {
-        content: '\f005'; /* Mã Unicode cho icon star của Font Awesome */
+        content: '\f005';
     }
     .star-rating label:hover,
     .star-rating label:hover ~ label,
     .star-rating input:checked ~ label {
         color: #ffc107;
-        font-weight: 900; /* Sao đặc (solid) */
+        font-weight: 900;
     }
-    /* === KẾT THÚC SỬA LỖI HIỂN THỊ SAO === */
 </style>
 
 <div class="container mt-5">
@@ -220,18 +214,18 @@
             
             <div class="d-flex align-items-center gap-2 flex-wrap mb-4">
                  @if(Model.Stock > 0)
-                {
-                    <span class="product-status-badge status-in-stock">Còn hàng (@Model.Stock sản phẩm)</span>
-                }
-                else
-                {
-                    <span class="product-status-badge status-out-of-stock">Hết hàng</span>
-                }
+                 {
+                     <span class="product-status-badge status-in-stock">Còn hàng (@Model.Stock sản phẩm)</span>
+                 }
+                 else
+                 {
+                     <span class="product-status-badge status-out-of-stock">Hết hàng</span>
+                 }
                 
-                @if (Model.SoldQuantity > 0)
-                {
-                    <span class="product-status-badge status-sold">Đã bán: @Model.SoldQuantity</span>
-                }
+                 @if (Model.SoldQuantity > 0)
+                 {
+                     <span class="product-status-badge status-sold">Đã bán: @Model.SoldQuantity</span>
+                 }
             </div>
 
             <div class="d-flex align-items-center gap-3">
@@ -272,7 +266,6 @@
         </div>
     </div>
 
-    @* PHẦN ĐÁNH GIÁ ĐÃ ĐƯỢC GIỮ LẠI NGUYÊN VẸN *@
     <div class="row mt-5">
         <div class="col-12">
             <h2 class="mb-4">Đánh giá sản phẩm</h2>
@@ -351,9 +344,33 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // ... Toàn bộ script của bạn giữ nguyên, không cần thay đổi ...
             const isUserSignedIn = @isUserSignedIn.ToString().ToLower();
             const getToken = () => $('input[name="__RequestVerificationToken"]').val();
+
+            function showNotification(message, type = 'info') {
+                 // Đây là hàm giả định, bạn có thể thay thế bằng hàm showToast của mình
+                const toastContainer = $('.toast-container');
+                 if (!toastContainer.length) {
+                     $('body').append('<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1090"></div>');
+                 }
+                 const toastId = 'toast-' + Date.now();
+                 const toastBg = type === 'success' ? 'bg-success' : (type === 'error' ? 'bg-danger' : 'bg-info');
+ 
+                 const toastHtml = `
+                     <div id="${toastId}" class="toast align-items-center text-white ${toastBg} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                         <div class="d-flex">
+                             <div class="toast-body">
+                                 ${message}
+                             </div>
+                             <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                         </div>
+                     </div>
+                 `;
+                 
+                 $('.toast-container').append(toastHtml);
+                 const toastElement = new bootstrap.Toast($(`#${toastId}`));
+                 toastElement.show();
+            }
 
             $('#thumbnail-container').on('click', '.thumbnail-item', function() {
                 $('#main-product-image').attr('src', $(this).data('large-src'));
@@ -380,30 +397,19 @@
                 }
             });
             
-            $('#add-to-cart-btn, #buy-now-btn').on('click', function(e) {
+            // Xử lý nút "Thêm vào giỏ hàng"
+            $('#add-to-cart-btn').on('click', function(e) {
                 e.preventDefault();
                 
-                const isBuyNow = $(this).attr('id') === 'buy-now-btn';
-                
-                if (!isUserSignedIn && isBuyNow) {
-                    showNotification('Vui lòng đăng nhập để thực hiện chức năng này.', 'error');
-                    setTimeout(() => {
-                        window.location.href = `/Identity/Account/Login?ReturnUrl=${encodeURIComponent(window.location.pathname)}`;
-                    }, 1500);
-                    return; 
-                }
-
                 const btn = $(this);
                 const productId = @Model.Id;
                 const quantity = parseInt($('#product-quantity').val());
                 const originalHtml = btn.html();
 
-                let url = isBuyNow ? '@Url.Action("BuyNow", "Checkout")' : '@Url.Action("AddToCart", "Cart")';
-
                 btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
 
                 $.ajax({
-                    url: url,
+                    url: '@Url.Action("AddToCart", "Cart")',
                     type: 'POST',
                     headers: { "RequestVerificationToken": getToken() },
                     data: {
@@ -412,29 +418,42 @@
                     },
                     success: function(response) {
                         if (response.success) {
-                            if (isBuyNow && response.redirectUrl) {
-                                window.location.href = response.redirectUrl;
-                            } else {
-                                showNotification(response.message, 'success');
-                                $('#cart-item-count').text(response.newCartCount);
-                                btn.prop('disabled', false).html(originalHtml);
-                            }
+                            showNotification(response.message, 'success');
+                            $('#cart-item-count').text(response.newCartCount);
                         } else {
                             showNotification(response.message || 'Không thể thực hiện thao tác.', 'error');
-                            btn.prop('disabled', false).html(originalHtml);
                         }
                     },
                     error: function(jqXHR) {
                         let errorMessage = 'Đã có lỗi xảy ra. Vui lòng thử lại sau.';
                         if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
                             errorMessage = jqXHR.responseJSON.message;
-                        } else if (jqXHR.status === 401) {
-                            errorMessage = 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.';
                         }
                         showNotification(errorMessage, 'error');
+                    },
+                    complete: function() {
                         btn.prop('disabled', false).html(originalHtml);
                     }
                 });
+            });
+
+            // SỬA LỖI: Xử lý riêng cho nút "Mua Ngay"
+            $('#buy-now-btn').on('click', function(e) {
+                e.preventDefault();
+                
+                if (!isUserSignedIn) {
+                    showNotification('Vui lòng đăng nhập để thực hiện chức năng này.', 'error');
+                    setTimeout(() => {
+                        window.location.href = `/Identity/Account/Login?ReturnUrl=${encodeURIComponent(window.location.pathname)}`;
+                    }, 1500);
+                    return; 
+                }
+
+                const productId = @Model.Id;
+                const quantity = parseInt($('#product-quantity').val());
+
+                // Chuyển hướng trực tiếp với số lượng chính xác
+                window.location.href = `@Url.Action("BuyNow", "Cart")?productId=${productId}&quantity=${quantity}`;
             });
         });
     </script>

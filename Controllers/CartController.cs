@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Globalization;
-// Thêm các using cần thiết cho việc render view thành chuỗi
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -23,6 +22,7 @@ namespace DCBStore.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private const string SessionCartKey = "CartSession";
+        private const string BuyNowSessionKey = "BuyNowItem";
         private const string SessionAppliedCouponCode = "AppliedCouponCode";
         private const string SessionCouponDiscount = "CouponDiscount";
 
@@ -31,6 +31,42 @@ namespace DCBStore.Controllers
             _context = context;
             _userManager = userManager;
         }
+        
+        // SỬA LỖI: Chỉ giữ lại MỘT phiên bản BuyNow duy nhất
+        [Authorize] 
+        [HttpGet]
+        public async Task<IActionResult> BuyNow(int productId, int quantity = 1)
+        {
+            var product = await _context.Products.Include(p => p.Images)
+                                            .AsNoTracking()
+                                            .FirstOrDefaultAsync(p => p.Id == productId && !p.IsDeleted);
+
+            if (product == null)
+            {
+                TempData["ErrorMessage"] = "Sản phẩm không tồn tại.";
+                return RedirectToAction("Index", "Products");
+            }
+            if (product.Stock < quantity)
+            {
+                TempData["ErrorMessage"] = "Số lượng tồn kho không đủ.";
+                return RedirectToAction("Details", "Products", new { id = productId });
+            }
+
+            var buyNowItem = new SessionCartItem
+            {
+                ProductId = product.Id,
+                Quantity = quantity,
+                Price = product.Price,
+                ProductName = product.Name,
+                ImageUrl = product.Images?.FirstOrDefault()?.Url,
+                Product = product 
+            };
+            
+            HttpContext.Session.SetObjectAsJson(BuyNowSessionKey, buyNowItem);
+
+            return RedirectToAction("Index", "Checkout");
+        }
+
 
         public async Task<IActionResult> Index()
         {
@@ -44,7 +80,6 @@ namespace DCBStore.Controllers
             }
             else
             {
-                // SỬA LỖI 1: Gọi đúng hàm async
                 cartItemsForView = await GetSessionCartItemsAsync();
             }
 
@@ -124,7 +159,7 @@ namespace DCBStore.Controllers
 
             return Json(new { success = true, message = "Đã thêm sản phẩm vào giỏ hàng!", newCartCount });
         }
-
+        
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
@@ -213,7 +248,6 @@ namespace DCBStore.Controllers
             {
                 userCart = new Models.Cart { UserId = userId, CreatedDate = DateTime.Now };
                 _context.Carts.Add(userCart);
-                await _context.SaveChangesAsync();
             }
             return userCart;
         }
@@ -225,7 +259,7 @@ namespace DCBStore.Controllers
             {
                 if (item.Product == null)
                 {
-                    item.Product = await _context.Products.Include(p => p.Images).AsNoTracking().FirstAsync(p => p.Id == item.ProductId);
+                    item.Product = await _context.Products.Include(p => p.Images).AsNoTracking().FirstOrDefaultAsync(p => p.Id == item.ProductId);
                 }
             }
             return sessionCart;
@@ -234,11 +268,11 @@ namespace DCBStore.Controllers
         private async Task<List<SessionCartItem>> GetDbCartItems(string userId)
         {
             var userCart = await _context.Carts
-                                       .Include(c => c.CartItems)
-                                       .ThenInclude(ci => ci.Product)
-                                       .ThenInclude(p => p.Images)
-                                       .AsNoTracking()
-                                       .FirstOrDefaultAsync(c => c.UserId == userId);
+                                        .Include(c => c.CartItems)
+                                        .ThenInclude(ci => ci.Product)
+                                        .ThenInclude(p => p.Images)
+                                        .AsNoTracking()
+                                        .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (userCart != null)
             {
@@ -345,7 +379,6 @@ namespace DCBStore.Controllers
         #endregion
     }
 
-    // SỬA LỖI 2: Thêm lớp helper này vào cuối file để biên dịch được
     public static class ControllerExtensions
     {
         public static async Task<string> RenderViewToStringAsync<TModel>(this Controller controller, string viewName, TModel model)
