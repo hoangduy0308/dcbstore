@@ -1,14 +1,14 @@
-#nullable disable
-
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
-using DCBStore.Data;
+using DCBStore.Data; // Đảm bảo namespace này đúng
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using System.IO;
-using System.Linq;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 
 namespace DCBStore.Areas.Identity.Pages.Account.Manage
 {
@@ -16,20 +16,27 @@ namespace DCBStore.Areas.Identity.Pages.Account.Manage
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
         public IndexModel(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
+            ApplicationDbContext context,
             IWebHostEnvironment webHostEnvironment)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _context = context;
             _webHostEnvironment = webHostEnvironment;
         }
 
+        // CÁC THUỘC TÍNH CẦN THIẾT CHO GIAO DIỆN
         public string Username { get; set; }
+        public string Email { get; set; }
         public string AvatarUrl { get; set; }
+        public int OrderCount { get; set; }
+        public int WishlistCount { get; set; }
 
         [TempData]
         public string StatusMessage { get; set; }
@@ -39,22 +46,45 @@ namespace DCBStore.Areas.Identity.Pages.Account.Manage
 
         public class InputModel
         {
-            public string FullName { get; set; }
+            [Phone]
+            [Display(Name = "Số điện thoại")]
             public string PhoneNumber { get; set; }
+
+            [Display(Name = "Tên đầy đủ")]
+            public string FullName { get; set; }
+
+            // THUỘC TÍNH CẦN THIẾT CHO UPLOAD AVATAR
+            [Display(Name = "Ảnh đại diện")]
+            public IFormFile AvatarFile { get; set; }
         }
 
         private async Task LoadAsync(ApplicationUser user)
         {
             var userName = await _userManager.GetUserNameAsync(user);
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
+            var email = await _userManager.GetEmailAsync(user);
+
+            var userWithStats = await _context.Users
+                .Include(u => u.Orders)
+                .Include(u => u.Wishlist)
+                    .ThenInclude(w => w.WishlistItems)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == user.Id);
+
+            if (userWithStats != null)
+            {
+                OrderCount = userWithStats.Orders?.Count ?? 0;
+                WishlistCount = userWithStats.Wishlist?.WishlistItems?.Count ?? 0;
+            }
 
             Username = userName;
+            Email = email;
             AvatarUrl = user.AvatarUrl;
 
             Input = new InputModel
             {
-                FullName = user.FullName,
-                PhoneNumber = phoneNumber
+                PhoneNumber = phoneNumber,
+                FullName = user.FullName
             };
         }
 
@@ -84,42 +114,44 @@ namespace DCBStore.Areas.Identity.Pages.Account.Manage
                 return Page();
             }
 
-            user.FullName = Input.FullName;
-
-            var avatarFile = Request.Form.Files.FirstOrDefault(f => f.Name == "AvatarFile");
-            if (avatarFile != null && avatarFile.Length > 0)
+            if (Input.AvatarFile != null)
             {
-                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images/avatars");
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(avatarFile.FileName);
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                Directory.CreateDirectory(uploadsFolder);
-                
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                if (!string.IsNullOrEmpty(user.AvatarUrl))
                 {
-                    await avatarFile.CopyToAsync(fileStream);
+                    var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, user.AvatarUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(oldImagePath))
+                    {
+                        System.IO.File.Delete(oldImagePath);
+                    }
                 }
-                
+
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images/avatars");
+                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Input.AvatarFile.FileName;
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                await using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await Input.AvatarFile.CopyToAsync(fileStream);
+                }
                 user.AvatarUrl = "/images/avatars/" + uniqueFileName;
             }
-
-            var updateResult = await _userManager.UpdateAsync(user);
-            if (!updateResult.Succeeded)
+            
+            if (Input.FullName != user.FullName)
             {
-                StatusMessage = "Error: Unexpected error when trying to update profile.";
-                return RedirectToPage();
+                user.FullName = Input.FullName;
             }
-
+            
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
             if (Input.PhoneNumber != phoneNumber)
             {
                 var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
                 if (!setPhoneResult.Succeeded)
                 {
-                    StatusMessage = "Error: Unexpected error when trying to set phone number.";
+                    StatusMessage = "Lỗi không mong muốn khi cập nhật số điện thoại.";
                     return RedirectToPage();
                 }
             }
+
+            await _userManager.UpdateAsync(user);
 
             await _signInManager.RefreshSignInAsync(user);
             StatusMessage = "Hồ sơ của bạn đã được cập nhật";

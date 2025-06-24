@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace DCBStore.Areas.Admin.Controllers
 {
@@ -39,8 +40,38 @@ namespace DCBStore.Areas.Admin.Controllers
 
             var pendingOrders = await _context.Orders
                 .CountAsync(o => o.Status == OrderStatus.Pending);
-                
+
             var totalUsers = await _context.Users.CountAsync();
+            var totalProducts = await _context.Products.CountAsync();
+
+            var revenueByMonth = await _context.Orders
+                .Where(o => o.Status == OrderStatus.Completed)
+                .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
+                .Select(g => new
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    TotalRevenue = g.Sum(x => x.Total)
+                })
+                .OrderBy(g => g.Year).ThenBy(g => g.Month)
+                .ToListAsync();
+
+            var ordersByMonth = await _context.Orders
+                .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
+                .Select(g => new
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    Count = g.Count()
+                })
+                .OrderBy(g => g.Year).ThenBy(g => g.Month)
+                .ToListAsync();
+
+            ViewBag.TotalOrders = await _context.Orders.CountAsync();
+            ViewBag.TotalProducts = totalProducts;
+            ViewBag.TotalUsers = totalUsers;
+            ViewBag.RevenueByMonth = revenueByMonth;
+            ViewBag.OrdersByMonth = ordersByMonth;
 
             var viewModel = new DashboardViewModel
             {

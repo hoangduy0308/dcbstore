@@ -1,91 +1,137 @@
 @model DCBStore.Areas.Admin.Models.DashboardViewModel
-@using Microsoft.AspNetCore.Identity
-@using DCBStore.Data
-@inject SignInManager<ApplicationUser> SignInManager
-@* UserManager is also needed if you plan to use UserManager.GetUserId(User) later in this view *@
-@inject UserManager<ApplicationUser> UserManager
-
 
 @{
-    ViewData["Title"] = "Tổng quan Quản trị";
+    ViewData["Title"] = "Dashboard";
+    var revenueByMonth = ViewBag.RevenueByMonth as IEnumerable<dynamic>;
+    var ordersByMonth = ViewBag.OrdersByMonth as IEnumerable<dynamic>;
 }
 
-<h1 class="mb-4">@ViewData["Title"]</h1>
-
-<div class="row">
-    <div class="col-md-3 mb-4">
-        <div class="card bg-primary text-white h-100">
+<h2 class="mb-4">Dashboard thống kê cửa hàng</h2>
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card text-white bg-primary h-100 shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-uppercase mb-0">Doanh thu tháng này</h6>
-                        <h4 class="display-5">@Model.MonthlyRevenue.ToString("N0") VNĐ</h4>
-                    </div>
-                    <i class="fas fa-dollar-sign fa-3x"></i>
-                </div>
-            </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a class="small text-white stretched-link" href="#">Xem chi tiết</a>
-                <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                <h5 class="card-title">Tổng đơn hàng</h5>
+                <p class="card-text display-6">@ViewBag.TotalOrders</p>
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-4">
-        <div class="card bg-warning text-white h-100">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card text-white bg-success h-100 shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-uppercase mb-0">Đơn hàng mới hôm nay</h6>
-                        <h4 class="display-5">@Model.NewOrdersToday</h4>
-                    </div>
-                    <i class="fas fa-receipt fa-3x"></i>
-                </div>
-            </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a class="small text-white stretched-link" href="#">Xem chi tiết</a>
-                <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                <h5 class="card-title">Tổng sản phẩm</h5>
+                <p class="card-text display-6">@ViewBag.TotalProducts</p>
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-4">
-        <div class="card bg-danger text-white h-100">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card text-white bg-info h-100 shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-uppercase mb-0">Đơn hàng đang chờ</h6>
-                        <h4 class="display-5">@Model.PendingOrders</h4>
-                    </div>
-                    <i class="fas fa-hourglass-half fa-3x"></i>
-                </div>
-            </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a class="small text-white stretched-link" href="#">Xem chi tiết</a>
-                <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                <h5 class="card-title">Tổng người dùng</h5>
+                <p class="card-text display-6">@ViewBag.TotalUsers</p>
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-4">
-        <div class="card bg-success text-white h-100">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card text-white bg-warning h-100 shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-uppercase mb-0">Tổng số người dùng</h6>
-                        <h4 class="display-5">@Model.NewUsersThisMonth</h4>
-                    </div>
-                    <i class="fas fa-users fa-3x"></i>
-                </div>
-            </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a class="small text-white stretched-link" href="#">Xem chi tiết</a>
-                <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                <h5 class="card-title">Doanh thu tháng này</h5>
+                <p class="card-text display-6">@Model.MonthlyRevenue.ToString("N0") ₫</p>
             </div>
         </div>
     </div>
 </div>
 
-@* Phần sản phẩm bán chạy nhất đã được di chuyển về Views/Home/Index.cshtml cho trang công cộng *@
-@* Trang Dashboard Admin này sẽ tập trung hiển thị các thống kê tổng quan *@
+<div class="row mb-4">
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-4">
+                <h6>Đơn mới hôm nay</h6>
+                <span class="fs-2 fw-bold text-primary">@Model.NewOrdersToday</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-4">
+                <h6>Đơn chờ xử lý</h6>
+                <span class="fs-2 fw-bold text-warning">@Model.PendingOrders</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-4">
+                <h6>Người dùng mới tháng này</h6>
+                <span class="fs-2 fw-bold text-info">@Model.NewUsersThisMonth</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Doanh thu theo tháng</h5>
+                <canvas id="revenueChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Số đơn hàng theo tháng</h5>
+                <canvas id="ordersChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 @section Scripts {
-    @* Có thể thêm các script riêng cho dashboard nếu cần *@
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const revenueLabels = [@Html.Raw(string.Join(",", revenueByMonth.Select(item => $"'Thg {item.Month}/{item.Year}'")))];
+        const revenueData = [@Html.Raw(string.Join(",", revenueByMonth.Select(item => item.TotalRevenue)))];
+
+        const orderLabels = [@Html.Raw(string.Join(",", ordersByMonth.Select(item => $"'Thg {item.Month}/{item.Year}'")))];
+        const orderData = [@Html.Raw(string.Join(",", ordersByMonth.Select(item => item.Count)))];
+        
+        new Chart(document.getElementById('revenueChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: revenueLabels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: revenueData,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    borderWidth: 3,
+                    tension: 0.2,
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: true } }
+            }
+        });
+
+        new Chart(document.getElementById('ordersChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: orderLabels,
+                datasets: [{
+                    label: 'Số đơn hàng',
+                    data: orderData,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } }
+            }
+        });
+    </script>
 }

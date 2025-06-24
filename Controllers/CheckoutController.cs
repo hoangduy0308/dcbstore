@@ -10,6 +10,9 @@ using System.Collections.Generic;
 using System;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.Text;
+// SỬA LỖI: Thêm using cho IEmailSender
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace DCBStore.Controllers
 {
@@ -18,23 +21,25 @@ namespace DCBStore.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        // SỬA LỖI: Thay đổi từ class cụ thể sang interface
+        private readonly IEmailSender _emailSender; 
         private const string BuyNowSessionKey = "BuyNowItem";
         private const string SessionAppliedCouponCode = "AppliedCouponCode";
         private const string SessionCouponDiscount = "CouponDiscount";
 
-        public CheckoutController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        // SỬA LỖI: Yêu cầu IEmailSender trong constructor
+        public CheckoutController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IEmailSender emailSender)
         {
             _context = context;
             _userManager = userManager;
+            _emailSender = emailSender;
         }
 
-        // SỬA LỖI: Chỉ giữ lại MỘT phiên bản Index duy nhất, chấp nhận tham số fromCart
         public async Task<IActionResult> Index(bool fromCart = false)
         {
             var userId = _userManager.GetUserId(User);
             if (userId == null) return Unauthorized();
 
-            // Nếu người dùng đi từ giỏ hàng, hãy đảm bảo xóa mọi session "Mua Ngay" còn sót lại
             if (fromCart)
             {
                 HttpContext.Session.Remove(BuyNowSessionKey);
@@ -167,7 +172,8 @@ namespace DCBStore.Controllers
         public async Task<IActionResult> PlaceOrder(CheckoutViewModel checkoutViewModel)
         {
             var userId = _userManager.GetUserId(User);
-            if (userId == null) return Unauthorized();
+            var user = await _userManager.GetUserAsync(User); 
+            if (userId == null || user == null) return Unauthorized();
 
             var currentOrderItems = await GetCurrentCartItemsAsync(userId);
             if (currentOrderItems == null || !currentOrderItems.Any())
@@ -217,6 +223,7 @@ namespace DCBStore.Controllers
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
                 
+                var orderDetailsHtml = new StringBuilder();
                 foreach (var item in currentOrderItems)
                 {
                     var product = productsInDb.First(p => p.Id == item.ProductId);
@@ -230,9 +237,35 @@ namespace DCBStore.Controllers
                         Price = item.Price
                     };
                     _context.OrderDetails.Add(orderDetail);
+                    orderDetailsHtml.Append($"<tr><td style='padding: 8px; border: 1px solid #ddd;'>{item.ProductName}</td><td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{item.Quantity}</td><td style='padding: 8px; border: 1px solid #ddd; text-align: right;'>{item.Price:N0} đ</td></tr>");
                 }
                 
                 await _context.SaveChangesAsync();
+                
+                string subject = $"DCBStore - Xác nhận đơn hàng #{order.Id}";
+                string body = $@"
+                    <h1>Cảm ơn bạn đã đặt hàng!</h1>
+                    <p>Chào {order.CustomerName},</p>
+                    <p>Đơn hàng #{order.Id} của bạn đã được tiếp nhận và đang được xử lý.</p>
+                    <h3>Chi tiết đơn hàng:</h3>
+                    <table style='width: 100%; border-collapse: collapse;'>
+                        <thead>
+                            <tr>
+                                <th style='padding: 8px; border: 1px solid #ddd; background-color: #f2f2f2; text-align: left;'>Sản phẩm</th>
+                                <th style='padding: 8px; border: 1px solid #ddd; background-color: #f2f2f2; text-align: center;'>Số lượng</th>
+                                <th style='padding: 8px; border: 1px solid #ddd; background-color: #f2f2f2; text-align: right;'>Đơn giá</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {orderDetailsHtml}
+                        </tbody>
+                    </table>
+                    <h3 style='text-align: right;'>Tổng cộng: {order.Total:N0} đ</h3>
+                    <p>Chúng tôi sẽ thông báo cho bạn khi đơn hàng được vận chuyển.</p>
+                    <p>Cảm ơn bạn đã tin tưởng DCBStore!</p>";
+                
+                await _emailSender.SendEmailAsync(user.Email, subject, body);
+                
                 await transaction.CommitAsync();
 
                 bool isBuyNowFlow = HttpContext.Session.Keys.Contains(BuyNowSessionKey);

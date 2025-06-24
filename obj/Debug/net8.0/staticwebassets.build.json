@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "BgUhaG+wl2DrdTSLZFUALrz7ZCYgmbNKAEKp5vt0jZQ=",
+  "Hash": "Cs/6AfzkN9d0CXGi9yIXt3YWcezW+NRbMT+bQr6YIhc=",
   "Source": "DCBStore",
   "BasePath": "_content/DCBStore",
   "Mode": "Default",
@@ -1328,12 +1328,12 @@
       "OriginalItemSpec": "wwwroot\\images\\avatars\\80a5c6c5-3a54-4fc5-9033-3d523bc91b14_GmeNfrMbYAAHWRk.jpg"
     },
     {
-      "Identity": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\chanel-no5.jpg",
+      "Identity": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\avatars\\d8069a24-7a93-451b-b940-a31a29379365_481712981_1183858823098434_6008174039502110759_n.jpg",
       "SourceId": "DCBStore",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\",
       "BasePath": "_content/DCBStore",
-      "RelativePath": "images/chanel-no5.jpg",
+      "RelativePath": "images/avatars/d8069a24-7a93-451b-b940-a31a29379365_481712981_1183858823098434_6008174039502110759_n.jpg",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -1344,15 +1344,15 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\images\\chanel-no5.jpg"
+      "OriginalItemSpec": "wwwroot\\images\\avatars\\d8069a24-7a93-451b-b940-a31a29379365_481712981_1183858823098434_6008174039502110759_n.jpg"
     },
     {
-      "Identity": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\laptop-thinkpad.jpg",
+      "Identity": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\banner-1.png",
       "SourceId": "DCBStore",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\",
       "BasePath": "_content/DCBStore",
-      "RelativePath": "images/laptop-thinkpad.jpg",
+      "RelativePath": "images/banner-1.png",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -1363,26 +1363,7 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\images\\laptop-thinkpad.jpg"
-    },
-    {
-      "Identity": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\nha-gia-kim.jpg",
-      "SourceId": "DCBStore",
-      "SourceType": "Discovered",
-      "ContentRoot": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\",
-      "BasePath": "_content/DCBStore",
-      "RelativePath": "images/nha-gia-kim.jpg",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "AssetMergeBehavior": "PreferTarget",
-      "AssetMergeSource": "",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\images\\nha-gia-kim.jpg"
+      "OriginalItemSpec": "wwwroot\\images\\banner-1.png"
     },
     {
       "Identity": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\01dcf8e4-4437-4392-8d9d-5ef6d5290409_12_37_1.webp",
@@ -1820,25 +1801,6 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\products\\fe300763-776c-4bfe-aa96-6bcb7bae2388_tải xuống.jpg"
-    },
-    {
-      "Identity": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\sony-headphone.jpg",
-      "SourceId": "DCBStore",
-      "SourceType": "Discovered",
-      "ContentRoot": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\",
-      "BasePath": "_content/DCBStore",
-      "RelativePath": "images/sony-headphone.jpg",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "AssetMergeBehavior": "PreferTarget",
-      "AssetMergeSource": "",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\images\\sony-headphone.jpg"
     },
     {
       "Identity": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\js\\admin-chat.js",

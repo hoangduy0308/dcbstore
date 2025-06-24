@@ -33,16 +33,12 @@
       "PackagePath": "staticwebassets\\images\\avatars\\80a5c6c5-3a54-4fc5-9033-3d523bc91b14_GmeNfrMbYAAHWRk.jpg"
     },
     {
-      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\chanel-no5.jpg",
-      "PackagePath": "staticwebassets\\images\\chanel-no5.jpg"
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\avatars\\d8069a24-7a93-451b-b940-a31a29379365_481712981_1183858823098434_6008174039502110759_n.jpg",
+      "PackagePath": "staticwebassets\\images\\avatars\\d8069a24-7a93-451b-b940-a31a29379365_481712981_1183858823098434_6008174039502110759_n.jpg"
     },
     {
-      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\laptop-thinkpad.jpg",
-      "PackagePath": "staticwebassets\\images\\laptop-thinkpad.jpg"
-    },
-    {
-      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\nha-gia-kim.jpg",
-      "PackagePath": "staticwebassets\\images\\nha-gia-kim.jpg"
+      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\banner-1.png",
+      "PackagePath": "staticwebassets\\images\\banner-1.png"
     },
     {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\01dcf8e4-4437-4392-8d9d-5ef6d5290409_12_37_1.webp",
@@ -135,10 +131,6 @@
     {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\products\\fe300763-776c-4bfe-aa96-6bcb7bae2388_tải xuống.jpg",
       "PackagePath": "staticwebassets\\images\\products\\fe300763-776c-4bfe-aa96-6bcb7bae2388_tải xuống.jpg"
-    },
-    {
-      "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\images\\sony-headphone.jpg",
-      "PackagePath": "staticwebassets\\images\\sony-headphone.jpg"
     },
     {
       "Id": "D:\\Work\\LT.Web\\DCBStore\\wwwroot\\js\\admin-chat.js",

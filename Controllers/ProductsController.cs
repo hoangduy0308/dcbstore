@@ -50,11 +50,11 @@ namespace DCBStore.Controllers
             int pageNumber = 1)
         {
             var productsQuery = _context.Products
-                                      .Where(p => !p.IsDeleted)
-                                      .Include(p => p.Category)
-                                      .Include(p => p.Images)
-                                      .Include(p => p.Reviews)
-                                      .AsQueryable();
+                                        .Where(p => !p.IsDeleted)
+                                        .Include(p => p.Category)
+                                        .Include(p => p.Images)
+                                        .Include(p => p.Reviews)
+                                        .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -91,8 +91,11 @@ namespace DCBStore.Controllers
                     productsQuery = productsQuery.Where(p => p.Stock == 0);
                 }
             }
+            
+            // ViewData["CurrentSort"] = sortOrder; // Dòng này không còn cần thiết vì ViewModel đã xử lý
 
-            ViewData["CurrentSort"] = sortOrder;
+            // --- [BẮT ĐẦU VÙNG SỬA LỖI] ---
+            // Cải thiện logic sắp xếp để rõ ràng và đáng tin cậy hơn.
             switch (sortOrder)
             {
                 case "price_desc":
@@ -104,17 +107,23 @@ namespace DCBStore.Controllers
                 case "best_selling":
                     productsQuery = productsQuery.OrderByDescending(p => p.SoldQuantity);
                     break;
+                // Thêm một case rõ ràng cho "Mới nhất" để xử lý giá trị "newest" từ View (nếu bạn cập nhật View)
+                case "newest": 
                 default:
-                    productsQuery = productsQuery.OrderByDescending(p => p.Id);
+                    // Sắp xếp theo ngày tạo (CreatedAt) là cách tốt nhất cho "Mới nhất".
+                    // Giả sử Model "Product" của bạn có thuộc tính "CreatedAt".
+                    // Nếu không có, bạn có thể quay lại dùng OrderByDescending(p => p.Id).
+                    productsQuery = productsQuery.OrderByDescending(p => p.Id); // Hoặc tốt hơn: p.CreatedAt
                     break;
             }
+            // --- [KẾT THÚC VÙNG SỬA LỖI] ---
 
             int pageSize = 8;
             var count = await productsQuery.CountAsync();
             var pagedProducts = await productsQuery
-                                      .Skip((pageNumber - 1) * pageSize)
-                                      .Take(pageSize)
-                                      .ToListAsync();
+                                        .Skip((pageNumber - 1) * pageSize)
+                                        .Take(pageSize)
+                                        .ToListAsync();
 
             var viewModel = new ProductIndexViewModel
             {
@@ -126,7 +135,7 @@ namespace DCBStore.Controllers
                 MaxPrice = maxPrice,
                 MinRating = minRating,
                 Status = status,
-                SortOrder = sortOrder,
+                SortOrder = sortOrder, // Quan trọng: Trả lại giá trị sortOrder để View "ghi nhớ"
                 PageNumber = pageNumber,
                 TotalPages = (int)Math.Ceiling(count / (double)pageSize)
             };
@@ -142,13 +151,13 @@ namespace DCBStore.Controllers
             }
 
             var product = await _context.Products
-                                      .Where(p => !p.IsDeleted && p.Id == id)
-                                      .Include(p => p.Category)
-                                      .Include(p => p.Images)
-                                      .Include(p => p.Reviews.OrderByDescending(r => r.ReviewDate))
-                                        .ThenInclude(r => r.User)
-                                      .AsNoTracking()
-                                      .FirstOrDefaultAsync();
+                                        .Where(p => !p.IsDeleted && p.Id == id)
+                                        .Include(p => p.Category)
+                                        .Include(p => p.Images)
+                                        .Include(p => p.Reviews.OrderByDescending(r => r.ReviewDate))
+                                            .ThenInclude(r => r.User)
+                                        .AsNoTracking()
+                                        .FirstOrDefaultAsync();
 
             if (product == null)
             {

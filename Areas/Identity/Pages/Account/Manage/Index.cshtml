@@ -6,101 +6,110 @@
 }
 
 <style>
-    .profile-card {
-        border-radius: 0.75rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
     .profile-header {
-        border-bottom: 1px solid #e0e0e0;
+        border-bottom: 1px solid #e9ecef;
     }
     .profile-avatar {
         width: 150px;
         height: 150px;
         object-fit: cover;
-        border: 2px solid #e9ecef;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 3px solid #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         cursor: pointer;
         transition: transform 0.2s;
     }
     .profile-avatar:hover {
         transform: scale(1.05);
     }
-    .form-group label {
+    .form-label {
         font-weight: 500;
-        color: #343a40;
+        color: #495057;
     }
     .form-control-plaintext {
         background-color: #f8f9fa;
-        border-radius: 0.5rem;
+        border-radius: 0.375rem;
         padding-left: 1rem;
     }
     .btn-shopee {
         background-color: #ee4d2d;
         border-color: #ee4d2d;
         color: white;
-        transition: background-color 0.2s, border-color 0.2s;
+        font-weight: 500;
     }
     .btn-shopee:hover {
-        background-color: #e53e1e;
-        border-color: #e53e1e;
+        background-color: #d73210;
+        border-color: #d73210;
+        color: white;
     }
-    .btn-outline-secondary {
+    .activity-stats {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        padding: 15px;
         border-radius: 0.5rem;
     }
 </style>
 
-<div class="profile-card card p-4">
-    <div class="profile-header card-header bg-white pb-3 mb-4">
+<div>
+    <div class="profile-header pb-3 mb-4">
         <h4>@ViewData["Title"]</h4>
         <p class="text-muted mb-0">Quản lý thông tin hồ sơ để bảo mật tài khoản</p>
     </div>
 
-    <div class="card-body">
+    <div>
         <partial name="_StatusMessage" for="StatusMessage" />
 
         <form id="profile-form" method="post" enctype="multipart/form-data">
-            <div class="row g-4">
-                <div class="col-md-8 order-md-1">
+            <div class="row g-4 g-lg-5">
+                <div class="col-lg-8 order-lg-1">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
-                    <div class="row mb-3 form-group align-items-center">
-                        <label class="col-sm-3 col-form-label text-sm-end">Tên đăng nhập</label>
-                        <div class="col-sm-9">
-                            <input asp-for="Username" class="form-control-plaintext" readonly />
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tên đăng nhập</label>
+                        <input asp-for="Username" class="form-control-plaintext ps-3" readonly />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" readonly />
                     </div>
 
-                    <div class="row mb-3 form-group align-items-center">
-                        <label asp-for="Input.FullName" class="col-sm-3 col-form-label text-sm-end"></label>
-                        <div class="col-sm-9">
-                            <input asp-for="Input.FullName" class="form-control" placeholder="Nhập tên đầy đủ của bạn" />
-                            <span asp-validation-for="Input.FullName" class="text-danger mt-1 d-block"></span>
-                        </div>
+                    <div class="mb-3">
+                        <label asp-for="Input.FullName" class="form-label"></label>
+                        <input asp-for="Input.FullName" class="form-control" placeholder="Nhập tên đầy đủ của bạn" />
+                        <span asp-validation-for="Input.FullName" class="text-danger mt-1 d-block"></span>
                     </div>
 
-                    <div class="row mb-3 form-group align-items-center">
-                        <label asp-for="Input.PhoneNumber" class="col-sm-3 col-form-label text-sm-end"></label>
-                        <div class="col-sm-9">
-                            <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Nhập số điện thoại của bạn" />
-                            <span asp-validation-for="Input.PhoneNumber" class="text-danger mt-1 d-block"></span>
-                        </div>
+                    <div class="mb-3">
+                        <label asp-for="Input.PhoneNumber" class="form-label"></label>
+                        <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Nhập số điện thoại của bạn" />
+                        <span asp-validation-for="Input.PhoneNumber" class="text-danger mt-1 d-block"></span>
                     </div>
-
-                    <div class="row mt-4">
-                        <div class="col-sm-9 offset-sm-3">
-                            <button id="update-profile-button" type="submit" class="btn btn-primary btn-lg btn-shopee">Lưu thay đổi</button>
-                        </div>
+                    
+                    <div class="mt-4">
+                        <button id="update-profile-button" type="submit" class="btn btn-shopee px-4 py-2">Lưu thay đổi</button>
                     </div>
                 </div>
 
-                <div class="col-md-4 order-md-2 d-flex flex-column align-items-center justify-content-center">
+                <div class="col-lg-4 order-lg-2 d-flex flex-column align-items-center">
                     <div class="avatar-upload-container text-center">
                         <img id="profilePicture" class="profile-avatar rounded-circle mb-3" src="@(Model.AvatarUrl ?? "/images/avatars/default-avatar.png")" alt="Profile picture">
-                        <input type="file" name="AvatarFile" id="avatarFile" class="d-none" accept=".jpg,.jpeg,.png">
+                        <input type="file" asp-for="Input.AvatarFile" id="avatarFile" class="d-none" accept=".jpg,.jpeg,.png">
                         <label for="avatarFile" class="btn btn-outline-secondary">Chọn Ảnh</label>
                         <div class="form-text mt-2 text-muted">
                             Dung lượng file tối đa 1 MB<br>
                             Định dạng: .JPEG, .PNG
+                        </div>
+                    </div>
+                    
+                    <div class="activity-stats mt-4 w-100">
+                        <div class="d-flex justify-content-around text-center">
+                            <a asp-page="./Orders" class="text-decoration-none text-dark">
+                                <div class="fs-4 fw-bold">@Model.OrderCount</div>
+                                <div class="small text-muted">Đơn hàng</div>
+                            </a>
+                            <a asp-page="/Wishlist" class="text-decoration-none text-dark"> <div class="fs-4 fw-bold">@Model.WishlistCount</div>
+                                <div class="small text-muted">Yêu thích</div>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -113,11 +122,10 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         document.getElementById('avatarFile').onchange = function (evt) {
-            var reader = new FileReader();
-            reader.onload = function (e) {
-                document.getElementById('profilePicture').src = e.target.result;
-            };
-            reader.readAsDataURL(this.files[0]);
+            const [file] = this.files;
+            if (file) {
+                document.getElementById('profilePicture').src = URL.createObjectURL(file);
+            }
         };
     </script>
 }

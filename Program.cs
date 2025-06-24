@@ -2,16 +2,16 @@ using Microsoft.EntityFrameworkCore;
 using DCBStore.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication;
-using DCBStore.Hubs; // <-- THÊM DÒNG NÀY
+using DCBStore.Hubs;
+using DCBStore.Helpers;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Cấu hình kết nối Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// 2. Cấu hình Session
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -20,12 +20,10 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// 3. Cấu hình ASP.NET Core Identity
-builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
-    .AddRoles<IdentityRole>() 
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// 4. Cấu hình đăng nhập bên thứ ba (Google)
 builder.Services.AddAuthentication()
     .AddGoogle(options =>
     {
@@ -33,7 +31,6 @@ builder.Services.AddAuthentication()
         options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
     });
 
-// 5. Cấu hình Controller và Razor Pages
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
     {
@@ -41,13 +38,11 @@ builder.Services.AddControllersWithViews()
     });
 builder.Services.AddRazorPages();
 
-// 6. Thêm dịch vụ SignalR
-builder.Services.AddSignalR(); // <-- THÊM DÒNG NÀY
+builder.Services.AddSignalR();
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 
-// XÂY DỰNG ỨNG DỤNG
 var app = builder.Build();
 
-// SEEDING DATA
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -56,7 +51,7 @@ using (var scope = app.Services.CreateScope())
     {
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-        
+
         string[] roleNames = { "Admin", "Customer" };
         foreach (var roleName in roleNames)
         {
@@ -67,7 +62,7 @@ using (var scope = app.Services.CreateScope())
                 logger.LogInformation($"Role '{roleName}' đã được tạo.");
             }
         }
-        
+
         var adminEmail = "admin@dcbstore.com";
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
         if (adminUser == null)
@@ -76,7 +71,7 @@ using (var scope = app.Services.CreateScope())
             { 
                 UserName = adminEmail, 
                 Email = adminEmail, 
-                EmailConfirmed = true
+                EmailConfirmed = true 
             };
             var result = await userManager.CreateAsync(newAdmin, "Admin@123"); 
             if (result.Succeeded)
@@ -92,7 +87,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Cấu hình HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -109,16 +103,15 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
-
-// Thêm Endpoint cho ChatHub
-app.MapHub<ChatHub>("/chatHub"); // <-- THÊM DÒNG NÀY
+app.MapHub<ChatHub>("/chatHub");
 
 app.MapControllerRoute(
-  name: "MyArea",
-  pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
+    name: "MyArea",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
 );
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}"
+);
 
 app.Run();

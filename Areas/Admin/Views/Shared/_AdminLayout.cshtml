@@ -1,3 +1,8 @@
+@using Microsoft.AspNetCore.Identity
+@using DCBStore.Data
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -34,7 +39,12 @@
         .sidebar {
             width: 260px;
             background-color: var(--sidebar-bg);
-            transition: width 0.3s ease;
+            transition: all 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 1000;
         }
 
         .sidebar .navbar-brand {
@@ -83,13 +93,15 @@
         }
 
         .main-content-wrapper {
+            margin-left: 260px; /* Thêm margin-left để không bị sidebar đè lên */
             width: calc(100% - 260px);
-            transition: width 0.3s ease;
+            transition: all 0.3s ease;
         }
         
         .top-header {
             background-color: #fff;
             border-bottom: 1px solid #e5e7eb;
+            padding: 0.75rem 0;
         }
         
         .content-card {
@@ -98,13 +110,13 @@
             box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
         }
 
-        @@media (max-width: 768px) {
+        @@media (max-width: 991.98px) {
             .sidebar {
-                width: 0;
-                overflow: hidden;
+                margin-left: -260px;
             }
             .main-content-wrapper {
                 width: 100%;
+                margin-left: 0;
             }
         }
     </style>
@@ -173,13 +185,15 @@
                 </ul>
             </aside>
 
-            <div class="main-content-wrapper vh-100 d-flex flex-column">
-                <header class="top-header p-3 d-flex justify-content-end align-items-center">
-                    <partial name="_LoginPartial" />
+            <div class="main-content-wrapper d-flex flex-column vh-100">
+                <header class="top-header">
+                    <div class="container-fluid d-flex justify-content-end align-items-center">
+                        <partial name="_LoginPartial" />
+                    </div>
                 </header>
 
-                <main class="flex-grow-1 p-4 p-md-5" style="overflow-y: auto;">
-                    <div class="content-card p-4">
+                <main class="flex-grow-1" style="overflow-y: auto;">
+                    <div class="container-fluid p-4">
                         @RenderBody()
                     </div>
                 </main>
@@ -188,7 +202,11 @@
     }
     else
     {
-        @RenderBody()
+        <div class="container">
+            <main role="main" class="py-4">
+                @RenderBody()
+            </main>
+        </div>
     }
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

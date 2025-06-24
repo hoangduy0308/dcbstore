@@ -1,0 +1,18 @@
+@page
+@model DCBStore.Areas.Identity.Pages.Account.ConfirmEmailModel
+@{
+    ViewData["Title"] = "Xác nhận Email";
+}
+
+<h1 class="mt-4">@ViewData["Title"]</h1>
+
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    <div class="alert @(Model.StatusMessage.Contains("lỗi") ? "alert-danger" : "alert-success")" role="alert">
+        @Model.StatusMessage
+    </div>
+}
+
+<p>
+    <a asp-page="/Index">Quay về trang chủ</a>
+</p>

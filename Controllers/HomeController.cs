@@ -5,6 +5,7 @@ using DCBStore.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
+using DCBStore.Models.ViewModels; // Thêm namespace của ViewModel
 
 namespace DCBStore.Controllers
 {
@@ -21,15 +22,30 @@ namespace DCBStore.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Lấy 4 sản phẩm nổi bật nhất (chưa bị xóa và bán chạy nhất)
+            // Lấy 8 sản phẩm bán chạy nhất để làm "Sản phẩm nổi bật"
             var featuredProducts = await _context.Products
-                .Where(p => !p.IsDeleted) // Chỉ lấy sản phẩm chưa bị xóa
-                .OrderByDescending(p => p.SoldQuantity) // Sắp xếp theo bán chạy
-                .Include(p => p.Images) // Lấy kèm hình ảnh
-                .Take(4) // SỬA ĐỔI: Chỉ lấy 4 sản phẩm đầu tiên
+                .Where(p => !p.IsDeleted)
+                .OrderByDescending(p => p.SoldQuantity)
+                .Include(p => p.Images)
+                .Take(8) 
                 .ToListAsync();
-                
-            return View(featuredProducts);
+
+            // Lấy 8 sản phẩm mới nhất để làm "Hàng mới về"
+            var newArrivals = await _context.Products
+                .Where(p => !p.IsDeleted)
+                .OrderByDescending(p => p.Id) // Giả sử Id càng lớn thì càng mới
+                .Include(p => p.Images)
+                .Take(8)
+                .ToListAsync();
+            
+            // Tạo ViewModel và đưa dữ liệu vào
+            var viewModel = new HomeViewModel
+            {
+                FeaturedProducts = featuredProducts,
+                NewArrivals = newArrivals
+            };
+            
+            return View(viewModel); // Trả về View với ViewModel
         }
 
         public IActionResult Privacy()

@@ -13,6 +13,10 @@ namespace DCBStore.Data
         public Cart? Cart { get; set; } // Mối quan hệ 1-1 với Cart (nullable vì Cart có thể được tạo sau)
         public Wishlist? Wishlist { get; set; } // Mối quan hệ 1-1 với Wishlist (nullable vì Wishlist có thể được tạo sau)
         public ICollection<Order> Orders { get; set; } = new List<Order>(); // Mối quan hệ 1-nhiều với Order
-        // KẾT THÚC THÊM MỚI
+                                                                            // KẾT THÚC THÊM MỚI
+        public string FullNameOrUserName()
+    {
+        return !string.IsNullOrWhiteSpace(FullName) ? FullName : (UserName ?? "");
+    }
     }
 }

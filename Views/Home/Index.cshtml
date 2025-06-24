@@ -1,97 +1,138 @@
-﻿@model IEnumerable<DCBStore.Models.Product>
-@using Microsoft.AspNetCore.Identity
-@using DCBStore.Data
-@inject SignInManager<ApplicationUser> SignInManager
+﻿@model DCBStore.Models.ViewModels.HomeViewModel
 
 @{
     ViewData["Title"] = "Trang Chủ";
 }
 
 <style>
-    .sold-badge {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background-color: rgba(0, 0, 0, 0.6);
-        color: white;
-        padding: 5px 8px;
-        border-radius: 5px;
-        font-size: 0.85rem;
+    /* CSS cho Trust Badges */
+    .trust-badge-section {
+        padding-top: 1rem;
+        padding-bottom: 3rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .trust-badge {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .trust-badge i {
+        font-size: 2rem;
+        color: var(--bs-primary);
+    }
+    .trust-badge-text h6 {
+        margin-bottom: 0;
         font-weight: 600;
-        z-index: 10;
     }
-    .product-card-img-container {
-        position: relative;
-        overflow: hidden;
-        background-color: #f8f9fa; /* Thêm màu nền nhạt cho các khoảng trắng */
+    .trust-badge-text p {
+        margin-bottom: 0;
+        font-size: 0.9rem;
+        color: #6c757d;
     }
-    .card-img-top {
-        transition: transform 0.3s ease;
-        height: 250px;
-        /* SỬA LỖI: Thay đổi 'cover' thành 'contain' để hiển thị toàn bộ ảnh */
-        object-fit: contain; 
+
+    /* CSS chung cho các khu vực sản phẩm */
+    .product-section {
+        padding: 4rem 0;
     }
-    .product-card:hover .card-img-top {
-        transform: scale(1.05);
+    .section-title {
+        text-align: center;
+        margin-bottom: 3rem;
     }
-    .product-card {
-        transition: box-shadow 0.3s ease;
-    }
-    .product-card:hover {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .15) !important;
+    .section-title h2 {
+        font-weight: 700;
     }
 </style>
 
-<div class="container py-5">
-    <div class="text-center mb-5">
-        <h2 class="fw-bold display-6">Sản phẩm Nổi bật</h2>
-        <p class="text-muted">Khám phá những sản phẩm được yêu thích nhất tại DCBStore</p>
-    </div>
 
-    @if (!Model.Any())
-    {
-        <div class="text-center py-5">
-            <p class="lead">Không tìm thấy sản phẩm nào.</p>
-        </div>
-    }
-    else
-    {
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-            @foreach (var product in Model)
-            {
-                var imageUrl = product.Images?.FirstOrDefault()?.Url ?? "/images/placeholder.png";
-                <div class="col">
-                    <div class="card h-100 border-0 shadow-sm product-card">
-                        <div class="product-card-img-container position-relative">
-                            <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="@product.Id">
-                                <img src="@imageUrl" alt="@product.Name" class="card-img-top">
-                            </a>
-                            @if (product.SoldQuantity > 0)
-                            {
-                                <span class="sold-badge">Đã bán: @product.SoldQuantity</span>
-                            }
-                            @if (SignInManager.IsSignedIn(User))
-                            {
-                                <button class="btn toggle-wishlist-btn position-absolute top-0 end-0 m-2" data-product-id="@product.Id" title="Thêm vào yêu thích">
-                                    <i class="far fa-heart"></i>
-                                </button>
-                            }
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title h6 flex-grow-1"> 
-                                <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="@product.Id"
-                                   class="text-dark text-decoration-none stretched-link">@product.Name</a>
-                            </h5>
-                            
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <p class="card-text fw-bold text-primary mb-0">
-                                    @product.Price.ToString("N0") VNĐ
-                                </p>
-                            </div>
-                        </div>
+<div class="trust-badge-section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-3 col-6">
+                <div class="trust-badge">
+                    <i class="fas fa-truck-fast"></i>
+                    <div class="trust-badge-text">
+                        <h6>Giao hàng siêu tốc</h6>
+                        <p>Trong vòng 24h</p>
                     </div>
                 </div>
-            }
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="trust-badge">
+                    <i class="fas fa-shield-alt"></i>
+                    <div class="trust-badge-text">
+                        <h6>Bảo hành chính hãng</h6>
+                        <p>Yên tâm sử dụng</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="trust-badge">
+                    <i class="fas fa-headset"></i>
+                    <div class="trust-badge-text">
+                        <h6>Hỗ trợ 24/7</h6>
+                        <p>Giải đáp mọi thắc mắc</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="trust-badge">
+                    <i class="fas fa-undo-alt"></i>
+                    <div class="trust-badge-text">
+                        <h6>Đổi trả dễ dàng</h6>
+                        <p>Trong vòng 7 ngày</p>
+                    </div>
+                </div>
+            </div>
         </div>
-    }
+    </div>
+</div>
+
+
+<div class="product-section">
+    <div class="container">
+        <div class="section-title">
+            <h2 class="display-6">Sản phẩm Bán chạy</h2>
+            <p class="text-muted">Khám phá những sản phẩm được yêu thích nhất tại DCBStore</p>
+        </div>
+
+        @if (Model.FeaturedProducts != null && Model.FeaturedProducts.Any())
+        {
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
+                @foreach (var product in Model.FeaturedProducts)
+                {
+                    <partial name="_ProductCard" model="product" />
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-center">Chưa có sản phẩm nào.</p>
+        }
+    </div>
+</div>
+
+<div class="product-section bg-light">
+    <div class="container">
+        <div class="section-title">
+            <h2 class="display-6">Hàng Mới Về</h2>
+            <p class="text-muted">Những sản phẩm công nghệ mới nhất vừa cập bến</p>
+        </div>
+
+        @if (Model.NewArrivals != null && Model.NewArrivals.Any())
+        {
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
+                 @foreach (var product in Model.NewArrivals)
+                {
+                    <partial name="_ProductCard" model="product" />
+                }
+            </div>
+             <div class="text-center mt-5">
+                <a asp-controller="Products" asp-action="Index" class="btn btn-outline-primary px-4">Xem tất cả sản phẩm</a>
+            </div>
+        }
+        else
+        {
+            <p class="text-center">Chưa có sản phẩm nào.</p>
+        }
+    </div>
 </div>

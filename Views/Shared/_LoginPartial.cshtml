@@ -5,36 +5,66 @@
 
 @if (SignInManager.IsSignedIn(User))
 {
-    <h6 class="dropdown-header" id="current-username">Xin chào, @UserManager.GetUserName(User)</h6>
-    
+    var currentUser = await UserManager.GetUserAsync(User);
+    var avatarUrl = currentUser?.AvatarUrl ?? "/images/avatars/default-avatar.png";
+
+    // Khối thông tin người dùng ở đầu dropdown
+    <li class="px-3 py-2">
+        <div class="d-flex align-items-center">
+            <a asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
+                <img src="@avatarUrl" alt="Avatar" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;" />
+            </a>
+            <div class="d-flex flex-column" style="line-height: 1.2; max-width: 150px;">
+                <span class="small text-muted">Xin chào,</span>
+                <strong class="text-dark text-truncate">@currentUser.FullNameOrUserName()</strong>
+            </div>
+        </div>
+    </li>
+    <li><hr class="dropdown-divider my-2"></li>
+
+    // Các link chức năng
     @if (User.IsInRole("Admin"))
     {
-        <a class="dropdown-item fw-bold text-danger" asp-area="Admin" asp-controller="Home" asp-action="Index">
-            <i class="fas fa-user-shield fa-fw me-2"></i>Trang Quản trị
-        </a>
+        <li>
+            <a class="dropdown-item fw-bold text-danger" asp-area="Admin" asp-controller="Home" asp-action="Index">
+                <i class="fas fa-user-shield fa-fw me-2"></i>Trang Quản trị
+            </a>
+        </li>
     }
 
-    <a class="dropdown-item" id="manage" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
-        <i class="fas fa-user-cog fa-fw me-2"></i>Quản lý tài khoản
-    </a>
+    <li>
+        <a class="dropdown-item" id="manage" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
+            <i class="fas fa-user-cog fa-fw me-2"></i>Quản lý tài khoản
+        </a>
+    </li>
     
-    <a class="dropdown-item" asp-area="" asp-controller="Wishlist" asp-action="Index">
-        <i class="fas fa-heart fa-fw me-2"></i>Danh sách yêu thích
-    </a>
+    <li>
+        <a class="dropdown-item" asp-area="" asp-controller="Wishlist" asp-action="Index">
+            <i class="fas fa-heart fa-fw me-2"></i>Danh sách yêu thích
+        </a>
+    </li>
 
-    <div class="dropdown-divider"></div>
-    <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-        <button id="logout" type="submit" class="dropdown-item text-danger">
-            <i class="fas fa-sign-out-alt fa-fw me-2"></i>Đăng xuất
-        </button>
-    </form>
+    <li><hr class="dropdown-divider my-2"></li>
+    
+    // Nút đăng xuất
+    <li>
+        <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+            <button id="logout" type="submit" class="dropdown-item text-danger">
+                <i class="fas fa-sign-out-alt fa-fw me-2"></i>Đăng xuất
+            </button>
+        </form>
+    </li>
 }
 else
 {
-    <a class="dropdown-item" id="register" asp-area="Identity" asp-page="/Account/Register">
-        <i class="fas fa-user-plus fa-fw me-2"></i>Đăng ký
-    </a>
-    <a class="dropdown-item" id="login" asp-area="Identity" asp-page="/Account/Login">
-        <i class="fas fa-sign-in-alt fa-fw me-2"></i>Đăng nhập
-    </a>
+    <li>
+        <a class="dropdown-item" id="register" asp-area="Identity" asp-page="/Account/Register">
+            <i class="fas fa-user-plus fa-fw me-2"></i>Đăng ký
+        </a>
+    </li>
+    <li>
+        <a class="dropdown-item" id="login" asp-area="Identity" asp-page="/Account/Login">
+            <i class="fas fa-sign-in-alt fa-fw me-2"></i>Đăng nhập
+        </a>
+    </li>
 }

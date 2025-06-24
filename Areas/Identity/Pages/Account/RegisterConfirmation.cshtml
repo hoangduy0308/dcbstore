@@ -1,0 +1,26 @@
+@page
+@model DCBStore.Areas.Identity.Pages.Account.RegisterConfirmationModel
+@{
+    ViewData["Title"] = "Đăng ký thành công";
+}
+
+<h1 class="mt-4">@ViewData["Title"]</h1>
+
+<p>
+    Cảm ơn bạn đã đăng ký!<br />
+    Vui lòng kiểm tra email <strong>@Model.Email</strong> để xác nhận tài khoản.
+</p>
+
+@if (Model.ShowResendLink)
+{
+    <div class="mt-3">
+        <p class="text-muted">
+            Nếu bạn chưa nhận được email, 
+            <a asp-page="./ResendEmailConfirmation" asp-route-email="@Model.Email">gửi lại email xác nhận</a>.
+        </p>
+    </div>
+}
+
+<p class="mt-4">
+    <a asp-page="/Index">Quay về trang chủ</a>
+</p>

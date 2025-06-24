@@ -5,243 +5,267 @@
 
 @{
     ViewData["Title"] = "Tất cả Sản phẩm";
-    // SỬA LỖI LOGIC: Thêm biến kiểm tra đăng nhập
     var isUserSignedIn = SignInManager.IsSignedIn(User);
 }
 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
 <style>
-    /* CSS của bạn giữ nguyên, không thay đổi */
-    .sold-badge {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background-color: rgba(0, 0, 0, 0.6);
-        color: white;
-        padding: 5px 8px;
-        border-radius: 5px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        z-index: 10;
+    body { font-family: 'Inter', sans-serif; }
+    .sold-badge { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color:#fff; padding:5px 8px; border-radius:5px; font-size:.85rem; font-weight:600; z-index:10; }
+    .product-card-img-container { position: relative; overflow:hidden; background:#f8f9fa; }
+    .card-img-top { transition: transform .3s ease; height:200px; object-fit:contain; }
+    .product-card { transition: transform .3s ease, box-shadow .3s ease; overflow:hidden; }
+    .product-card:hover { transform: translateY(-8px); box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.18) !important; }
+    .product-actions { position:absolute; bottom:0; left:0; right:0; padding:1rem; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent); opacity:0; transform:translateY(100%); transition:opacity .3s ease, transform .3s ease; z-index:11; }
+    .product-card:hover .product-actions { opacity:1; transform:translateY(0); }
+    .toggle-wishlist-btn { background:none; border:none; color:#adb5bd; cursor:pointer; font-size:1.5rem; padding:0; transition:color .2s, transform .2s; }
+    .toggle-wishlist-btn:hover { color:#dc3545; transform:scale(1.2); }
+    .toggle-wishlist-btn.liked { color:#dc3545; }
+
+    @@media (max-width: 992px) {
+        #desktop-filter { display: none; }
     }
-    .product-card-img-container {
-        position: relative;
-        overflow: hidden;
-        background-color: #f8f9fa;
+
+    .skeleton-card {
+        background: #e2e2e2;
+        height: 350px;
+        border-radius: .5rem;
+        animation: pulse .8s infinite;
     }
-    .card-img-top {
-        transition: transform 0.3s ease;
-        height: 200px;
-        object-fit: contain; 
-    }
-    .filter-sidebar {
-        position: sticky;
-        top: 100px;
-    }
-    .filter-section {
-        margin-bottom: 1.5rem;
-    }
-    .rating-filter label {
-        color: #ffc107;
-    }
-    .product-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        overflow: hidden;
-    }
-    .product-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, .18) !important;
-    }
-    .product-actions {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: 1rem;
-        background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0));
-        opacity: 0;
-        transform: translateY(100%);
-        transition: opacity 0.3s ease, transform 0.3s ease;
-        z-index: 11;
-    }
-    .product-card:hover .product-actions {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    .product-actions .btn {
-        flex-grow: 1;
+    @@keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: .4; }
+        100% { opacity: 1; }
     }
 </style>
 
 <div class="container py-5">
     @Html.AntiForgeryToken()
-    <div class="row">
-        @* Sidebar bộ lọc *@
-        <div class="col-lg-3">
-            <div class="filter-sidebar">
-                <h4 class="mb-4">Bộ lọc & Sắp xếp</h4>
-                <form asp-action="Index" method="get">
-                    <input type="hidden" name="searchString" value="@Model.SearchString" />
-                    <div class="filter-section">
-                        <label for="sortOrder" class="form-label fw-bold">Sắp xếp theo</label>
-                        <select name="sortOrder" id="sortOrder" class="form-select" onchange="this.form.submit()">
-                            <option value="" selected="@(string.IsNullOrEmpty(Model.SortOrder))">Mới nhất</option>
-                            <option value="best_selling" selected="@(Model.SortOrder == "best_selling")">Bán chạy nhất</option>
-                            <option value="price_asc" selected="@(Model.SortOrder == "price_asc")">Giá tăng dần</option>
-                            <option value="price_desc" selected="@(Model.SortOrder == "price_desc")">Giá giảm dần</option>
-                        </select>
+
+    <div class="row mb-4">
+        <div class="col-lg-3 d-none d-lg-block" id="desktop-filter">
+            <h4 class="mb-3">Bộ lọc &amp; Sắp xếp</h4>
+            <form asp-action="Index" method="get">
+                <input type="hidden" name="searchString" value="@Model.SearchString" />
+
+                <div class="mb-3">
+                    <label class="form-label">Sắp xếp</label>
+                    @Html.DropDownList("sortOrder",
+                        new List<SelectListItem> {
+                            // --- [SỬA LỖI] --- Thay đổi Value từ "" thành "newest" và cập nhật điều kiện Selected
+                            new SelectListItem { Text="Mới nhất", Value="newest", Selected = (string.IsNullOrEmpty(Model.SortOrder) || Model.SortOrder == "newest") },
+                            new SelectListItem { Text="Bán chạy nhất", Value="best_selling", Selected = Model.SortOrder=="best_selling" },
+                            new SelectListItem { Text="Giá tăng dần", Value="price_asc", Selected = Model.SortOrder=="price_asc" },
+                            new SelectListItem { Text="Giá giảm dần", Value="price_desc", Selected = Model.SortOrder=="price_desc" }
+                        },
+                        new { @class="form-select", onchange="this.form.submit()" })
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Danh mục</label>
+                    @Html.DropDownList("categoryId",
+                        new SelectList(Model.Categories, "Id", "Name", Model.CategoryId),
+                        "Tất cả",
+                        new { @class="form-select", onchange="this.form.submit()" })
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Khoảng giá</label>
+                    <div class="d-flex gap-2">
+                        <input type="number" name="minPrice" class="form-control" placeholder="Từ" value="@Model.MinPrice" />
+                        <input type="number" name="maxPrice" class="form-control" placeholder="Đến" value="@Model.MaxPrice" />
                     </div>
-                    <div class="filter-section">
-                        <label class="form-label fw-bold">Danh mục</label>
-                        <div class="list-group">
-                            <a asp-action="Index" asp-all-route-data="@Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString())" asp-route-categoryId="" class="list-group-item list-group-item-action @(Model.CategoryId == null ? "active" : "")">Tất cả</a>
-                            @foreach (var category in Model.Categories)
-                            {
-                                <a asp-action="Index" asp-all-route-data="@Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString())" asp-route-categoryId="@category.Id" class="list-group-item list-group-item-action @(Model.CategoryId == category.Id ? "active" : "")">@category.Name</a>
-                            }
-                        </div>
-                    </div>
-                    <div class="filter-section">
-                        <label class="form-label fw-bold">Khoảng giá</label>
-                        <div class="d-flex align-items-center">
-                            <input type="number" name="minPrice" class="form-control" placeholder="Từ" value="@Model.MinPrice">
-                            <span class="mx-2">-</span>
-                            <input type="number" name="maxPrice" class="form-control" placeholder="Đến" value="@Model.MaxPrice">
-                        </div>
-                    </div>
-                    <div class="filter-section rating-filter">
-                        <label class="form-label fw-bold">Đánh giá</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="minRating" value="4" id="rating4" onchange="this.form.submit()" checked="@(Model.MinRating == 4)">
-                            <label class="form-check-label" for="rating4">
-                                Từ 4 sao <i class="fas fa-star"></i> trở lên
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="minRating" value="3" id="rating3" onchange="this.form.submit()" checked="@(Model.MinRating == 3)">
-                            <label class="form-check-label" for="rating3">
-                                Từ 3 sao <i class="fas fa-star"></i> trở lên
-                            </label>
-                        </div>
-                    </div>
-                    <div class="filter-section">
-                         <label class="form-label fw-bold">Trạng thái</label>
-                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="status" value="in-stock" id="in-stock" onchange="this.form.submit()" checked="@(Model.Status == "in-stock")">
-                            <label class="form-check-label" for="in-stock">Còn hàng</label>
-                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="status" value="out-of-stock" id="out-of-stock" onchange="this.form.submit()" checked="@(Model.Status == "out-of-stock")">
-                            <label class="form-check-label" for="out-of-stock">Hết hàng</label>
-                        </div>
-                    </div>
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Lọc sản phẩm</button>
-                        <a asp-action="Index" class="btn btn-outline-secondary">Xóa bộ lọc</a>
-                    </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Đánh giá tối thiểu</label>
+                    @Html.DropDownList("minRating",
+                        new List<SelectListItem> {
+                            new SelectListItem { Text="Từ 5 sao", Value="5", Selected = Model.MinRating==5 },
+                            new SelectListItem { Text="Từ 4 sao", Value="4", Selected = Model.MinRating==4 },
+                            new SelectListItem { Text="Từ 3 sao", Value="3", Selected = Model.MinRating==3 },
+                            new SelectListItem { Text="Từ 2 sao", Value="2", Selected = Model.MinRating==2 },
+                            new SelectListItem { Text="Từ 1 sao", Value="1", Selected = Model.MinRating==1 }
+                        },
+                        "Tất cả", // Thêm tùy chọn này nếu muốn
+                        new { @class="form-select", onchange="this.form.submit()" })
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary">Lọc</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Xóa bộ lọc</a>
+                </div>
+            </form>
         </div>
 
         <div class="col-lg-9">
-            <div class="text-center mb-5">
-                 @if (string.IsNullOrEmpty(Model.SearchString) && !Model.CategoryId.HasValue)
-                 {
-                     <h1 class="display-5 fw-bold">Tất cả Sản phẩm</h1>
-                     <p class="text-muted">Khám phá toàn bộ danh mục sản phẩm đa dạng tại DCBStore.</p>
-                 }
-                 else
-                 {
-                     <h1 class="display-5 fw-bold">Kết quả lọc</h1>
-                 }
+            <button class="btn btn-outline-primary d-lg-none mb-3" type="button"
+                    data-bs-toggle="offcanvas" data-bs-target="#offcanvasFilter">
+                <i class="fas fa-filter me-2"></i>Bộ lọc
+            </button>
+
+            <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasFilter">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title">Bộ lọc</h5>
+                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+                </div>
+                <div class="offcanvas-body">
+                    <form asp-action="Index" method="get">
+                        <input type="hidden" name="searchString" value="@Model.SearchString" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Sắp xếp</label>
+                            @Html.DropDownList("sortOrder",
+                                new List<SelectListItem> {
+                                    // --- [SỬA LỖI] --- Thay đổi Value từ "" thành "newest" và cập nhật điều kiện Selected
+                                    new SelectListItem { Text="Mới nhất", Value="newest", Selected = (string.IsNullOrEmpty(Model.SortOrder) || Model.SortOrder == "newest") },
+                                    new SelectListItem { Text="Bán chạy nhất", Value="best_selling", Selected = Model.SortOrder=="best_selling" },
+                                    new SelectListItem { Text="Giá tăng dần", Value="price_asc", Selected = Model.SortOrder=="price_asc" },
+                                    new SelectListItem { Text="Giá giảm dần", Value="price_desc", Selected = Model.SortOrder=="price_desc" }
+                                },
+                                new { @class="form-select", onchange="this.form.submit()" })
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Danh mục</label>
+                            @Html.DropDownList("categoryId",
+                                new SelectList(Model.Categories, "Id", "Name", Model.CategoryId),
+                                "Tất cả",
+                                new { @class="form-select", onchange="this.form.submit()" })
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Khoảng giá</label>
+                            <div class="d-flex gap-2">
+                                <input type="number" name="minPrice" class="form-control" placeholder="Từ" value="@Model.MinPrice" />
+                                <input type="number" name="maxPrice" class="form-control" placeholder="Đến" value="@Model.MaxPrice" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Đánh giá tối thiểu</label>
+                             @Html.DropDownList("minRating",
+                                new List<SelectListItem> {
+                                    new SelectListItem { Text="Từ 5 sao", Value="5", Selected = Model.MinRating==5 },
+                                    new SelectListItem { Text="Từ 4 sao", Value="4", Selected = Model.MinRating==4 },
+                                    new SelectListItem { Text="Từ 3 sao", Value="3", Selected = Model.MinRating==3 },
+                                    new SelectListItem { Text="Từ 2 sao", Value="2", Selected = Model.MinRating==2 },
+                                    new SelectListItem { Text="Từ 1 sao", Value="1", Selected = Model.MinRating==1 }
+                                },
+                                "Tất cả",
+                                new { @class="form-select", onchange="this.form.submit()" })
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary">Lọc</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">Xóa bộ lọc</a>
+                        </div>
+                    </form>
+                </div>
             </div>
-            
+
             @if (!Model.Products.Any())
             {
                 <div class="text-center py-5">
                     <p class="lead">Không tìm thấy sản phẩm nào phù hợp.</p>
-                    <a asp-controller="Products" asp-action="Index" class="btn btn-link">Xem tất cả sản phẩm</a>
+                    <a asp-action="Index" class="btn btn-link">Xem tất cả sản phẩm</a>
                 </div>
             }
             else
             {
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-3 g-4">
+                <div id="product-grid" class="row g-4">
                     @foreach (var product in Model.Products)
                     {
                         var imageUrl = product.Images?.FirstOrDefault()?.Url ?? "/images/placeholder.png";
-                        <div class="col">
-                            <div class="card h-100 border-0 shadow-sm product-card">
-                                
-                                <div class="product-card-img-container position-relative">
+                        <div class="col-6 col-md-4">
+                            <div class="card h-100 product-card">
+                                <div class="product-card-img-container">
                                     <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id">
-                                        <img src="@imageUrl" class="card-img-top" alt="@product.Name">
+                                        <img src="@imageUrl" loading="lazy" class="card-img-top" alt="@product.Name" />
                                     </a>
-
-                                    <div class="product-actions">
-                                        <div class="d-flex gap-2">
-                                            <form asp-controller="Cart" asp-action="AddToCart" method="post" class="w-100 add-to-cart-form">
-                                                <input type="hidden" name="productId" value="@product.Id" />
-                                                <input type="hidden" name="quantity" value="1" />
-                                                <button type="submit" class="btn btn-warning w-100 btn-sm">
-                                                    <i class="fas fa-shopping-cart me-1"></i> Thêm
-                                                </button>
-                                            </form>
-                                            <a asp-controller="Cart" asp-action="BuyNow" asp-route-productId="@product.Id" class="btn btn-danger w-100 btn-sm">
-                                                <i class="fas fa-bolt me-1"></i> Mua Ngay
-                                            </a>
-                                        </div>
-                                    </div>
-
                                     @if (product.SoldQuantity > 0)
                                     {
                                         <span class="sold-badge">Đã bán: @product.SoldQuantity</span>
                                     }
                                     @if (isUserSignedIn)
                                     {
-                                        <button class="btn toggle-wishlist-btn position-absolute top-0 end-0 m-2" data-product-id="@product.Id" title="Thêm vào yêu thích">
+                                        <button class="btn toggle-wishlist-btn position-absolute top-0 end-0 m-2" data-product-id="@product.Id">
                                             <i class="far fa-heart"></i>
                                         </button>
                                     }
+                                    <div class="product-actions d-flex gap-2">
+                                        @using (Html.BeginForm("AddToCart", "Cart", FormMethod.Post, new { @class = "w-100 add-to-cart-form" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="productId" value="@product.Id" />
+                                            <input type="hidden" name="quantity" value="1" />
+                                            <button type="submit" class="btn btn-warning btn-sm w-100">
+                                                <i class="fas fa-shopping-cart me-1"></i>Thêm
+                                            </button>
+                                        }
+                                        <a asp-controller="Cart" asp-action="BuyNow" asp-route-productId="@product.Id" class="btn btn-danger btn-sm w-100">
+                                            <i class="fas fa-bolt me-1"></i>Mua ngay
+                                        </a>
+                                    </div>
                                 </div>
-
-                                <div class="card-body d-flex flex-column text-center">
-                                    <h5 class="card-title h6 flex-grow-1">
-                                        <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="text-dark text-decoration-none">@product.Name</a>
-                                    </h5>
-                                    <p class="card-text fw-bold text-primary mb-0 mt-2">
-                                        @product.Price.ToString("N0") VNĐ
-                                    </p>
+                                <div class="card-body text-center d-flex flex-column">
+                                    <h6 class="card-title">
+                                        <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="text-dark text-decoration-none">
+                                            @product.Name
+                                        </a>
+                                    </h6>
+                                    <div class="mt-auto">
+                                        <p class="fw-bold text-primary mb-1">@product.Price.ToString("N0")₫</p>
+                                        <div>
+                                            @for (int s = 1; s <= 5; s++)
+                                            {
+                                                if (product.Reviews.Any() && s <= Math.Round(product.Reviews.Average(r => r.Rating)))
+                                                {
+                                                    <i class="fas fa-star text-warning"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="far fa-star text-warning"></i>
+                                                }
+                                            }
+                                            <span class="text-muted small">(@product.Reviews.Count)</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     }
                 </div>
 
-                @* Phân trang *@
-                <nav aria-label="Product navigation" class="mt-5 d-flex justify-content-center">
-                    <ul class="pagination">
-                        @if (Model.HasPreviousPage)
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        @if (Model.PageNumber > 1)
                         {
-                             <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="@Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString())" asp-route-pageNumber="@(Model.PageNumber - 1)">«</a></li>
+                            <li class="page-item"><a class="page-link" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-all-route-data="@Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString())">«</a></li>
                         }
-                        else
-                        {
-                             <li class="page-item disabled"><span class="page-link">«</span></li>
-                        }
-                        
+
                         @for (int i = 1; i <= Model.TotalPages; i++)
                         {
-                             <li class="page-item @(i == Model.PageNumber ? "active" : "")">
-                                 <a class="page-link" asp-action="Index" asp-all-route-data="@Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString())" asp-route-pageNumber="@i">@i</a>
-                             </li>
+                            if (i == 1 || i == Model.TotalPages || (i >= Model.PageNumber - 2 && i <= Model.PageNumber + 2))
+                            {
+                                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-all-route-data="@Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString())">@i</a>
+                                </li>
+                            }
+                            else if (i == 2 && Model.PageNumber > 4)
+                            {
+                                <li class="page-item disabled ellipsis"><span class="page-link">…</span></li>
+                            }
+                            else if (i == Model.TotalPages - 1 && Model.PageNumber < Model.TotalPages - 3)
+                            {
+                                <li class="page-item disabled ellipsis"><span class="page-link">…</span></li>
+                            }
                         }
-                        
-                        @if (Model.HasNextPage)
+
+                        @if (Model.PageNumber < Model.TotalPages)
                         {
-                            <li class="page-item"><a class="page-link" asp-action="Index" asp-all-route-data="@Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString())" asp-route-pageNumber="@(Model.PageNumber + 1)">»</a></li>
-                        }
-                        else
-                        {
-                            <li class="page-item disabled"><span class="page-link">»</span></li>
+                            <li class="page-item"><a class="page-link" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber + 1)" asp-all-route-data="@Context.Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString())">»</a></li>
                         }
                     </ul>
                 </nav>
@@ -255,8 +279,16 @@
     $(document).ready(function() {
         const isUserSignedIn = @isUserSignedIn.ToString().ToLower();
 
+        // Hàm hiển thị toast thông báo
         function showToast(message, isSuccess) {
+            // Cần một container để chứa toast trong Layout của bạn, ví dụ:
+            // <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
             const toastContainer = $('.toast-container');
+            if (!toastContainer.length) {
+                $('body').append('<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080"></div>');
+                toastContainer = $('.toast-container');
+            }
+            
             const toastId = 'toast-' + Date.now();
             const toastBg = isSuccess ? 'bg-success' : 'bg-danger';
 
@@ -274,12 +306,16 @@
             toastContainer.append(toastHtml);
             const toastElement = new bootstrap.Toast($(`#${toastId}`));
             toastElement.show();
+            // Tự động xóa toast khỏi DOM sau khi ẩn
+            $(`#${toastId}`).on('hidden.bs.toast', function () {
+                $(this).remove();
+            });
         }
 
+        // Xử lý form "Thêm vào giỏ" bằng AJAX
         $('.add-to-cart-form').on('submit', function(e) {
             e.preventDefault();
 
-            // SỬA LỖI LOGIC: Kiểm tra đăng nhập trước khi gửi
             if (!isUserSignedIn) {
                 showToast('Vui lòng đăng nhập để thêm sản phẩm.', false);
                 setTimeout(() => {
@@ -297,15 +333,21 @@
                 success: function(response) {
                     if (response.success) {
                         showToast(response.message, true);
-                        if (typeof response.newCartCount !== 'undefined') {
-                             $('#cart-item-count').text(response.newCartCount).removeClass('d-none');
+                        if (typeof response.cartItemCount !== 'undefined') {
+                            const countBadge = $('#cart-item-count');
+                            countBadge.text(response.cartItemCount);
+                            if(response.cartItemCount > 0) {
+                                countBadge.removeClass('d-none');
+                            } else {
+                                countBadge.addClass('d-none');
+                            }
                         }
                     } else {
                         showToast(response.message, false);
                     }
                 },
                 error: function(xhr) {
-                    if(xhr.status === 401) { // Lỗi chưa xác thực
+                    if(xhr.status === 401) {
                          showToast('Vui lòng đăng nhập để thêm sản phẩm.', false);
                     } else {
                         showToast('Đã có lỗi xảy ra. Vui lòng thử lại.', false);

@@ -3,38 +3,33 @@
 }
 
 <style>
+    /* Thêm màu nền cho trang để làm nổi bật các card */
+    body.dcb-account-page-active {
+        background-color: #f4f6f9;
+    }
+
     .dcb-account-page .container {
         padding-top: 40px;
         padding-bottom: 40px;
-    }
-    .dcb-account-page .row {
-        margin-top: 20px;
-    }
-    .dcb-account-page .col-lg-3,
-    .dcb-account-page .col-lg-9 {
-        padding-bottom: 20px; /* Thêm padding dưới cho các cột */
+        min-height: calc(100vh - 200px); /* Tùy chỉnh 200px phù hợp với header/footer của bạn */
     }
 
     .account-sidebar {
         background-color: #fff;
         border-radius: 0.75rem;
         box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        padding: 20px 0;
+        padding: 0; /* Bỏ padding ở đây để _ManageNav toàn quyền kiểm soát */
+        height: 100%; /* Đảm bảo sidebar chiếm toàn bộ chiều cao cột */
     }
 
     .account-content-area {
         background-color: #fff;
         border-radius: 0.75rem;
         box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        padding: 30px; /* Tăng padding */
+        padding: 30px;
     }
-
-    /* Đảm bảo chiều cao tối thiểu cho nội dung để tránh footer bị "nhảy" */
-    .dcb-account-page .container {
-        min-height: calc(100vh - 200px); /* Tùy chỉnh 200px phù hợp với header/footer của bạn */
-    }
-
-    @@media (max-width: 767.98px) {
+    
+    @@media (max-width: 991.98px) {
         .account-sidebar {
             margin-bottom: 20px;
         }
@@ -44,12 +39,12 @@
 <div class="dcb-account-page">
     <div class="container">
         <div class="row">
-            <div class="col-lg-3 col-md-4">
+            <div class="col-lg-3">
                 <div class="account-sidebar">
                     <partial name="_ManageNav" />
                 </div>
             </div>
-            <div class="col-lg-9 col-md-8">
+            <div class="col-lg-9">
                 <div class="account-content-area">
                     @RenderBody()
                 </div>
@@ -59,5 +54,6 @@
 </div>
 
 @section Scripts {
+    <script>document.body.classList.add('dcb-account-page-active');</script>
     @RenderSection("Scripts", required: false)
 }

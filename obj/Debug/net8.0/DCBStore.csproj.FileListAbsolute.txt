@@ -261,3 +261,4 @@ D:\Work\LT.Web\DCBStore\obj\Debug\net8.0\refint\DCBStore.dll
 D:\Work\LT.Web\DCBStore\obj\Debug\net8.0\DCBStore.pdb
 D:\Work\LT.Web\DCBStore\obj\Debug\net8.0\DCBStore.genruntimeconfig.cache
 D:\Work\LT.Web\DCBStore\obj\Debug\net8.0\ref\DCBStore.dll
+D:\Work\LT.Web\DCBStore\bin\Debug\net8.0\Mailjet.Client.dll
