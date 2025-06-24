@@ -27,58 +27,69 @@ namespace DCBStore.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var today = DateTime.Today;
-            var firstDayOfMonth = new DateTime(today.Year, today.Month, 1);
-            var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+            var today = DateTime.UtcNow.Date;
+            var firstDayOfCurrentMonth = new DateTime(today.Year, today.Month, 1);
+            var firstDayOfLastMonth = firstDayOfCurrentMonth.AddMonths(-1);
 
             var monthlyRevenue = await _context.Orders
-                .Where(o => o.OrderDate >= firstDayOfMonth && o.OrderDate <= lastDayOfMonth)
+                .Where(o => o.OrderDate >= firstDayOfCurrentMonth && o.OrderDate < firstDayOfCurrentMonth.AddMonths(1) && o.Status == OrderStatus.Completed)
                 .SumAsync(o => o.Total);
+
+            var lastMonthRevenue = await _context.Orders
+                .Where(o => o.OrderDate >= firstDayOfLastMonth && o.OrderDate < firstDayOfCurrentMonth && o.Status == OrderStatus.Completed)
+                .SumAsync(o => o.Total);
+
+            var totalOrders = await _context.Orders.CountAsync();
+            var totalOrdersLastMonth = await _context.Orders.CountAsync(o => o.OrderDate < firstDayOfCurrentMonth);
+
+            var totalUsers = await _userManager.Users.CountAsync();
+            var newUsersThisMonth = await _userManager.Users
+                .CountAsync(u => u.CreatedAt >= firstDayOfCurrentMonth && u.CreatedAt < firstDayOfCurrentMonth.AddMonths(1));
+            
+            var newUsersLastMonth = await _userManager.Users
+                .CountAsync(u => u.CreatedAt >= firstDayOfLastMonth && u.CreatedAt < firstDayOfCurrentMonth);
 
             var newOrdersToday = await _context.Orders
                 .CountAsync(o => o.OrderDate.Date == today);
 
             var pendingOrders = await _context.Orders
                 .CountAsync(o => o.Status == OrderStatus.Pending);
+            
+            ViewBag.TotalOrders = totalOrders;
+            ViewBag.TotalProducts = await _context.Products.CountAsync();
+            ViewBag.TotalUsers = totalUsers;
 
-            var totalUsers = await _context.Users.CountAsync();
-            var totalProducts = await _context.Products.CountAsync();
-
-            var revenueByMonth = await _context.Orders
+            ViewBag.RevenueByMonth = await _context.Orders
                 .Where(o => o.Status == OrderStatus.Completed)
                 .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
-                .Select(g => new
-                {
-                    Year = g.Key.Year,
-                    Month = g.Key.Month,
-                    TotalRevenue = g.Sum(x => x.Total)
-                })
+                .Select(g => new { Year = g.Key.Year, Month = g.Key.Month, TotalRevenue = g.Sum(x => x.Total) })
                 .OrderBy(g => g.Year).ThenBy(g => g.Month)
                 .ToListAsync();
 
-            var ordersByMonth = await _context.Orders
+            ViewBag.OrdersByMonth = await _context.Orders
                 .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
-                .Select(g => new
-                {
-                    Year = g.Key.Year,
-                    Month = g.Key.Month,
-                    Count = g.Count()
-                })
+                .Select(g => new { Year = g.Key.Year, Month = g.Key.Month, Count = g.Count() })
                 .OrderBy(g => g.Year).ThenBy(g => g.Month)
                 .ToListAsync();
 
-            ViewBag.TotalOrders = await _context.Orders.CountAsync();
-            ViewBag.TotalProducts = totalProducts;
-            ViewBag.TotalUsers = totalUsers;
-            ViewBag.RevenueByMonth = revenueByMonth;
-            ViewBag.OrdersByMonth = ordersByMonth;
+            decimal CalculatePercentageChange(decimal current, decimal previous)
+            {
+                if (previous == 0)
+                {
+                    return current > 0 ? 100.0m : 0;
+                }
+                return Math.Round(((current - previous) / previous) * 100, 1);
+            }
 
             var viewModel = new DashboardViewModel
             {
                 MonthlyRevenue = monthlyRevenue,
                 NewOrdersToday = newOrdersToday,
                 PendingOrders = pendingOrders,
-                NewUsersThisMonth = totalUsers
+                NewUsersThisMonth = newUsersThisMonth,
+                RevenueChangePercentage = CalculatePercentageChange(monthlyRevenue, lastMonthRevenue),
+                OrdersChangePercentage = CalculatePercentageChange(totalOrders, totalOrdersLastMonth),
+                UsersChangePercentage = CalculatePercentageChange(newUsersThisMonth, newUsersLastMonth)
             };
 
             return View(viewModel);

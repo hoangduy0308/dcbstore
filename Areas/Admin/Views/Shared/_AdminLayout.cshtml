@@ -93,7 +93,7 @@
         }
 
         .main-content-wrapper {
-            margin-left: 260px; /* Thêm margin-left để không bị sidebar đè lên */
+            margin-left: 260px;
             width: calc(100% - 260px);
             transition: all 0.3s ease;
         }
@@ -109,6 +109,60 @@
             border-radius: 0.75rem;
             box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
         }
+
+        /* === BẮT ĐẦU CSS MỚI CHO DASHBOARD === */
+        .stat-widget {
+            background-color: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .stat-widget:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .stat-widget-info .stat-title {
+            color: #6b7280;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        .stat-widget-info .stat-metric {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1;
+        }
+        .stat-widget-info .stat-trend {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        .stat-widget-info .stat-trend .fa-arrow-up { color: #10b981; }
+        .stat-widget-info .stat-trend .fa-arrow-down { color: #ef4444; }
+        .stat-widget-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .stat-widget-icon i {
+            font-size: 1.75rem;
+        }
+        .widget-orders .stat-widget-icon { background-color: #e0e7ff; }
+        .widget-orders .stat-widget-icon i { color: #4f46e5; }
+        .widget-products .stat-widget-icon { background-color: #d1fae5; }
+        .widget-products .stat-widget-icon i { color: #059669; }
+        .widget-users .stat-widget-icon { background-color: #cffafe; }
+        .widget-users .stat-widget-icon i { color: #0891b2; }
+        .widget-revenue .stat-widget-icon { background-color: #fef3c7; }
+        .widget-revenue .stat-widget-icon i { color: #d97706; }
+        /* === KẾT THÚC CSS MỚI CHO DASHBOARD === */
 
         @@media (max-width: 991.98px) {
             .sidebar {
@@ -188,7 +242,9 @@
             <div class="main-content-wrapper d-flex flex-column vh-100">
                 <header class="top-header">
                     <div class="container-fluid d-flex justify-content-end align-items-center">
-                        <partial name="_LoginPartial" />
+                        <ul class="navbar-nav d-flex flex-row align-items-center mb-0" style="--bs-nav-link-padding-x: 0.75rem;">
+                            <partial name="_LoginPartial" />
+                        </ul>
                     </div>
                 </header>
 

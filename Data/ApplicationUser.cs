@@ -15,8 +15,10 @@ namespace DCBStore.Data
         public ICollection<Order> Orders { get; set; } = new List<Order>(); // Mối quan hệ 1-nhiều với Order
                                                                             // KẾT THÚC THÊM MỚI
         public string FullNameOrUserName()
-    {
-        return !string.IsNullOrWhiteSpace(FullName) ? FullName : (UserName ?? "");
+        {
+            return !string.IsNullOrWhiteSpace(FullName) ? FullName : (UserName ?? "");
+        }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
-    }
+    
 }
