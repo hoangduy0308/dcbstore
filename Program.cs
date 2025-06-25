@@ -43,49 +43,54 @@ builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+// SỬA LỖI: Chỉ chạy seeding trong môi trường Development (trên máy của bạn)
+if (app.Environment.IsDevelopment())
 {
-    var services = scope.ServiceProvider;
-    var logger = services.GetRequiredService<ILogger<Program>>();
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-
-        string[] roleNames = { "Admin", "Customer" };
-        foreach (var roleName in roleNames)
+        var services = scope.ServiceProvider;
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        try
         {
-            var roleExist = await roleManager.RoleExistsAsync(roleName);
-            if (!roleExist)
+            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+            var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+
+            string[] roleNames = { "Admin", "Customer" };
+            foreach (var roleName in roleNames)
             {
-                await roleManager.CreateAsync(new IdentityRole(roleName));
-                logger.LogInformation($"Role '{roleName}' đã được tạo.");
+                var roleExist = await roleManager.RoleExistsAsync(roleName);
+                if (!roleExist)
+                {
+                    await roleManager.CreateAsync(new IdentityRole(roleName));
+                    logger.LogInformation($"Role '{roleName}' đã được tạo.");
+                }
+            }
+
+            var adminEmail = "admin@dcbstore.com";
+            var adminUser = await userManager.FindByEmailAsync(adminEmail);
+            if (adminUser == null)
+            {
+                var newAdmin = new ApplicationUser 
+                { 
+                    UserName = adminEmail, 
+                    Email = adminEmail, 
+                    EmailConfirmed = true 
+                };
+                var result = await userManager.CreateAsync(newAdmin, "Admin@123"); 
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(newAdmin, "Admin");
+                    logger.LogInformation($"Tài khoản Admin mặc định '{adminEmail}' đã được tạo.");
+                }
             }
         }
-
-        var adminEmail = "admin@dcbstore.com";
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
-        if (adminUser == null)
+        catch (Exception ex)
         {
-            var newAdmin = new ApplicationUser 
-            { 
-                UserName = adminEmail, 
-                Email = adminEmail, 
-                EmailConfirmed = true 
-            };
-            var result = await userManager.CreateAsync(newAdmin, "Admin@123"); 
-            if (result.Succeeded)
-            {
-                await userManager.AddToRoleAsync(newAdmin, "Admin");
-                logger.LogInformation($"Tài khoản Admin mặc định '{adminEmail}' đã được tạo.");
-            }
+            logger.LogError(ex, "Đã có lỗi xảy ra trong quá trình seeding database.");
         }
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Đã có lỗi xảy ra trong quá trình seeding database.");
     }
 }
+
 
 if (!app.Environment.IsDevelopment())
 {
